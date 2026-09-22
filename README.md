@@ -378,7 +378,7 @@ Everything above is documented inline in [`.env.example`](.env.example).
 | `FORGE_DECIDER` | `auto` | `auto` \| `live` \| `local` |
 | `FORGE_LLM_PROVIDER` | `deepseek` | `deepseek` \| `openai` \| `openrouter` \| `groq` \| `together` \| `ollama` |
 | `FORGE_LLM_BASE_URL` / `FORGE_LLM_MODEL` / `FORGE_LLM_API_KEY` | — | point at **any** OpenAI-compatible endpoint |
-| `FORGE_LLM_EFFORT` | `low` | reasoning budget for models that support it |
+| `FORGE_LLM_EFFORT` | `low` | reasoning budget. **Measured near-no-op** on `deepseek-flash` — reasoning cannot be switched off; see [Saving time and money](#saving-time-and-money) |
 | `FORGE_IMAGE_BASE_URL` | *unset* | **any** reachable HTTP service; unset = images off |
 | `FORGE_IMAGE_ALLOW_HOSTS` | — | extra hostnames beyond localhost (comma-separated) |
 | `FORGE_IMAGE_ALLOW_ANY_HOST` | — | `1` disables the allowlist (trusted networks only) |
@@ -455,6 +455,50 @@ One runtime dependency (`zod`). The decision transport, the LLM client, the imag
 layout engine, the ZIP writer and the HTTP server are all hand-written. For a tool whose whole
 claim is *deliberate, inspectable decisions*, a readable dependency tree is part of the
 argument.
+
+---
+
+### Saving time and money
+
+The writer dominates both. Measured on the default setup:
+
+| | Decide (Jev) | Write (deepseek-flash) |
+|---|---|---|
+| tokens | ~2,500 in, ~0 out | ~900 in, **~4,000 out** |
+| time | ~0.4 s | **~19–22 s** |
+| cost | $0.0001 | **~$0.0024** |
+
+The write is **output-token-bound** at roughly **210 output tokens/second**, and
+about **65% of those output tokens are reasoning** — the model thinks before it
+writes.
+
+**You cannot turn that reasoning off on `deepseek-flash`.** Measured over 3
+samples per setting:
+
+| setting | time | reasoning tokens | cost |
+|---|---|---|---|
+| `low` | 18.9 s | 2,542 | $0.00245 |
+| `high` | 19.5 s | 2,777 | $0.00260 |
+| `none` | 18.9 s | 2,223 | $0.00228 |
+| *omitted* | 19.1 s | 2,842 | $0.00256 |
+
+`effort` moves reasoning by ~9% and wall time by ~3% — within noise. Values like
+`none`, `off`, `0` and `{"reasoning":{"enabled":false}}` are **accepted and
+ignored**; the model reasons anyway.
+
+**The real lever is the model.** The writer is provider-agnostic, so point it at a
+non-reasoning one and the verbatim output (~1,400 tokens) is all you pay for —
+at the measured 210 tok/s that is roughly **7 seconds and a third of the cost**:
+
+```bash
+FORGE_LLM_PROVIDER=openai
+FORGE_LLM_MODEL=gpt-4o-mini
+FORGE_LLM_PRICE_IN=0.15
+FORGE_LLM_PRICE_OUT=0.60
+```
+
+The other lever is the brief itself: a larger content model costs more to write.
+`content.ts` is where that shape is defined.
 
 ---
 
