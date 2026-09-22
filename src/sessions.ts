@@ -31,7 +31,7 @@
 import { mkdir, copyFile, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { BLUEPRINTS, MODULES, requiredModules, type ModuleId } from './blueprint.js';
+import { BLUEPRINTS, MODULES, imageSlotsFor, requiredModules, type ModuleId } from './blueprint.js';
 import { compose } from './compose.js';
 import { fallbackContent, type Content } from './content.js';
 import { decideWithFallback, type DeciderPreference, type DecideResult } from './decider.js';
@@ -39,6 +39,7 @@ import { buildDirections, type Direction, type Distributions } from './direction
 import { jevCost, writerCost } from './pricing.js';
 import { navTargetsFor, sectionInstanceIds } from './render.js';
 import { renderHtml } from './render.js';
+import { ingestUserImages, type UserImageRequest } from './userassets.js';
 import { writeContent } from './writer.js';
 import { JevResponse, type DesignSpec } from './types.js';
 
@@ -534,6 +535,9 @@ export interface FinalizeOptions {
   index: number;
   /** Write blueprint-specific final copy (one more writer call). */
   finalCopy?: boolean;
+  /** Real brand/product images, preferred over anything generated. */
+  userImages?: UserImageRequest[];
+  userImageRoot?: string;
   signal?: AbortSignal;
 }
 
@@ -599,6 +603,20 @@ export async function finalizeSession(
   spec.meta.writerOutputTokens = write.outputTokens;
   spec.meta.writerReasoningTokens = write.reasoningTokens;
   spec.meta.writerEstimatedUsd = writerCost(write.inputTokens, write.outputTokens);
+
+  if (opts.userImages?.length) {
+    const ingested = await ingestUserImages({
+      outDir,
+      slug,
+      root: opts.userImageRoot ?? process.cwd(),
+      requests: opts.userImages,
+      allowedSlots: imageSlotsFor(dir.blueprint).map((x) => x.id),
+    });
+    if (ingested.assets.length) {
+      const taken = new Set(ingested.assets.map((a) => a.slot));
+      spec.assets = [...ingested.assets, ...spec.assets.filter((a) => !taken.has(a.slot))];
+    }
+  }
 
   const html = renderHtml(spec, { fontBasePath: 'fonts/' });
   await mkdir(outDir, { recursive: true });

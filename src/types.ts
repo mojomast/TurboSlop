@@ -96,8 +96,21 @@ import { Content } from './content.js';
  * ------------------------------------------------------------------ */
 export const Asset = z.object({
   kind: z.enum(['surface', 'motif', 'backdrop']),
+  /**
+   * The image slot this fills. The renderer resolves by slot, so the same
+   * picture is never cycled across unrelated tiles.
+   */
+  slot: z.string().default(''),
+  /** `user` assets always take precedence over generated ones. */
+  source: z.enum(['generated', 'user']).default('generated'),
   file: z.string(),
   alt: z.string(),
+  /** Attribution. Required for anything the user did not make themselves. */
+  credit: z.string().default(''),
+  license: z.string().default(''),
+  /** Intrinsic pixel size, so an upscale can be measured rather than hidden. */
+  nativeWidth: z.number().default(256),
+  nativeHeight: z.number().default(256),
   /** The exact prompt used, so a result can be reproduced or audited. */
   prompt: z.string().default(''),
   seed: z.number(),

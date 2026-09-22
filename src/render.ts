@@ -16,7 +16,7 @@
  * `<main>` carried `id="top"`, and a repeated module emitted the same id twice,
  * so duplicates were both invalid and ambiguous as link targets.
  */
-import { BLUEPRINT_BY_ID, type Blueprint, type ModuleId } from './blueprint.js';
+import { BLUEPRINT_BY_ID, imageSlotsFor, type Blueprint, type ModuleId } from './blueprint.js';
 import {
   MODULE_LABELS,
   renderFooter,
@@ -191,15 +191,23 @@ export function renderHtml(spec: DesignSpec, opts: RenderOptions = {}): string {
     .join('\n');
 
   const assets = spec.assets ?? [];
+  /* User-supplied images win over generated ones for the same slot. */
+  const ordered = [...assets.filter((a) => a.source === 'user'), ...assets.filter((a) => a.source !== 'user')];
+  const textureSlots = new Set(
+    imageSlotsFor(blueprint)
+      .filter((s) => s.scale === 'texture')
+      .map((s) => s.id),
+  );
   const ctx: BlockCtx = {
     content: c,
     emotion,
     paletteId: palette.id,
     typeId: type.id,
-    plateAssets: assets.filter((a) => a.kind !== 'backdrop'),
-    backdrops: assets.filter((a) => a.kind === 'backdrop'),
+    plateAssets: ordered.filter((a) => a.kind !== 'backdrop' || a.slot === 'hero'),
+    backdrops: ordered.filter((a) => a.kind === 'backdrop'),
     blueprint,
     visual: vb,
+    textureSlots,
   };
 
   const instanceIds = sectionInstanceIds(blueprint);

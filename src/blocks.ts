@@ -26,6 +26,8 @@ export interface BlockCtx {
   blueprint: Blueprint;
   /** How this direction is drawn. Optional so blocks stay usable in isolation. */
   visual?: VisualBlueprint;
+  /** Slots that hold an ENLARGED asset, to be drawn as atmosphere not as a photo. */
+  textureSlots?: Set<string>;
 }
 
 /**
@@ -69,13 +71,32 @@ function contactOf(c: Content) {
 /** A `tel:` href from a loosely-formatted phone number. */
 const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
 
-/** An image slot. Falls back to a gradient plate, so a page never breaks without art. */
-function plate(assets: Asset[], i: number, cls = 'plate'): string {
-  const a = assets.length ? assets[i % assets.length] : undefined;
+/**
+ * An image plate for a named slot.
+ *
+ * Resolution is by SLOT ID, not by cycling an array: the picture generated for
+ * "the third catalogue tile" goes in the third catalogue tile. When the slot has
+ * no asset the CSS gradient plate stands in, so a page never breaks and never
+ * shows a picture that belongs somewhere else.
+ *
+ * `width`/`height` are the asset's real pixel size, so an enlargement is visible
+ * in the markup rather than hidden, and `data-texture` marks the slots where a
+ * 256px asset is deliberately scaled and must be drawn as atmosphere.
+ */
+function plate(ctx: BlockCtx, i: number, cls = 'plate', slotId?: string): string {
+  /* Strict resolution once ANY asset carries a slot: a named place gets its own
+     picture or a gradient, never a neighbour's. Cycling is kept only for legacy
+     specs whose assets have no slot recorded at all. */
+  const hasSlots = ctx.plateAssets.some((a) => a.slot);
+  const bySlot = slotId ? ctx.plateAssets.find((a) => a.slot === slotId) : undefined;
+  const a =
+    bySlot ??
+    (hasSlots ? undefined : ctx.plateAssets.length ? ctx.plateAssets[i % ctx.plateAssets.length] : undefined);
   if (!a) return `<div class="${cls}" aria-hidden="true"></div>`;
-  return `<div class="${cls}"><img class="plate-img" src="${esc(a.file)}" alt="${esc(
+  const texture = a.slot && ctx.textureSlots?.has(a.slot) ? ' data-texture="1"' : '';
+  return `<div class="${cls}"${texture}><img class="plate-img" src="${esc(a.file)}" alt="${esc(
     a.alt,
-  )}" width="256" height="256" loading="lazy" decoding="async"></div>`;
+  )}" width="${a.nativeWidth}" height="${a.nativeHeight}" loading="lazy" decoding="async"></div>`;
 }
 
 /* ================================================================== *
@@ -89,7 +110,7 @@ ${items
   .map(
     (it, i) => `          <article class="work-card reveal reveal--rise">
             <a href="#contact" aria-label="${esc(it.name)} — enquire">
-              ${plate(ctx.plateAssets, i)}
+              ${plate(ctx, i, 'plate', `items-${i + 1}`)}
               <p class="eyebrow">${esc(it.meta)}</p>
               <h3>${esc(it.name)}</h3>
               ${it.tags.length ? `<p class="lede">${esc(it.tags.join(' · '))}</p>` : ''}
@@ -106,7 +127,7 @@ ${items
   .map(
     (it, i) => `          <article class="work-card col-6 reveal reveal--rise">
             <a href="#contact">
-              ${plate(ctx.plateAssets, i)}
+              ${plate(ctx, i, 'plate', `items-${i + 1}`)}
               <p class="eyebrow">${esc(it.meta)}</p>
               <h3>${esc(it.name)}</h3>
               ${it.tags.length ? `<p class="lede">${esc(it.tags.join(' · '))}</p>` : ''}
@@ -165,7 +186,7 @@ ${items
   .map(
     (it, i) => `          <article class="tile reveal reveal--scale" style="--span:${BENTO_SPANS[i % BENTO_SPANS.length]}">
             <a href="#contact" aria-label="${esc(it.name)} — enquire">
-              ${plate(ctx.plateAssets, i, 'tile__plate')}
+              ${plate(ctx, i, 'tile__plate', `items-${i + 1}`)}
               <span class="tile__meta"><b>${esc(it.name)}</b> <span class="mono">${esc(it.meta)}</span></span>
             </a>
           </article>`,
@@ -180,7 +201,7 @@ ${items
   .map(
     (it, i) => `          <article class="tile reveal reveal--scale" style="--span:${i % 5 === 0 ? 8 : 4}">
             <a href="#contact" aria-label="${esc(it.name)} — enquire">
-              ${plate(ctx.plateAssets, i, 'tile__plate')}
+              ${plate(ctx, i, 'tile__plate', `items-${i + 1}`)}
               <span class="tile__meta"><b>${esc(it.name)}</b> <span class="mono">${esc(it.meta)}</span></span>
             </a>
           </article>`,
@@ -301,7 +322,7 @@ ${c.items
   .slice(0, ctx.blueprint.imageSlots || 4)
   .map(
     (it, i) => `          <figure class="tile" style="--span:${variant === 'strip' ? 3 : i % 4 === 0 ? 6 : 3}">
-            ${plate(ctx.plateAssets, i, 'tile__plate')}
+            ${plate(ctx, i, 'tile__plate', `gallery-${i + 1}`)}
             <figcaption class="mono">${esc(it.name)}</figcaption>
           </figure>`,
   )
@@ -509,7 +530,7 @@ export function renderHero(variant: HeroVariant, ctx: BlockCtx): string {
     case 'media':
       return `  <section class="sec hero hero--media" id="top">
     <div class="wrap hero-media">
-      ${plate(ctx.plateAssets, 0, 'hero-media__plate')}
+      ${plate(ctx, 0, 'hero-media__plate', 'hero')}
       <div class="hero-media__caption">
         <p class="eyebrow">${esc(c.eyebrow)}</p>
         <h1 class="hero-media__title">${emphasize(c.tagline)}</h1>
@@ -564,7 +585,7 @@ export function renderHero(variant: HeroVariant, ctx: BlockCtx): string {
     /* ---- editorial opening: a large figure and a narrow text column ---- */
     case 'editorial-figure': {
       const framed = ctx.visual?.frames?.[0];
-      const inner = plate(ctx.plateAssets, 0, 'hero-figure__img');
+      const inner = plate(ctx, 0, 'hero-figure__img', 'hero');
       return `  <section class="sec hero hero--editorial-figure" id="top">
     <div class="wrap hero-figure">
       <div class="hero-figure__plate">${
@@ -593,7 +614,7 @@ export function renderHero(variant: HeroVariant, ctx: BlockCtx): string {
       const framed = ctx.visual?.frames?.[0] ?? 'browser';
       const demo = renderFrame({
         kind: framed,
-        inner: plate(ctx.plateAssets, 0, 'hero-demo__img'),
+        inner: plate(ctx, 0, 'hero-demo__img', 'hero'),
         label: stripEmphasis(c.brand).toLowerCase().replace(/\s+/g, '') + '.example',
         seed: (ctx.visual?.seed ?? 0) + 7,
         ratio: '16 / 10',

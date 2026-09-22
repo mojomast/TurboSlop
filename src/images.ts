@@ -29,6 +29,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { paletteVisual } from './catalog.js';
+import type { BlueprintImageSlot } from './blueprint.js';
 import type { DesignSpec } from './types.js';
 
 /** Response cap for a 256x256 PNG. Anything larger is not our image. */
@@ -290,6 +291,48 @@ export function buildAssetPrompts(spec: DesignSpec, count: number): AssetPrompt[
 }
 
 /**
+ * Prompts built from the SLOTS a page will actually render.
+ *
+ * This is the difference between "generate six pictures and hope" and
+ * "generate the picture this place needs": a full-bleed atmospheric field, a
+ * tall figure, or a square still life are different requests, and the aspect is
+ * stated so the model composes for it.
+ */
+export interface SlotPrompt {
+  slot: string;
+  kind: AssetPrompt['kind'];
+  aspect: string;
+  role: string;
+  prompt: string;
+}
+
+export function buildSlotPrompts(spec: DesignSpec, slots: BlueprintImageSlot[]): SlotPrompt[] {
+  const emotion = spec.tokens.emotion ?? 'other';
+  const surface = SURFACE_BY_EMOTION[emotion] ?? SURFACE_BY_EMOTION.other!;
+  const style = styleFor(spec);
+
+  return slots.map((s, i) => {
+    const framing =
+      s.role === 'hero-texture'
+        ? `Wide ${s.aspect} atmospheric field of ${surface}, one even plane, no focal subject, large unoccupied areas`
+        : s.role === 'hero-figure'
+          ? `${s.aspect} study of ${surface}, one clear subject, generous negative space`
+          : s.role === 'item'
+            ? `Square still life of a single object on a plain undecorated ground, centred, strong silhouette`
+            : `A single simple form on a plain ground, ${s.aspect} framing, strong silhouette`;
+    const crop = s.crop === 'detail' ? 'Close detail crop.' : '';
+    const kind: AssetPrompt['kind'] = i === 0 ? 'backdrop' : i === 1 ? 'surface' : 'motif';
+    return {
+      slot: s.id,
+      kind,
+      aspect: s.aspect,
+      role: s.role,
+      prompt: `${framing}. ${crop} ${style}.`.replace(/\s+/g, ' ').trim(),
+    };
+  });
+}
+
+/**
  * Assert our own templates stay inside the encoder budget. Our prompts are
  * generated, so an over-long one is a bug in this file, not user error.
  */
@@ -542,6 +585,8 @@ export async function fetchImage(cfgService: ImageServiceConfig, imagePath: stri
  * ------------------------------------------------------------------ */
 export interface GeneratedAsset {
   kind: AssetPrompt['kind'];
+  /** Which slot this fills. Empty for a legacy "just give me N images" call. */
+  slot: string;
   prompt: string;
   seed: number;
   steps: number;
@@ -553,6 +598,12 @@ export interface GeneratedAsset {
 
 export interface ImageRunOptions {
   count: number;
+  /**
+   * The places this page actually renders. When given, exactly one image is
+   * generated per slot (up to `count`) and nothing is generated for a place
+   * that does not exist.
+   */
+  slots?: BlueprintImageSlot[];
   steps: number;
   cfg: number;
   /** Fixed seed for reproducibility; omit for a random one. */
@@ -586,7 +637,10 @@ export async function generateAssets(spec: DesignSpec, opts: ImageRunOptions): P
   if (!service) throw new ImageServiceError('no image service configured (FORGE_IMAGE_BASE_URL not allowlisted)');
 
   const started = Date.now();
-  const prompts = buildAssetPrompts(spec, opts.count);
+  const useSlots = Boolean(opts.slots && opts.slots.length);
+  const prompts = useSlots
+    ? buildSlotPrompts(spec, opts.slots!.slice(0, Math.max(1, opts.count)))
+    : buildAssetPrompts(spec, opts.count).map((p) => ({ ...p, slot: '', aspect: '1 / 1', role: 'texture' }));
   assertPromptsWithinBudget(prompts);
   const assets: GeneratedAsset[] = [];
   const dir = path.join(opts.outDir, 'assets', opts.slug);
@@ -594,7 +648,7 @@ export async function generateAssets(spec: DesignSpec, opts: ImageRunOptions): P
 
   for (const [i, p] of prompts.entries()) {
     const seed = opts.seed !== undefined ? opts.seed + i : randomSeed();
-    opts.onProgress?.(`[${i + 1}/${prompts.length}] ${p.kind} — steps ${opts.steps}, guidance ${opts.cfg}`);
+    opts.onProgress?.(`[${i + 1}/${prompts.length}] ${p.slot || p.kind} — steps ${opts.steps}, guidance ${opts.cfg}`);
 
     const sub = await submitGenerateWithBusyRetry(service, p.prompt, seed, opts.steps, opts.cfg);
     const wanted = new Set(sub.ids);
@@ -614,10 +668,12 @@ export async function generateAssets(spec: DesignSpec, opts: ImageRunOptions): P
     }
 
     const buf = await fetchImage(service, done.image!);
-    const file = path.join(dir, `${String(i).padStart(2, '0')}-${p.kind}-${done.seed}.png`);
+    const name = p.slot ? p.slot : p.kind;
+    const file = path.join(dir, `${String(i).padStart(2, '0')}-${name}-${done.seed}.png`);
     await writeFile(file, buf);
     assets.push({
       kind: p.kind,
+      slot: p.slot,
       prompt: p.prompt,
       seed: done.seed,
       steps: done.steps,

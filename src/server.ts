@@ -196,12 +196,21 @@ function designReadme(spec: DesignSpec, slug: string): string {
     .join('\n');
   const assets = spec.assets.length
     ? spec.assets
-        .map(
-          (a) =>
-            `### ${a.kind} — \`${path.basename(a.file)}\`\n\n` +
+        .map((a) => {
+          const base = `### ${a.slot || a.kind} — \`${path.basename(a.file)}\``;
+          if (a.source === 'user') {
+            return (
+              `${base}\n\n- **supplied by the brief's owner** (${a.nativeWidth}x${a.nativeHeight}px)\n` +
+              `- credit: ${a.credit || '_not stated_'}\n- licence: ${a.license || '_not stated_'}\n- alt: ${a.alt}\n`
+            );
+          }
+          return (
+            `${base}\n\n` +
             `- seed \`${a.seed}\`, steps ${a.steps}, guidance ${a.cfg}, ${(a.bytes / 1024).toFixed(0)} KB\n` +
-            `- alt: ${a.alt}\n\n> ${a.prompt}\n`,
-        )
+            `- native resolution ${a.nativeWidth}x${a.nativeHeight} (generated)\n` +
+            `- alt: ${a.alt}\n\n> ${a.prompt}\n`
+          );
+        })
         .join('\n')
     : '_No generated artwork — the layout uses its CSS gradient fallbacks._\n';
 
@@ -325,6 +334,28 @@ interface DesignRequest {
   decider?: DeciderPreference;
   copy?: boolean;
   images?: { enabled?: boolean; count?: number; preset?: string; steps?: number; cfg?: number; seed?: number };
+  /**
+   * Real brand/product images. Local paths, resolved inside
+   * FORGE_USER_IMAGE_DIR, copied into the export with their credit and licence.
+   */
+  userImages?: { slot: string; path: string; alt?: string; credit?: string; license?: string }[];
+}
+
+/** Where user image paths resolve. Never the repo, and never the client's cwd. */
+const USER_IMAGE_ROOT = path.resolve(process.env.FORGE_USER_IMAGE_DIR ?? process.cwd());
+
+function readUserImages(input: DesignRequest['userImages']) {
+  if (!Array.isArray(input)) return [];
+  return input
+    .filter((x) => x && typeof x.slot === 'string' && typeof x.path === 'string')
+    .slice(0, 12)
+    .map((x) => ({
+      slot: x.slot,
+      path: x.path,
+      ...(typeof x.alt === 'string' ? { alt: x.alt } : {}),
+      ...(typeof x.credit === 'string' ? { credit: x.credit } : {}),
+      ...(typeof x.license === 'string' ? { license: x.license } : {}),
+    }));
 }
 
 function readImageOptions(input: DesignRequest['images']) {
@@ -348,6 +379,7 @@ async function startJob(opts: {
   decider: DeciderPreference;
   noCopy: boolean;
   images: ReturnType<typeof readImageOptions>;
+  userImages?: ReturnType<typeof readUserImages>;
 }): Promise<Job> {
   const parent = opts.parentSlug ? await getDesign(OUT_DIR, opts.parentSlug) : null;
   if (opts.parentSlug && !parent) throw new Error('parent design not found');
@@ -375,6 +407,7 @@ async function startJob(opts: {
         decider: opts.decider,
         noCopy: opts.noCopy,
         images: opts.images,
+        ...(opts.userImages?.length ? { userImages: opts.userImages, userImageRoot: USER_IMAGE_ROOT } : {}),
         outDir: OUT_DIR,
         slug,
         onProgress: (e) => emit(job, { ...e, at: Date.now() }),
@@ -487,7 +520,11 @@ async function startDirectionsJob(opts: DirectionsRequest): Promise<Job> {
 async function startFinalizeJob(
   session: DirectionSession,
   index: number,
-  opts: { finalCopy: boolean },
+  opts: {
+    finalCopy: boolean;
+    userImages?: { slot: string; path: string; alt?: string; credit?: string; license?: string }[];
+    userImageRoot?: string;
+  },
 ): Promise<Job> {
   const slug = await uniqueSlug(OUT_DIR, slugify(session.brief));
   const job: Job = {
@@ -512,6 +549,7 @@ async function startFinalizeJob(
       const { spec, write } = await finalizeSession(OUT_DIR, session, slug, {
         index,
         finalCopy: opts.finalCopy,
+        ...(opts.userImages?.length ? { userImages: opts.userImages, userImageRoot: opts.userImageRoot } : {}),
       });
 
       await recordDesign(OUT_DIR, {
@@ -764,10 +802,14 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
     const s = await loadSession(OUT_DIR, finRoute[1]!);
     if (!s) return json(res, 404, { error: 'session not found' }), true;
     try {
-      const body = (await readBody(req)) as { index?: number; finalCopy?: boolean };
+      const body = (await readBody(req)) as { index?: number; finalCopy?: boolean; userImages?: DesignRequest['userImages'] };
       const index = typeof body.index === 'number' ? body.index : (s.selectedIndex ?? 0);
       if (!s.directions[index]) return json(res, 400, { error: 'no such direction' }), true;
-      const job = await startFinalizeJob(s, index, { finalCopy: body.finalCopy !== false });
+      const job = await startFinalizeJob(s, index, {
+        finalCopy: body.finalCopy !== false,
+        userImages: readUserImages(body.userImages),
+        userImageRoot: USER_IMAGE_ROOT,
+      });
       json(res, 202, { jobId: job.id, slug: job.slug });
     } catch (err) {
       json(res, 400, { error: err instanceof Error ? err.message : 'bad request' });
@@ -818,6 +860,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
         decider: body.decider ?? 'auto',
         noCopy: body.copy === false,
         images: readImageOptions(body.images),
+        userImages: readUserImages(body.userImages),
       });
       json(res, 202, { jobId: job.id, slug: job.slug });
     } catch (err) {

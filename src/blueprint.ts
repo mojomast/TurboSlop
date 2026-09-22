@@ -320,6 +320,98 @@ export const BLUEPRINTS: Blueprint[] = [
 export const BLUEPRINT_BY_ID = Object.fromEntries(BLUEPRINTS.map((b) => [b.id, b]));
 
 /* ------------------------------------------------------------------ *
+ * Image slots
+ *
+ * An image request has to describe a PLACE, not just a count. The previous
+ * model generated N 256x256 square textures and then cycled them across
+ * whatever tiles happened to exist, which is how a page ends up with the same
+ * picture on a hero and a thumbnail.
+ *
+ * A slot says: what this picture is for, what shape it is, how it should be
+ * cropped, where it sits, and — the part that matters for honesty — whether a
+ * 256px generated asset can fill it without being stretched into something it
+ * is not.
+ * ------------------------------------------------------------------ */
+export type ImageRole = 'hero-texture' | 'hero-figure' | 'item' | 'figure';
+export type ImageCrop = 'cover' | 'contain' | 'detail';
+
+export interface BlueprintImageSlot {
+  id: string;
+  role: ImageRole;
+  /** CSS aspect ratio, e.g. '16 / 10'. */
+  aspect: string;
+  crop: ImageCrop;
+  /** Where it sits, for the prompt and for reporting. */
+  placement: string;
+  /**
+   * `native` means a 256px asset is used at or near its true size.
+   * `texture` means it is deliberately enlarged and must be drawn as an
+   * atmospheric layer — never presented as a photograph.
+   */
+  scale: 'native' | 'texture';
+  /** Approximate rendered width at 1440, used by the upscale check. */
+  desktopWidth: number;
+}
+
+/**
+ * The image places a blueprint actually renders.
+ *
+ * Deterministic from the blueprint, so image requests and the renderer agree by
+ * construction — the failure the baseline found (2 images generated, 0
+ * rendered) cannot recur.
+ */
+export function imageSlotsFor(bp: Blueprint): BlueprintImageSlot[] {
+  const slots: BlueprintImageSlot[] = [];
+
+  if (bp.imageSlots > 0) {
+    if (bp.hero === 'media') {
+      slots.push({
+        id: 'hero', role: 'hero-texture', aspect: '16 / 9', crop: 'cover',
+        placement: 'full-bleed behind the opening statement', scale: 'texture', desktopWidth: 1200,
+      });
+    } else if (bp.hero === 'editorial-figure') {
+      slots.push({
+        id: 'hero', role: 'hero-figure', aspect: '4 / 5', crop: 'cover',
+        placement: 'tall plate in the opening, beside the headline', scale: 'texture', desktopWidth: 620,
+      });
+    } else if (bp.hero === 'product-demo') {
+      slots.push({
+        id: 'hero', role: 'hero-figure', aspect: '16 / 10', crop: 'detail',
+        placement: 'inside the framed demonstration', scale: 'native', desktopWidth: 256,
+      });
+    }
+  }
+
+  const hasGallery = bp.sections.some((s) => s.module === 'gallery');
+  const hasItems = bp.sections.some((s) => s.module === 'items');
+  const wants = Math.max(0, bp.imageSlots - slots.length);
+
+  if (hasGallery) {
+    for (let i = 0; i < Math.min(wants, 5); i++) {
+      slots.push({
+        id: `gallery-${i + 1}`, role: 'figure', aspect: i % 5 === 0 ? '4 / 3' : '1 / 1', crop: 'cover',
+        placement: `mosaic tile ${i + 1}`, scale: 'native', desktopWidth: 256,
+      });
+    }
+  } else if (hasItems) {
+    for (let i = 0; i < Math.min(wants, 5); i++) {
+      slots.push({
+        id: `items-${i + 1}`, role: 'item', aspect: '1 / 1', crop: i === 0 ? 'detail' : 'cover',
+        placement: `catalogue tile ${i + 1}`, scale: 'native', desktopWidth: 256,
+      });
+    }
+  }
+
+  return slots;
+}
+
+/** Slots a specific rendered variant can actually use. Excludes none, so a
+ *  caller can always ask "what will this page show?". */
+export function renderedSlots(bp: Blueprint): BlueprintImageSlot[] {
+  return imageSlotsFor(bp);
+}
+
+/* ------------------------------------------------------------------ *
  * Validation and compatibility
  *
  * A blueprint that cannot honestly be filled from a brief's real information is

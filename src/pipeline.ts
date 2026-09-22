@@ -15,7 +15,7 @@ import { decideWithFallback, type DeciderPreference } from './decider.js';
 import { compose } from './compose.js';
 import { fallbackContent, validateContentForBlueprint } from './content.js';
 import { buildDirections, type Direction, type Distributions } from './directions.js';
-import { requiredModules } from './blueprint.js';
+import { imageSlotsFor, requiredModules } from './blueprint.js';
 import { writeContent } from './writer.js';
 import {
   IMAGE_PRESETS,
@@ -26,6 +26,7 @@ import {
   type ImagePreset,
 } from './images.js';
 import { renderHtml } from './render.js';
+import { ingestUserImages, type UserImageRequest } from './userassets.js';
 import { jevCost, writerCost } from './pricing.js';
 import type { DesignSpec } from './types.js';
 export type ProgressPhase = 'decide' | 'content' | 'images' | 'render' | 'write' | 'done' | 'error';
@@ -64,6 +65,10 @@ export interface RunOptions {
   /** Rendered direction set, when a caller wants the whole contact sheet. */
   onDirections?: (dirs: Direction[]) => void;
   noCopy: boolean;
+  /** Real brand/product images. Preferred over anything generated. */
+  userImages?: UserImageRequest[];
+  /** Directory the user image paths resolve against. */
+  userImageRoot?: string;
   images: ImageOptions;
   outDir: string;
   slug: string;
@@ -90,12 +95,19 @@ export function slugify(input: string): string {
   );
 }
 
-/** Descriptive alt text for generated decoration. */
-export function assetAlt(kind: string, spec: DesignSpec): string {
+/**
+ * Alt text for generated artwork.
+ *
+ * It says what the image IS — including calling an enlarged 256px asset a
+ * texture rather than letting it pass as a photograph — because alt text is
+ * where that honesty actually reaches a reader.
+ */
+export function assetAlt(kind: string, spec: DesignSpec, slot?: { role?: string; scale?: string }): string {
   const emotion = spec.tokens.emotion ?? 'studio';
+  const texture = slot?.scale === 'texture' ? 'enlarged texture' : 'study';
   const map: Record<string, string> = {
-    backdrop: `Abstract atmospheric backdrop in a ${emotion} register`,
-    surface: `Surface and texture study in a ${emotion} register`,
+    backdrop: `Abstract atmospheric ${texture} in a ${emotion} register`,
+    surface: `Surface ${texture} in a ${emotion} register`,
     motif: `Geometric motif suggesting ${emotion}`,
   };
   return map[kind] ?? 'Generated decorative artwork';
@@ -259,15 +271,24 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
         ...(opts.images.steps !== undefined ? { imageSteps: opts.images.steps } : {}),
         ...(opts.images.cfg !== undefined ? { imageCfg: opts.images.cfg } : {}),
       });
-      say('images', `Generating ${opts.images.count} image(s) — ${preset.label} (steps ${steps}, guidance ${cfg})`, {
-        index: 0,
-        total: opts.images.count,
-      });
+      /* Only the places this direction actually renders. Asking for six images
+         for a page with two slots is how the baseline ended up with artwork on
+         disk and 0 <img> elements in the page. */
+      const slots = chosenDir ? imageSlotsFor(chosenDir.blueprint) : [];
+      const wanted = slots.length ? Math.min(opts.images.count, slots.length) : opts.images.count;
+      say(
+        'images',
+        slots.length
+          ? `Filling ${wanted} of ${slots.length} slot(s): ${slots.slice(0, wanted).map((x) => x.id).join(', ')} — ${preset.label}`
+          : `Generating ${opts.images.count} image(s) — ${preset.label} (steps ${steps}, guidance ${cfg})`,
+        { index: 0, total: wanted },
+      );
       try {
         const run = await generateAssets(spec, {
-          count: opts.images.count,
+          count: wanted,
           steps,
           cfg,
+          ...(slots.length ? { slots } : {}),
           ...(opts.images.seed !== undefined ? { seed: opts.images.seed } : {}),
           outDir: opts.outDir,
           slug: opts.slug,
@@ -277,10 +298,17 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
         spec.assets = run.assets.map((a) => {
           const warn = promptBudgetWarning(a.prompt);
           if (warn) notes.push(warn);
+          const slot = slots.find((x) => x.id === a.slot);
           return {
             kind: a.kind,
+            slot: a.slot,
+            source: 'generated' as const,
             file: path.relative(opts.outDir, a.file).split(path.sep).join('/'),
-            alt: assetAlt(a.kind, spec),
+            alt: assetAlt(a.kind, spec, slot),
+            credit: '',
+            license: '',
+            nativeWidth: 256,
+            nativeHeight: 256,
             prompt: a.prompt,
             seed: a.seed,
             steps: a.steps,
@@ -294,7 +322,7 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
         spec.meta.imageCount = spec.assets.length;
         spec.meta.imageMs = run.totalMs;
         notes.push(
-          `images: ${spec.assets.length}/${opts.images.count} at ${preset.label} ` +
+          `images: ${spec.assets.length} filled of ${slots.length || opts.images.count} slot(s) at ${preset.label} ` +
             `(steps ${steps}, guidance ${cfg}) in ${run.totalMs}ms`,
         );
         say('images', `${spec.assets.length} image(s) in ${run.totalMs}ms`);
@@ -304,6 +332,25 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
         );
         say('images', 'Image generation failed — continuing without art');
       }
+    }
+  }
+
+  // ---- 3b. user-supplied images (always preferred over generated ones) ----
+  if (opts.userImages?.length) {
+    const slotIds = chosenDir ? imageSlotsFor(chosenDir.blueprint).map((x) => x.id) : [];
+    const ingested = await ingestUserImages({
+      outDir: opts.outDir,
+      slug: opts.slug,
+      root: opts.userImageRoot ?? process.cwd(),
+      requests: opts.userImages,
+      allowedSlots: slotIds,
+    });
+    notes.push(...ingested.notes);
+    if (ingested.assets.length) {
+      // A supplied image replaces whatever was generated for the same slot.
+      const taken = new Set(ingested.assets.map((a) => a.slot));
+      spec.assets = [...ingested.assets, ...spec.assets.filter((a) => !taken.has(a.slot))];
+      notes.push(`user images: ${ingested.assets.length} supplied (preferred over generated art)`);
     }
   }
 

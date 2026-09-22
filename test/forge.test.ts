@@ -781,7 +781,7 @@ await test('a product demonstration is wrapped in a real frame', async () => {
   const spec = await composed(BRIEFS[0]!);
   spec.blueprint = 'product-demo';
   spec.assets = [
-    { kind: 'backdrop', file: 'assets/demo/00-backdrop-1.png', alt: 'demo', prompt: '', seed: 1, steps: 4, cfg: 2, bytes: 100, seconds: 0 },
+    { kind: 'backdrop', slot: 'hero', source: 'generated', file: 'assets/demo/00-backdrop-1.png', alt: 'demo', credit: '', license: '', nativeWidth: 256, nativeHeight: 256, prompt: '', seed: 1, steps: 4, cfg: 2, bytes: 100, seconds: 0 },
   ];
   const html = renderHtml(spec);
   assert.ok(/frame--(browser|device|plain)/.test(html), 'the demonstration should be framed');
