@@ -109,8 +109,10 @@ Output of the pipeline above, at `256×256` artwork and all.
 **Every stage is optional.** No Jev key → a deterministic local decider. No LLM → canonical
 copy. No image service → CSS gradient fallbacks. The page always ships.
 
-See [`docs/JEV-RESEARCH.md`](docs/JEV-RESEARCH.md) for the decision-model research and
-[`docs/MODERN-CSS.md`](docs/MODERN-CSS.md) for the CSS feature set.
+See [`docs/JEV-RESEARCH.md`](docs/JEV-RESEARCH.md) for the decision-model research,
+[`docs/MODERN-CSS.md`](docs/MODERN-CSS.md) for the CSS feature set, and
+[`docs/LAYOUT-DIVERSITY.md`](docs/LAYOUT-DIVERSITY.md) for how page structure is chosen —
+including the measured baseline this work started from and the limitations that remain.
 
 ---
 
@@ -431,6 +433,9 @@ implementation — confirming valid CRCs and correct per-entry compression choic
 src/
   types.ts        zod schemas + inferred types — the contract
   catalog.ts      every value the machine may emit (the "deck")
+  blueprint.ts    the layout grammar: leads, variants, validation, fingerprints
+  blocks.ts       one renderer per module, per variant
+  directions.ts   ranked alternatives -> scored, diverse direction sets
   questions.ts    ALL Jev questions, criteria, thresholds, weights  ← review this
   jev.ts          typed transport for POST /v1/systemone
   decider.ts      live (Jev) + deterministic local decider, one interface
@@ -447,7 +452,8 @@ src/
 public/
   index.html      the control surface (no build step)
 deploy/           systemd unit, nginx config
-docs/             research, CSS reference, screenshots
+docs/             research, CSS reference, layout-diversity findings, screenshots
+baseline/         the measured before-state: 33 screenshots, specs, structure, timings
 ```
 
 ### Why so few dependencies?
