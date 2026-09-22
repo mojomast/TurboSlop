@@ -192,6 +192,7 @@ export function compose(brief: string, result: DecideResult): ComposeResult {
       writerLatencyMs: 0,
       writerInputTokens: 0,
       writerOutputTokens: 0,
+      writerReasoningTokens: 0,
       writerEstimatedUsd: 0,
       imageSteps: 0,
       imageCfg: 0,

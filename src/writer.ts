@@ -115,6 +115,8 @@ export interface WriteContentResult {
   latencyMs: number;
   inputTokens: number;
   outputTokens: number;
+  /** Output tokens spent thinking. Zero when thinking is disabled. */
+  reasoningTokens: number;
   /** Present when a writer was configured but failed — never silently ignored. */
   fallbackReason?: string;
 }
@@ -153,6 +155,7 @@ export async function writeContent(
     latencyMs: 0,
     inputTokens: 0,
     outputTokens: 0,
+    reasoningTokens: 0,
   };
 
   if (opts.offline) return base;
@@ -212,6 +215,7 @@ export async function writeContent(
       latencyMs: res.latencyMs,
       inputTokens: res.inputTokens,
       outputTokens: res.outputTokens,
+      reasoningTokens: res.reasoningTokens,
     };
   } catch (err) {
     const reason = err instanceof LlmError ? err.message : String(err);

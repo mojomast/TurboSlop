@@ -144,6 +144,8 @@ export const DesignSpec = z.object({
     writerLatencyMs: z.number().default(0),
     writerInputTokens: z.number().default(0),
     writerOutputTokens: z.number().default(0),
+    /** Of the output tokens, how many were spent thinking. */
+    writerReasoningTokens: z.number().default(0),
     /** Estimated USD for the writing half. Dominates the total. */
     writerEstimatedUsd: z.number().default(0),
     /** Image generation summary. */

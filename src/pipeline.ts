@@ -151,6 +151,7 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
   spec.meta.writerLatencyMs = written.latencyMs;
   spec.meta.writerInputTokens = written.inputTokens;
   spec.meta.writerOutputTokens = written.outputTokens;
+  spec.meta.writerReasoningTokens = written.reasoningTokens;
   spec.meta.writerEstimatedUsd = writerCost(written.inputTokens, written.outputTokens);
   if (written.fallbackReason) {
     notes.push(`writer fell back to the specimen — ${written.fallbackReason}`);

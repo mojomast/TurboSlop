@@ -378,7 +378,8 @@ Everything above is documented inline in [`.env.example`](.env.example).
 | `FORGE_DECIDER` | `auto` | `auto` \| `live` \| `local` |
 | `FORGE_LLM_PROVIDER` | `deepseek` | `deepseek` \| `openai` \| `openrouter` \| `groq` \| `together` \| `ollama` |
 | `FORGE_LLM_BASE_URL` / `FORGE_LLM_MODEL` / `FORGE_LLM_API_KEY` | — | point at **any** OpenAI-compatible endpoint |
-| `FORGE_LLM_EFFORT` | `low` | reasoning budget. **Measured near-no-op** on `deepseek-flash` — reasoning cannot be switched off; see [Saving time and money](#saving-time-and-money) |
+| `FORGE_LLM_EFFORT` | `low` | effort when thinking is **on**; see [Saving time and money](#saving-time-and-money) |
+| `FORGE_LLM_THINKING` | `disabled` | thinking mode toggle — **3× faster and 2.7× cheaper when off**, with no loss of output validity |
 | `FORGE_IMAGE_BASE_URL` | *unset* | **any** reachable HTTP service; unset = images off |
 | `FORGE_IMAGE_ALLOW_HOSTS` | — | extra hostnames beyond localhost (comma-separated) |
 | `FORGE_IMAGE_ALLOW_ANY_HOST` | — | `1` disables the allowlist (trusted networks only) |
@@ -460,45 +461,47 @@ argument.
 
 ### Saving time and money
 
-The writer dominates both. Measured on the default setup:
+The writer dominates both. Measured end-to-end through the real pipeline:
 
-| | Decide (Jev) | Write (deepseek-flash) |
-|---|---|---|
-| tokens | ~2,500 in, ~0 out | ~900 in, **~4,000 out** |
-| time | ~0.4 s | **~19–22 s** |
-| cost | $0.0001 | **~$0.0024** |
-
-The write is **output-token-bound** at roughly **210 output tokens/second**, and
-about **65% of those output tokens are reasoning** — the model thinks before it
-writes.
-
-**You cannot turn that reasoning off on `deepseek-flash`.** Measured over 3
-samples per setting:
-
-| setting | time | reasoning tokens | cost |
+| | Decide (Jev) | Write — thinking **off** | Write — thinking **on** |
 |---|---|---|---|
-| `low` | 18.9 s | 2,542 | $0.00245 |
-| `high` | 19.5 s | 2,777 | $0.00260 |
-| `none` | 18.9 s | 2,223 | $0.00228 |
-| *omitted* | 19.1 s | 2,842 | $0.00256 |
+| time | ~0.4 s | **~8.5 s** | ~20.4 s |
+| cost | $0.0001 | **~$0.0011** | ~$0.0026 |
 
-`effort` moves reasoning by ~9% and wall time by ~3% — within noise. Values like
-`none`, `off`, `0` and `{"reasoning":{"enabled":false}}` are **accepted and
-ignored**; the model reasons anyway.
+**Thinking mode is the lever, and it is off by default.** DeepSeek exposes it
+via `{"thinking": {"type": "enabled"|"disabled"}}`; TurboSlop sends `disabled`.
+Measured against the same content-model prompt, 2 samples each:
 
-**The real lever is the model.** The writer is provider-agnostic, so point it at a
-non-reasoning one and the verbatim output (~1,400 tokens) is all you pay for —
-at the measured 210 tok/s that is roughly **7 seconds and a third of the cost**:
+| setting | time | reasoning tokens | cost | JSON valid |
+|---|---|---|---|---|
+| default (thinking on, effort `high`) | 18.9 s | 2,455 | $0.00231 | 2/2 |
+| **`thinking: disabled`** | **7.4 s** | **0** | **$0.00092** | 2/2 |
+| `disabled` + `reasoning_effort: none` | **6.2 s** | 0 | **$0.00085** | 2/2 |
+| `reasoning_effort: high` | 20.9 s | 4,404 | $0.00336 | 2/2 |
+
+Roughly **3× faster and 2.7× cheaper**, with structured-output validity
+unaffected — the written output was actually slightly *larger* without
+reasoning.
+
+```bash
+FORGE_LLM_THINKING=enabled   # turn deliberation back on, for speed to spend
+FORGE_LLM_EFFORT=high        # effort when thinking is on
+```
+
+Two related details worth knowing:
+
+- **The field is `reasoning_effort`, not `effort`.** An earlier version of this
+  client sent `effort`, which the API *silently ignores* — so every effort
+  setting appeared identical, because they were all running at the default.
+- **Thinking mode ignores `temperature`.** The client therefore only sends
+  `temperature` when thinking is off, rather than implying control it lacks.
+
+The writer is also provider-agnostic, so a cheaper model is a config change:
 
 ```bash
 FORGE_LLM_PROVIDER=openai
 FORGE_LLM_MODEL=gpt-4o-mini
-FORGE_LLM_PRICE_IN=0.15
-FORGE_LLM_PRICE_OUT=0.60
 ```
-
-The other lever is the brief itself: a larger content model costs more to write.
-`content.ts` is where that shape is defined.
 
 ---
 

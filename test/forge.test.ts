@@ -12,7 +12,7 @@ import { Content, fallbackContent, emphasize, stripEmphasis, balanceEmphasis, re
 import { COMPOSITION_IDS } from '../src/compositions.js';
 import { EFFECT_KIT_IDS } from '../src/styles.js';
 import { writeContent } from '../src/writer.js';
-import { resolveLlm, describeLlm, extractJson, salvageTruncatedJson } from '../src/llm.js';
+import { resolveLlm, describeLlm, extractJson, salvageTruncatedJson, complete } from '../src/llm.js';
 import { renderHtml } from '../src/render.js';
 import { DesignSpec } from '../src/types.js';
 import { AXIS_CANDIDATE_IDS } from '../src/questions.js';
@@ -374,6 +374,84 @@ await test('extractJson falls back to salvage when parsing fails', () => {
   const out = extractJson(truncated) as Record<string, unknown>;
   assert.equal(out.brand, 'Versions');
   assert.deepEqual(out.nav, ['A', 'B']);
+});
+
+/* ---- reasoning controls: the parameter names are load-bearing ---- */
+const TEST_LLM = {
+  provider: 'deepseek',
+  baseUrl: 'https://api.deepseek.com',
+  model: 'deepseek-flash',
+  apiKey: 'test-key',
+  keySource: 'test',
+};
+
+/** Call `complete` with fetch mocked, and return the request body it sent. */
+async function captureRequestBody(extra: Record<string, unknown> = {}): Promise<Record<string, unknown>> {
+  const realFetch = globalThis.fetch;
+  let body: Record<string, unknown> = {};
+  globalThis.fetch = (async (_url: unknown, init?: RequestInit) => {
+    body = JSON.parse(String(init?.body)) as Record<string, unknown>;
+    return new Response(
+      JSON.stringify({
+        model: 'deepseek-flash',
+        choices: [{ message: { content: '{"brand":"X"}' } }],
+        usage: { prompt_tokens: 10, completion_tokens: 5, completion_tokens_details: { reasoning_tokens: 0 } },
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    );
+  }) as typeof fetch;
+  try {
+    await complete({ system: 's', user: 'u', json: true, config: TEST_LLM, ...extra });
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+  return body;
+}
+
+await test('reasoning controls use the documented field names', async () => {
+  const body = await captureRequestBody();
+  // `reasoning_effort` is the documented field. An earlier version sent
+  // `effort`, which the API ignores silently — every effort setting then looked
+  // identical because they were all running at the default.
+  assert.equal(body.reasoning_effort, 'low', 'must send reasoning_effort');
+  assert.ok(!('effort' in body), 'must NOT send "effort" — silently ignored');
+  assert.deepEqual(body.thinking, { type: 'disabled' }, 'thinking is off by default');
+});
+
+await test('thinking can be turned on, and temperature is only sent when it applies', async () => {
+  const off = await captureRequestBody({ temperature: 0.9 });
+  assert.equal(off.temperature, 0.9, 'temperature applies in non-thinking mode');
+
+  const on = await captureRequestBody({ thinking: 'enabled', temperature: 0.9 });
+  assert.deepEqual(on.thinking, { type: 'enabled' });
+  // Documented: thinking mode ignores temperature. Sending it would imply
+  // control we do not have.
+  assert.ok(!('temperature' in on), 'temperature must be omitted while thinking');
+});
+
+await test('reasoning tokens are reported, and are zero when thinking is off', async () => {
+  const body = await captureRequestBody();
+  assert.deepEqual(body.thinking, { type: 'disabled' });
+  // The mock reports 0 reasoning tokens, matching the measured behaviour.
+  const res = await (async () => {
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = (async () =>
+      new Response(
+        JSON.stringify({
+          model: 'deepseek-flash',
+          choices: [{ message: { content: '{}' } }],
+          usage: { prompt_tokens: 10, completion_tokens: 5, completion_tokens_details: { reasoning_tokens: 0 } },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      )) as typeof fetch;
+    try {
+      return await complete({ system: 's', user: 'u', config: TEST_LLM });
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  })();
+  assert.equal(res.reasoningTokens, 0);
+  assert.equal(res.thinking, 'disabled');
 });
 
 /* ================================================================== *

@@ -801,8 +801,11 @@
     const jevTok = m.inputTokens || 0;
     const wIn = m.writerInputTokens || 0;
     const wOut = m.writerOutputTokens || 0;
+    const wThink = m.writerReasoningTokens || 0;
     $('#m-tokens').textContent = `${fmtInt(jevTok + wIn + wOut)} total`;
-    $('#m-tokens-sub').textContent = `decide ${fmtInt(jevTok)} in · write ${fmtInt(wIn)} in / ${fmtInt(wOut)} out`;
+    $('#m-tokens-sub').textContent =
+      `decide ${fmtInt(jevTok)} in · write ${fmtInt(wIn)} in / ${fmtInt(wOut)} out` +
+      (wThink ? ` (${fmtInt(wThink)} thinking)` : '');
 
     $('#m-models').textContent = m.model || '—';
     $('#m-models-sub').textContent = m.writer === 'llm' ? `writer: ${m.writerModel}` : 'writer: specimen fallback';
