@@ -374,6 +374,72 @@ export function elementCss(): string {
   .hero-dateline__title { margin-block-end: var(--s-4); }
 
   /* ================================================================
+   * THREE SUBSTANTIALLY DIFFERENT HERO RECIPES
+   * These are not variations on the same opening: one is type-only at
+   * poster scale, one is a large figure beside a narrow column, one is a
+   * framed demonstration. A visitor's first screen should look like a
+   * different decision each time.
+   * ================================================================ */
+
+  /* --- poster: the headline IS the first screen --- */
+  .hero--poster { padding-block: clamp(3rem, 12vh, 9rem) var(--sec-pad); }
+  .hero-poster { display: grid; gap: var(--s-3); }
+  .hero-poster__label { letter-spacing: 0.18em; text-transform: uppercase; }
+  .hero-poster__title {
+    font-family: var(--font-display);
+    font-weight: var(--head-weight);
+    font-size: clamp(3rem, 15vw, 13rem);
+    line-height: var(--head-gap);
+    letter-spacing: var(--head-tracking);
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+    margin-block: var(--s-2) var(--s-6);
+  }
+  .hero-poster__foot { display: grid; gap: var(--s-4); align-items: end; }
+  @container (min-width: 52rem) {
+    .hero-poster__foot { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+  }
+  .hero-poster__foot .lede { max-inline-size: 44ch; }
+
+  /* --- editorial figure: a large plate and a narrow reading column --- */
+  .hero-figure { display: grid; gap: var(--s-6); align-items: center; }
+  @container (min-width: 56rem) {
+    .hero-figure { grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr); }
+  }
+  .hero-figure__plate { margin: 0; min-inline-size: 0; }
+  .hero-figure__img {
+    aspect-ratio: 4 / 5; inline-size: 100%; border-radius: var(--radius); overflow: clip;
+  }
+  .hero-figure__col { display: grid; gap: var(--s-4); align-content: center; }
+  .hero-figure__title {
+    font-family: var(--font-display);
+    font-weight: var(--head-weight);
+    font-size: var(--fs-h2);
+    line-height: 1.03;
+    letter-spacing: var(--track-tight);
+    text-wrap: balance;
+  }
+  .hero-figure__col .lede { max-inline-size: 34ch; }
+
+  /* --- product demonstration: a framed mockup beside the statement --- */
+  .hero--product-demo { padding-block: var(--sec-pad); }
+  .hero-demo { display: grid; gap: var(--s-6); align-items: center; }
+  @container (min-width: 60rem) {
+    .hero-demo { grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr); }
+  }
+  .hero-demo__lead { display: grid; gap: var(--s-4); align-content: center; }
+  .hero-demo__title {
+    font-family: var(--font-display);
+    font-weight: var(--head-weight);
+    font-size: var(--fs-h2);
+    line-height: 1.02;
+    letter-spacing: var(--track-tight);
+    text-wrap: balance;
+  }
+  .hero-demo__frame { min-inline-size: 0; }
+  .hero-demo__img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+
+  /* ================================================================
    * NAV VARIANTS
    * ================================================================ */
   .site-head--minimal nav { justify-content: flex-start; }

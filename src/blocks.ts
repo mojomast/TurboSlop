@@ -10,8 +10,11 @@
  * function that renders "the sections", only per-module renderers.
  */
 import { emphasize, stripEmphasis, type Content, type Item } from './content.js';
+import { renderFrame } from './frames.js';
+import { renderIcon, type IconName } from './icons.js';
 import type { Asset } from './types.js';
 import type { HeroVariant, ModuleId, NavVariant, FooterVariant, Blueprint } from './blueprint.js';
+import type { VisualBlueprint } from './visual.js';
 
 export interface BlockCtx {
   content: Content;
@@ -21,6 +24,18 @@ export interface BlockCtx {
   plateAssets: Asset[];
   backdrops: Asset[];
   blueprint: Blueprint;
+  /** How this direction is drawn. Optional so blocks stay usable in isolation. */
+  visual?: VisualBlueprint;
+}
+
+/**
+ * An icon, but only if this direction's visual blueprint allows it.
+ * Icons are meaning, not decoration: if the set does not include it, we draw
+ * nothing rather than reaching for a different family.
+ */
+function icon(ctx: BlockCtx, name: IconName): string {
+  if (!ctx.visual || !ctx.visual.icons.includes(name)) return '';
+  return renderIcon(name);
 }
 
 function esc(s: string): string {
@@ -348,7 +363,7 @@ ${c.features
   .join('\n')}
         </ul>`;
 
-function contactBlock(c: Content, variant: string): string {
+function contactBlock(c: Content, variant: string, ctx: BlockCtx): string {
   const k = contactOf(c);
 
   // No details in the brief: say so, rather than manufacturing an address and a
@@ -362,12 +377,12 @@ function contactBlock(c: Content, variant: string): string {
   const bits: string[] = [];
   if (k.email) {
     bits.push(
-      `        <p class="display"><a class="link-u" href="mailto:${esc(k.email)}">${esc(k.email)}</a></p>`,
+      `        <p class="display"><a class="link-u with-icon" href="mailto:${esc(k.email)}">${icon(ctx, 'mail')}${esc(k.email)}</a></p>`,
     );
   }
   const tags: string[] = [];
-  if (k.phone) tags.push(`          <a class="tag" href="${esc(telHref(k.phone))}">${esc(k.phone)}</a>`);
-  if (k.address) tags.push(`          <span class="tag">${esc(k.address)}</span>`);
+  if (k.phone) tags.push(`          <a class="tag with-icon" href="${esc(telHref(k.phone))}">${icon(ctx, 'phone')}${esc(k.phone)}</a>`);
+  if (k.address) tags.push(`          <span class="tag with-icon">${icon(ctx, 'map-pin')}${esc(k.address)}</span>`);
   if (k.handle) tags.push(`          <span class="tag">${esc(k.handle)}</span>`);
   if (k.url) {
     tags.push(
@@ -434,7 +449,7 @@ export function renderModule(module: ModuleId, variant: string, ctx: BlockCtx): 
     case 'faq':
       return faqBlock(c);
     case 'contact':
-      return contactBlock(c, variant);
+      return contactBlock(c, variant, ctx);
     default:
       return '';
   }
@@ -529,6 +544,72 @@ export function renderHero(variant: HeroVariant, ctx: BlockCtx): string {
       <p class="lede">${esc(c.lede)}</p>${ctas}
     </div>
   </section>`;
+
+    /* ---- edge-to-edge typographic poster --------------------------------
+       The headline IS the first screen. No image, no panel: the type carries
+       the whole opening, which is what makes it read differently from every
+       statement-beside-something hero. */
+    case 'poster':
+      return `  <section class="sec hero hero--poster" id="top">
+    <div class="wrap hero-poster">
+      <p class="eyebrow hero-poster__label">${esc(c.eyebrow)}</p>
+      <h1 class="display hero-poster__title">${emphasize(c.tagline)}</h1>
+      <div class="hero-poster__foot">
+        <p class="lede">${esc(c.lede)}</p>
+        ${ctas}
+      </div>
+    </div>
+  </section>`;
+
+    /* ---- editorial opening: a large figure and a narrow text column ---- */
+    case 'editorial-figure': {
+      const framed = ctx.visual?.frames?.[0];
+      const inner = plate(ctx.plateAssets, 0, 'hero-figure__img');
+      return `  <section class="sec hero hero--editorial-figure" id="top">
+    <div class="wrap hero-figure">
+      <div class="hero-figure__plate">${
+        framed && framed !== 'plain'
+          ? renderFrame({
+              kind: framed,
+              inner,
+              label: stripEmphasis(c.title).slice(0, 48),
+              seed: (ctx.visual?.seed ?? 0) + 11,
+              ratio: '4 / 5',
+            }).html
+          : inner
+      }</div>
+      <div class="hero-figure__col">
+        <p class="eyebrow">${esc(c.eyebrow)}</p>
+        <h1 class="display hero-figure__title">${emphasize(c.tagline)}</h1>
+        <p class="lede">${esc(c.lede)}</p>
+        ${ctas}
+      </div>
+    </div>
+  </section>`;
+    }
+
+    /* ---- product-led: a framed demonstration beside the statement ---- */
+    case 'product-demo': {
+      const framed = ctx.visual?.frames?.[0] ?? 'browser';
+      const demo = renderFrame({
+        kind: framed,
+        inner: plate(ctx.plateAssets, 0, 'hero-demo__img'),
+        label: stripEmphasis(c.brand).toLowerCase().replace(/\s+/g, '') + '.example',
+        seed: (ctx.visual?.seed ?? 0) + 7,
+        ratio: '16 / 10',
+      });
+      return `  <section class="sec hero hero--product-demo" id="top">
+    <div class="wrap hero-demo">
+      <div class="hero-demo__lead">
+        <p class="eyebrow">${esc(c.eyebrow)}</p>
+        <h1 class="display hero-demo__title">${emphasize(c.tagline)}</h1>
+        <p class="lede">${esc(c.lede)}</p>
+        ${ctas}
+      </div>
+      <div class="hero-demo__frame">${demo.html}</div>
+    </div>
+  </section>`;
+    }
 
     default:
       return `  <section class="sec sec--shaped hero hero--display" id="top">

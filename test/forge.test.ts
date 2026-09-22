@@ -696,6 +696,129 @@ await test('structural distance ignores copy, colour and class names', async () 
 });
 
 /* ================================================================== *
+ * The visual blueprint
+ * ================================================================== */
+await test('every visual blueprint in the whole space validates', async () => {
+  const { visualBlueprintFor, validateVisualBlueprint } = await import('../src/visual.js');
+  const { BLUEPRINTS } = await import('../src/blueprint.js');
+  const { TYPEFACES, EMOTIONS } = await import('../src/catalog.js');
+  const issues: string[] = [];
+  let n = 0;
+  for (const bp of BLUEPRINTS) {
+    for (const t of TYPEFACES) {
+      for (const e of EMOTIONS) {
+        for (const d of ['quiet', 'balanced', 'dense']) {
+          const vb = visualBlueprintFor({
+            blueprint: bp, typefaceId: t.id, emotion: e.id, density: d,
+            seed: 7, accent: '#7c5cff', ground: '#ffffff',
+          });
+          n++;
+          for (const i of validateVisualBlueprint(vb)) issues.push(`${bp.id}/${t.id}/${e.id}/${d}: ${i.rule} — ${i.detail}`);
+        }
+      }
+    }
+  }
+  assert.ok(n > 4000, `expected the full space, only ${n} combinations`);
+  assert.deepEqual(issues.slice(0, 8), [], `${issues.length} invalid visual blueprints`);
+});
+
+await test('the visual blueprint is deterministic and genuinely seeded', async () => {
+  const { visualBlueprintFor } = await import('../src/visual.js');
+  const { BLUEPRINT_BY_ID } = await import('../src/blueprint.js');
+  const bp = BLUEPRINT_BY_ID['catalogue-gallery']!;
+  const at = (seed: number) =>
+    visualBlueprintFor({ blueprint: bp, typefaceId: 'grotesk-tight', emotion: 'serenity', density: 'balanced', seed, accent: '#5f7263', ground: '#f7f4ee' });
+  assert.deepEqual(at(42), at(42), 'the same seed must give the same drawing');
+  const a = JSON.stringify(at(1).sections);
+  const b = JSON.stringify(at(9999).sections);
+  assert.notEqual(a, b, 'a different seed must move at least the section recipes');
+});
+
+await test('typographic recipes are recipes, not just font names', async () => {
+  const { typoRecipeFor, HEADLINE_CONSTRUCTIONS, SECTION_BLEEDS } = await import('../src/visual.js');
+  const voices = ['grotesk-tight', 'editorial-serif', 'geometric-open', 'mono-technical', 'humanist-light'];
+  const constructions = new Set(voices.map((v) => typoRecipeFor(v, 'statement', 'balanced').construction));
+  assert.ok(constructions.size >= 3, `expected several headline constructions, got ${[...constructions].join(', ')}`);
+  for (const v of voices) {
+    const t = typoRecipeFor(v, 'statement', 'balanced');
+    assert.ok(HEADLINE_CONSTRUCTIONS.includes(t.construction));
+    assert.ok(t.measure.endsWith('ch'), `${v} has no reading measure`);
+    assert.ok(['start', 'center'].includes(t.alignment));
+    assert.ok(t.scale > 0.6 && t.scale < 1.6, `${v} scale out of range: ${t.scale}`);
+  }
+  // Density changes the measure, never the construction.
+  const dense = typoRecipeFor('grotesk-tight', 'statement', 'dense');
+  const quiet = typoRecipeFor('grotesk-tight', 'statement', 'quiet');
+  assert.equal(dense.construction, quiet.construction, 'density must not change the construction');
+  assert.notEqual(dense.measure, quiet.measure, 'density must change the measure');
+  // Outline headlines are only assigned where there is room for them.
+  assert.equal(typoRecipeFor('grotesk-tight', 'data', 'balanced').fill, true, 'a data page must not get an outline headline');
+  void SECTION_BLEEDS;
+});
+
+await test('the three new hero recipes render as genuinely different markup', async () => {
+  const cases: [string, string][] = [
+    ['statement-display', 'poster'],
+    ['story-editorial', 'editorial-figure'],
+    ['product-demo', 'product-demo'],
+  ];
+  const marks: string[] = [];
+  for (const [bpId, hero] of cases) {
+    const spec = await composed(BRIEFS[0]!);
+    spec.blueprint = bpId;
+    const html = renderHtml(spec);
+    assert.ok(html.includes(`data-hero="${hero}"`), `${bpId} should use the ${hero} hero`);
+    assert.ok(html.includes(`hero--${hero}`), `${bpId} should render the ${hero} hero class`);
+    marks.push(`${hero}:${html.includes('class="display hero-poster__title"')}|${html.includes('class="hero-figure__col"')}|${html.includes('class="hero-demo__frame"')}`);
+  }
+  // poster uses none of the other two, and so on
+  assert.ok(marks[0]!.includes('poster:true|false|false'), marks[0]);
+  assert.ok(marks[1]!.includes('editorial-figure:false|true|false'), marks[1]);
+  assert.ok(marks[2]!.includes('product-demo:false|false|true'), marks[2]);
+});
+
+await test('a product demonstration is wrapped in a real frame', async () => {
+  const spec = await composed(BRIEFS[0]!);
+  spec.blueprint = 'product-demo';
+  spec.assets = [
+    { kind: 'backdrop', file: 'assets/demo/00-backdrop-1.png', alt: 'demo', prompt: '', seed: 1, steps: 4, cfg: 2, bytes: 100, seconds: 0 },
+  ];
+  const html = renderHtml(spec);
+  assert.ok(/frame--(browser|device|plain)/.test(html), 'the demonstration should be framed');
+  assert.ok(html.includes('use this') === false, 'no control-surface chrome may leak into the page');
+});
+
+await test('art-directed treatments degrade rather than hide text', async () => {
+  const { IMAGE_TREATMENTS } = await import('../src/visual.js');
+  assert.deepEqual(
+    [...IMAGE_TREATMENTS],
+    ['plain', 'cutout', 'duotone', 'shaped', 'layered', 'textwrap'],
+  );
+  // Whatever the treatment, the headline must remain filled and readable when
+  // the user asks for more contrast.
+  const spec = await composed(BRIEFS[0]!);
+  spec.blueprint = 'image-mosaic';
+  const html = renderHtml(spec);
+  assert.ok(/prefers-contrast: more/.test(html), 'contrast fallback missing');
+  assert.ok(/data-treatment="/.test(html), 'the treatment must be declared on the page');
+});
+
+await test('icons are used sparingly and never as the only carrier of meaning', async () => {
+  const spec = await composed(BRIEFS[0]!);
+  spec.blueprint = 'catalogue-gallery';
+  // The specimen carries no contact details by design, so give it a route to
+  // icon. Icons annotate real routes; they are never invented for decoration.
+  spec.content = Content.parse({ ...spec.content!, contact: { email: 'studio@kiln.example', phone: '+31 10 000 0000' } });
+  const html = renderHtml(spec);
+  const icons = [...html.matchAll(/class="icon"/g)].length;
+  assert.ok(icons > 0, 'a contact section should use icons for its routes');
+  assert.ok(icons <= 6, `at most a small consistent set, found ${icons}`);
+  // Every icon carries no title: decorative, with the text doing the work.
+  const svgs = [...html.matchAll(/<svg[^>]*class="icon"[^>]*>/g)].map((m) => m[0]!);
+  for (const s of svgs) assert.ok(/aria-hidden="true"/.test(s), `icon not hidden from AT: ${s.slice(0, 80)}`);
+});
+
+/* ================================================================== *
  * Live halves — auto-skip without credentials
  * ================================================================== */
 const llm = resolveLlm();

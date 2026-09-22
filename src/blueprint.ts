@@ -65,6 +65,10 @@ export const HERO_VARIANTS = [
   'media', // image-led opening
   'index', // the opening IS an index/list of what is below
   'dateline', // a date/venue/programme strip leads
+  /* ---- the three substantially different recipes ---- */
+  'poster', // edge-to-edge typographic poster: the headline is the whole screen
+  'editorial-figure', // a large figure with a narrow text column beside it
+  'product-demo', // a framed device/browser demonstration, statement alongside
 ] as const;
 export type HeroVariant = (typeof HERO_VARIANTS)[number];
 
@@ -133,7 +137,7 @@ export const BLUEPRINTS: Blueprint[] = [
     label: 'Statement, full display',
     family: 'statement',
     suits: 'A confident position stated at maximum scale, then evidence beneath.',
-    lead: 'statement', hero: 'display', nav: 'bar', footer: 'masthead',
+    lead: 'statement', hero: 'poster', nav: 'bar', footer: 'masthead',
     sections: [s('about', 'columns'), s('features', 'rows'), s('quote', 'large'), s('items', 'editorial-index'), s('contact', 'email')],
     grid: { columns: 12, maxWidth: '96rem' }, rhythm: 'dramatic', imageSlots: 0,
   },
@@ -162,7 +166,7 @@ export const BLUEPRINTS: Blueprint[] = [
     label: 'Product demonstration first',
     family: 'product',
     suits: 'Show the thing working before explaining it; the product is the argument.',
-    lead: 'product', hero: 'split', nav: 'bar-cta', footer: 'cta-band',
+    lead: 'product', hero: 'product-demo', nav: 'bar-cta', footer: 'cta-band',
     sections: [s('items', 'bento'), s('features', 'cards'), s('stats', 'row'), s('faq', 'accordion'), s('contact', 'form')],
     grid: { columns: 12, maxWidth: '88rem' }, rhythm: 'even', imageSlots: 4,
   },
@@ -220,7 +224,7 @@ export const BLUEPRINTS: Blueprint[] = [
     label: 'Editorial feature',
     family: 'story',
     suits: 'Long-form writing with photography; the reading experience is the product.',
-    lead: 'story', hero: 'compact', nav: 'inline-links', footer: 'colophon',
+    lead: 'story', hero: 'editorial-figure', nav: 'inline-links', footer: 'colophon',
     sections: [s('about', 'columns'), s('quote', 'band'), s('gallery', 'mosaic'), s('items', 'editorial-index'), s('contact', 'email')],
     grid: { columns: 12, maxWidth: '78rem' }, rhythm: 'generous', imageSlots: 4,
   },
@@ -372,6 +376,12 @@ export function validateBlueprint(bp: Blueprint): BlueprintIssue[] {
   const imageModules = modules.filter((m) => m === 'gallery' || m === 'items').length;
   if (bp.imageSlots > 0 && imageModules === 0) add('images-unused', 'imageSlots > 0 but no module can show an image');
   if (bp.imageSlots === 0 && bp.hero === 'media') add('media-hero', 'a media hero needs at least one image slot');
+  if (bp.imageSlots === 0 && bp.hero === 'editorial-figure') {
+    add('figure-hero', 'an editorial-figure hero needs at least one image slot');
+  }
+  if (bp.imageSlots === 0 && bp.hero === 'product-demo') {
+    add('demo-hero', 'a product-demo hero needs a frame, which needs an image slot');
+  }
 
   // Chrome coherence.
   if (bp.nav === 'none' && bp.sections.length > 4) add('nav-none', 'four or more sections need navigation');

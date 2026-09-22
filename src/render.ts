@@ -31,6 +31,13 @@ import { atmosphereFor, EFFECTS_BY_ID, LAYOUT_BY_ID, MOTION_BY_ID, PALETTE_BY_ID
 import type { DensityId } from './catalog.js';
 import { stripEmphasis } from './content.js';
 import { buildStylesheet } from './layout.js';
+import {
+  motifFor,
+  validateVisualBlueprint,
+  visualBlueprintFor,
+  visualCss,
+  type VisualBlueprint,
+} from './visual.js';
 import type { DesignSpec } from './types.js';
 
 function esc(s: string): string {
@@ -40,6 +47,32 @@ function esc(s: string): string {
 }
 
 const FALLBACK_BLUEPRINT: Blueprint = BLUEPRINT_BY_ID['statement-display']!;
+
+/** How coarse the motif field is, per density decision. */
+const MOTIF_DENSITY: Record<string, number> = { quiet: 0.22, balanced: 0.5, dense: 0.85 };
+
+/**
+ * The visual blueprint for a spec.
+ *
+ * Exported so the pipeline can materialise the same motif the page will draw —
+ * one derivation, not two that can drift.
+ */
+export function visualForSpec(spec: DesignSpec): VisualBlueprint {
+  const palette = PALETTE_BY_ID[spec.tokens.palette ?? ''];
+  const blueprint = BLUEPRINT_BY_ID[spec.blueprint] ?? FALLBACK_BLUEPRINT;
+  if (!palette) throw new Error(`cannot derive a visual blueprint: unknown palette "${spec.tokens.palette}"`);
+  return visualBlueprintFor({
+    blueprint,
+    typefaceId: spec.tokens.typography ?? 'grotesk-tight',
+    emotion: spec.tokens.emotion ?? 'other',
+    density: spec.tokens.density ?? 'balanced',
+    // A spec built by the CLI or the tests may carry seed 0; use a stable
+    // non-zero value so the derivation is still a real hash.
+    seed: spec.seed || 1,
+    accent: palette.accent,
+    ground: palette.bg,
+  });
+}
 
 export interface RenderOptions {
   /**
@@ -95,6 +128,21 @@ export function navTargetsFor(blueprint: Blueprint, spec: DesignSpec): NavTarget
   return out;
 }
 
+/**
+ * Which section carries the motif.
+ *
+ * One coordinated motif per direction, placed once — a motif on every section
+ * is a texture, not a composition. The rules pick the section with the most
+ * room for it, deterministically.
+ */
+export function motifRoleOn(module: ModuleId, index: number, vb: VisualBlueprint): boolean {
+  if (vb.motif.role === 'none') return false;
+  const preferred = vb.motif.role === 'band' || vb.motif.role === 'rule' ? 'quote' : 'gallery';
+  if (module === preferred) return true;
+  // Fall back to the section after the first, so there is usually something.
+  return index === 1 && ['items', 'features', 'stats', 'about'].includes(module);
+}
+
 export function renderHtml(spec: DesignSpec, opts: RenderOptions = {}): string {
   const palette = PALETTE_BY_ID[spec.tokens.palette ?? ''];
   const type = TYPE_BY_ID[spec.tokens.typography ?? ''];
@@ -127,6 +175,21 @@ export function renderHtml(spec: DesignSpec, opts: RenderOptions = {}): string {
   });
   const atm = atmosphereFor(emotion);
 
+  /* The visual blueprint: hero recipe, typographic recipe, section recipes,
+     motif, image treatment, frames and icons. Validated, then emitted as data
+     attributes plus one CSS block. */
+  const vb = visualForSpec(spec);
+  const visualIssues = validateVisualBlueprint(vb);
+  if (visualIssues.length) {
+    throw new Error(
+      `Render failed: the visual blueprint is invalid — ${visualIssues.map((i) => `${i.rule}: ${i.detail}`).join('; ')}`,
+    );
+  }
+  const motif = vb.motif.role === 'none' ? null : motifFor(vb, palette.bg, MOTIF_DENSITY[density] ?? 0.5);
+  const extraCss = [visualCss({ vb, motif, fg: palette.fg, bg: palette.bg }), opts.extraCss ?? '']
+    .filter(Boolean)
+    .join('\n');
+
   const assets = spec.assets ?? [];
   const ctx: BlockCtx = {
     content: c,
@@ -136,6 +199,7 @@ export function renderHtml(spec: DesignSpec, opts: RenderOptions = {}): string {
     plateAssets: assets.filter((a) => a.kind !== 'backdrop'),
     backdrops: assets.filter((a) => a.kind === 'backdrop'),
     blueprint,
+    visual: vb,
   };
 
   const instanceIds = sectionInstanceIds(blueprint);
@@ -154,9 +218,19 @@ export function renderHtml(spec: DesignSpec, opts: RenderOptions = {}): string {
         heading?.note ?? '',
         id,
       );
+      /* Per-section drawing instructions. This is what makes the SAME module
+         look different on different pages: bleed, alignment, whitespace and the
+         share given to imagery all vary here rather than in the renderer. */
+      const r = vb.sections[sec.module];
+      const draw = r
+        ? ` data-bleed="${esc(r.bleed)}" data-align="${esc(r.align)}" data-whitespace="${esc(
+            r.whitespace,
+          )}" data-image-ratio="${r.imageRatio}"`
+        : '';
+      const motifAttr = motif && motifRoleOn(sec.module, i, vb) ? ` data-motif="${esc(vb.motif.role)}"` : '';
       return `  <section class="sec" id="${esc(id)}" data-block="${esc(sec.module)}:${esc(
         sec.variant,
-      )}" aria-labelledby="${esc(id)}-title">
+      )}"${draw}${motifAttr} aria-labelledby="${esc(id)}-title">
     <div class="wrap">
 ${head}
 ${renderModule(sec.module, sec.variant, ctx)}
@@ -178,7 +252,11 @@ ${renderModule(sec.module, sec.variant, ctx)}
   return `<!DOCTYPE html>
 <html lang="en" data-emotion="${esc(emotion)}" data-blueprint="${esc(blueprint.id)}" data-lead="${esc(
     blueprint.lead,
-  )}" data-effects="${esc(effects)}" data-palette="${esc(palette.id)}"${
+  )}" data-effects="${esc(effects)}" data-palette="${esc(palette.id)}" data-hero="${esc(
+    blueprint.hero,
+  )}" data-construction="${esc(vb.typo.construction)}" data-label="${esc(
+    vb.typo.labelStyle,
+  )}" data-treatment="${esc(vb.imageTreatment)}" data-motif-family="${esc(vb.motif.family)}"${
     opts.preview ? ' data-preview="1"' : ''
   }>
 <head>
@@ -198,7 +276,7 @@ ${renderModule(sec.module, sec.variant, ctx)}
 <meta name="forge-composite" content="${spec.composite.normalized.toFixed(3)}">
 <style>
 ${css}
-${opts.extraCss ?? ''}
+${extraCss}
 </style>
 </head>
 <body>

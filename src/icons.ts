@@ -104,7 +104,10 @@ function esc(s: string): string {
  * Render one standalone `<svg>`. Without a `title` the icon is decorative and
  * hidden from assistive tech; with one it becomes a labelled `role="img"`.
  */
-export function renderIcon(name: IconName, opts: { size?: number; title?: string } = {}): string {
+export function renderIcon(
+  name: IconName,
+  opts: { size?: number; title?: string; className?: string } = {},
+): string {
   const body = ICONS[name];
   if (typeof body !== 'string') {
     throw new Error(`Unknown icon: ${String(name)}. Expected one of ${ICON_NAMES.join(', ')}.`);
@@ -121,8 +124,13 @@ export function renderIcon(name: IconName, opts: { size?: number; title?: string
     ? ` role="img"><title>${esc(title)}</title>`
     : ' aria-hidden="true">';
 
+  /* A class is emitted by default so the host stylesheet can size and align the
+     icon without the caller having to wrap it. `className: ''` opts out. */
+  const cls = opts.className === undefined ? 'icon' : opts.className;
+  const classAttr = cls ? ` class="${esc(cls)}"` : '';
+
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ICON_GRID} ${ICON_GRID}"${dims}` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ICON_GRID} ${ICON_GRID}"${classAttr}${dims}` +
     ` fill="none" stroke="currentColor" stroke-width="${ICON_STROKE}" stroke-linecap="round"` +
     ` stroke-linejoin="round" focusable="false"${a11y}${body}</svg>`
   );
