@@ -1,5 +1,5 @@
 /**
- * turboslop — deciders.
+ * TurboSlop — deciders.
  *
  * Two interchangeable implementations of the same interface:
  *
@@ -17,7 +17,7 @@
  */
 import { callJevWithRetry, hasApiKey, JevError } from './jev.js';
 import { buildQuestions, type QuestionSet } from './questions.js';
-import { CANDIDATES, DENSITY_LEVELS, EMOTIONS, LAYOUTS, MOTIONS, PALETTES, TYPEFACES } from './catalog.js';
+import { CANDIDATES, COMPOSITIONS, DENSITY_LEVELS, EFFECT_KITS, EMOTIONS, LAYOUTS, MOTIONS, PALETTES, TYPEFACES } from './catalog.js';
 import type { JevResponse } from './types.js';
 
 export type DeciderKind = 'live' | 'local';
@@ -78,17 +78,20 @@ function tokens(text: string): string[] {
 }
 
 /** Emotion -> supporting axis affinities. Keeps the stand-in internally coherent. */
-const AFFINITY: Record<string, { palette: string[]; typography: string[]; layout: string[]; motion: string[]; density: number }> = {
-  awe:        { palette: ['void-violet', 'hazard-mono', 'noir-lime'], typography: ['grotesk-tight', 'condensed-heavy'], layout: ['full-bleed-cinematic'], motion: ['glacial'], density: 0 },
-  serenity:   { palette: ['sage-mist', 'aurora-glass'], typography: ['humanist-light', 'geometric-open'], layout: ['centered-measure', 'editorial-asymmetric'], motion: ['breath'], density: 0 },
-  delight:    { palette: ['candy-pop', 'aurora-glass'], typography: ['rounded-friendly', 'geometric-open'], layout: ['modular-cards'], motion: ['springy-playful'], density: 1 },
-  tension:    { palette: ['hazard-mono', 'noir-lime'], typography: ['mono-technical', 'condensed-heavy'], layout: ['rigid-grid', 'editorial-asymmetric'], motion: ['snap-mechanical'], density: 2 },
-  nostalgia:  { palette: ['paper-ink', 'bone-clay'], typography: ['editorial-serif'], layout: ['centered-measure', 'editorial-asymmetric'], motion: ['glacial'], density: 1 },
-  mystery:    { palette: ['void-violet', 'hazard-mono'], typography: ['editorial-serif', 'mono-technical'], layout: ['editorial-asymmetric', 'full-bleed-cinematic'], motion: ['glacial', 'breath'], density: 1 },
-  trust:      { palette: ['steel-signal', 'sage-mist'], typography: ['geometric-open', 'grotesk-tight'], layout: ['rigid-grid'], motion: ['snap-mechanical', 'buoyant'], density: 2 },
-  energy:     { palette: ['electric-acid', 'noir-lime'], typography: ['condensed-heavy', 'grotesk-tight'], layout: ['full-bleed-cinematic', 'modular-cards'], motion: ['kinetic'], density: 2 },
-  intimacy:   { palette: ['bone-clay', 'paper-ink'], typography: ['editorial-serif', 'humanist-light'], layout: ['centered-measure'], motion: ['breath', 'buoyant'], density: 0 },
-  optimism:   { palette: ['aurora-glass', 'candy-pop'], typography: ['geometric-open', 'rounded-friendly'], layout: ['modular-cards', 'editorial-asymmetric'], motion: ['buoyant'], density: 1 },
+const AFFINITY: Record<
+  string,
+  { composition: string[]; effects: string[]; palette: string[]; typography: string[]; layout: string[]; motion: string[]; density: number }
+> = {
+  awe:        { composition: ['manifesto', 'gallery-first'], effects: ['cinematic-depth', 'flat-plain'], palette: ['arctic-cyan', 'hazard-mono', 'noir-lime'], typography: ['grotesk-cold', 'barlow-velocity'], layout: ['full-bleed-cinematic'], motion: ['glacial'], density: 0 },
+  serenity:   { composition: ['split-hero', 'classic-stack'], effects: ['soft-material', 'flat-plain', 'organic-mesh'], palette: ['sage-mist', 'aurora-glass'], typography: ['fraunces-soft', 'outfit-aurora'], layout: ['centered-measure', 'editorial-asymmetric'], motion: ['breath'], density: 0 },
+  delight:    { composition: ['bento-grid', 'gallery-first'], effects: ['brutalist-block', 'soft-material', 'luminous-glass'], palette: ['candy-pop', 'aurora-glass'], typography: ['fredoka-round', 'outfit-aurora'], layout: ['modular-cards'], motion: ['springy-playful'], density: 1 },
+  tension:    { composition: ['data-first', 'classic-stack'], effects: ['technical-drawing', 'flat-plain', 'brutalist-block'], palette: ['hazard-mono', 'noir-lime'], typography: ['oswald-mono', 'barlow-velocity'], layout: ['rigid-grid', 'editorial-asymmetric'], motion: ['snap-mechanical'], density: 2 },
+  nostalgia:  { composition: ['editorial-lede', 'manifesto'], effects: ['tactile-paper', 'hairline-editorial'], palette: ['paper-ink', 'bone-terracotta'], typography: ['playfair-editorial'], layout: ['centered-measure', 'editorial-asymmetric'], motion: ['glacial'], density: 1 },
+  mystery:    { composition: ['manifesto', 'editorial-lede'], effects: ['cinematic-depth', 'flat-plain'], palette: ['void-violet', 'hazard-mono'], typography: ['instrument-contrast', 'playfair-editorial'], layout: ['editorial-asymmetric', 'full-bleed-cinematic'], motion: ['glacial', 'breath'], density: 1 },
+  trust:      { composition: ['data-first', 'classic-stack'], effects: ['hairline-editorial', 'flat-plain'], palette: ['steel-signal', 'sage-mist'], typography: ['inter-institutional', 'grotesk-cold'], layout: ['rigid-grid'], motion: ['snap-mechanical', 'buoyant'], density: 2 },
+  energy:     { composition: ['gallery-first', 'bento-grid'], effects: ['brutalist-block', 'luminous-glass'], palette: ['electric-acid', 'noir-lime'], typography: ['barlow-velocity', 'grotesk-cold'], layout: ['full-bleed-cinematic', 'modular-cards'], motion: ['kinetic'], density: 2 },
+  intimacy:   { composition: ['editorial-lede', 'manifesto'], effects: ['tactile-paper', 'soft-material'], palette: ['bone-terracotta', 'paper-ink'], typography: ['newsreader-letter', 'playfair-editorial'], layout: ['centered-measure'], motion: ['breath', 'buoyant'], density: 0 },
+  optimism:   { composition: ['bento-grid', 'split-hero'], effects: ['luminous-glass', 'soft-material', 'organic-mesh'], palette: ['aurora-glass', 'candy-pop'], typography: ['outfit-aurora', 'fredoka-round'], layout: ['modular-cards', 'editorial-asymmetric'], motion: ['buoyant'], density: 1 },
 };
 
 function scoreCandidate(id: string, label: string, description: string, briefTokens: string[], boost: string[]): number {
@@ -125,6 +128,8 @@ function localDecide(brief: string): JevResponse {
 
   const choiceAxes = [
     { axis: 'emotion', candidates: EMOTIONS },
+    { axis: 'composition', candidates: COMPOSITIONS },
+    { axis: 'effects', candidates: EFFECT_KITS },
     { axis: 'palette', candidates: PALETTES },
     { axis: 'typography', candidates: TYPEFACES },
     { axis: 'layout', candidates: LAYOUTS },
@@ -151,7 +156,7 @@ function localDecide(brief: string): JevResponse {
       };
       continue;
     }
-    const boost = (aff ? (aff[axis as 'palette' | 'typography' | 'layout' | 'motion'] as string[]) : []) ?? [];
+    const boost = (aff ? (aff[axis as 'composition' | 'effects' | 'palette' | 'typography' | 'layout' | 'motion'] as string[]) : []) ?? [];
     const scores = candidates.map((c) => scoreCandidate(c.id, c.label, c.description, briefTokens, boost));
     const ids = candidates.map((c) => c.id);
     const result = toProbabilities(scores, ids);

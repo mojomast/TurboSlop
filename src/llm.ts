@@ -1,5 +1,5 @@
 /**
- * turboslop — LLM transport (the GENERATION half of the system).
+ * TurboSlop — LLM transport (the GENERATION half of the system).
  *
  *     Jev decides.  The LLM writes.
  *
@@ -179,8 +179,6 @@ export async function complete(opts: CompleteOptions): Promise<CompletionResult>
       signal: controller.signal,
     });
 
-    const latencyMs = Date.now() - started;
-
     if (!res.ok) {
       const body = await res.text().catch(() => '');
       const retryable = res.status === 429 || res.status >= 500;
@@ -192,6 +190,11 @@ export async function complete(opts: CompleteOptions): Promise<CompletionResult>
       choices?: { message?: { content?: string; reasoning_content?: string }; finish_reason?: string }[];
       usage?: { prompt_tokens?: number; completion_tokens?: number; completion_tokens_details?: { reasoning_tokens?: number } };
     };
+
+    // Measured AFTER the body is consumed. `fetch` resolves on response headers,
+    // so timing it there reports time-to-first-byte and badly understates a
+    // model that streams a long answer.
+    const latencyMs = Date.now() - started;
 
     const choice = json.choices?.[0];
     const text = choice?.message?.content ?? '';
@@ -243,17 +246,95 @@ export async function completeWithRetry(opts: CompleteOptions, attempts = 3): Pr
 }
 
 /**
- * Tolerant JSON extraction. Models occasionally wrap JSON in prose or fences
- * even when asked not to, so we take the outermost object.
+ * Tolerant JSON extraction.
+ *
+ * Models wrap JSON in prose or fences; reasoning models additionally truncate
+ * when they run out of output budget. Throwing away an otherwise good
+ * generation because the last array element is incomplete is the worst trade,
+ * so we salvage what is there.
  */
 export function extractJson(raw: string): unknown {
   const cleaned = raw.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+
+  // 1. As-is.
   try {
     return JSON.parse(cleaned);
   } catch {
-    const start = cleaned.indexOf('{');
-    const end = cleaned.lastIndexOf('}');
-    if (start >= 0 && end > start) return JSON.parse(cleaned.slice(start, end + 1));
-    throw new LlmError(`LLM did not return parseable JSON. Got: ${cleaned.slice(0, 200)}`);
+    /* keep trying */
   }
+
+  // 2. Outermost object, in case of surrounding prose.
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start >= 0 && end > start) {
+    try {
+      return JSON.parse(cleaned.slice(start, end + 1));
+    } catch {
+      /* keep trying */
+    }
+  }
+
+  // 3. Truncated: cut back to the last complete element and close what is open.
+  const salvaged = salvageTruncatedJson(cleaned);
+  if (salvaged) {
+    try {
+      return JSON.parse(salvaged);
+    } catch {
+      /* give up */
+    }
+  }
+
+  throw new LlmError(`LLM did not return parseable JSON. Got: ${cleaned.slice(0, 200)}`);
+}
+
+/**
+ * Close every bracket left open in `s`, or return null if it cannot be done
+ * safely (for example an unterminated string).
+ */
+function closeOpen(s: string): string | null {
+  let inStr = false;
+  let esc = false;
+  const stack: string[] = [];
+  for (const ch of s) {
+    if (inStr) {
+      if (esc) esc = false;
+      else if (ch === '\\') esc = true;
+      else if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') inStr = true;
+    else if (ch === '{' || ch === '[') stack.push(ch);
+    else if (ch === '}' || ch === ']') stack.pop();
+  }
+  if (inStr) return null;
+  // A dangling separator would make the closed document invalid.
+  let out = s.replace(/[,\s]+$/, '');
+  if (out.endsWith(':')) return null;
+  for (let i = stack.length - 1; i >= 0; i--) out += stack[i] === '{' ? '}' : ']';
+  return out;
+}
+
+/** Try cutting at each closing bracket from the end until it parses. */
+export function salvageTruncatedJson(raw: string): string | null {
+  const start = raw.indexOf('{');
+  if (start < 0) return null;
+  const body = raw.slice(start).trim();
+
+  const cuts: number[] = [];
+  for (let i = body.length - 1; i > 0 && cuts.length < 120; i--) {
+    const c = body[i];
+    if (c === '}' || c === ']') cuts.push(i + 1);
+  }
+
+  for (const cut of cuts) {
+    const closed = closeOpen(body.slice(0, cut));
+    if (!closed) continue;
+    try {
+      JSON.parse(closed);
+      return closed;
+    } catch {
+      /* try an earlier cut */
+    }
+  }
+  return null;
 }

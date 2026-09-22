@@ -1,5 +1,5 @@
 /**
- * turboslop — a tiny, dependency-free ZIP writer.
+ * TurboSlop — a tiny, dependency-free ZIP writer.
  *
  * The deliverable is a downloaded archive, so every offset, size and checksum
  * here is user-visible: a wrong CRC or a mis-recorded compressed size makes the

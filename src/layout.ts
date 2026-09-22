@@ -1,5 +1,5 @@
 /**
- * turboslop — the layout engine.
+ * TurboSlop — the layout engine.
  *
  * Emits the stylesheet for a composed design direction.
  *
@@ -35,6 +35,7 @@
 import { atmosphereFor } from './catalog.js';
 import type { LayoutCandidate, MotionCandidate, PaletteCandidate, TypeCandidate } from './catalog.js';
 import type { DensityId } from './catalog.js';
+import { effectKitCss, elementCss } from './styles.js';
 
 export interface LayoutInput {
   emotion: string;
@@ -43,6 +44,8 @@ export interface LayoutInput {
   layout: LayoutCandidate;
   motion: MotionCandidate;
   density: DensityId;
+  /** The chosen CSS effect kit id. */
+  effects: string;
 }
 
 /** Spacing multiplier + reading measure per density decision. Higher = roomier. */
@@ -62,14 +65,13 @@ export function buildStylesheet(input: LayoutInput): string {
   const { palette, type, layout, motion, density, emotion } = input;
   const d = DENSITY[density];
   const atm = atmosphereFor(emotion);
-
   return `/* ============================================================
-   turboslop — generated stylesheet
+   TurboSlop — generated stylesheet
    emotion: ${emotion} · palette: ${palette.id} · type: ${type.id}
    layout: ${layout.id} · motion: ${motion.id} · density: ${density}
    ============================================================ */
 
-@layer reset, tokens, layout, components, motion, overrides;
+@layer reset, tokens, layout, components, elements, kits, motion, overrides;
 
 /* ---------------------------------------------------------- *
  * CASCADE LAYERS
@@ -783,6 +785,20 @@ ${atm.grain > 0
       .work-grid .work-card { grid-column: span calc(5 + mod(sibling-index(), 3)); }
     }
   }
+}
+
+/* ---------------------------------------------------------- *
+ * ELEMENTS — structural pieces any composition can use.
+ * ---------------------------------------------------------- */
+@layer elements {
+${elementCss()}
+}
+
+/* ---------------------------------------------------------- *
+ * KITS — the chosen CSS effect treatment.
+ * ---------------------------------------------------------- */
+@layer kits {
+${effectKitCss(input.effects)}
 }
 
 /* ---------------------------------------------------------- *

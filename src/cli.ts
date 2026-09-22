@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * turboslop — CLI
+ * TurboSlop — CLI
  *
  * Brief in, validated design spec + rendered page out.
  *
@@ -78,7 +78,7 @@ function parseArgs(argv: string[]): Args {
 
 function printHelp(): void {
   console.log(`
-turboslop — Jev decides, the LLM writes, the image service illustrates
+TurboSlop — Jev decides, the LLM writes, the image service illustrates
 
   --brief "..."            a natural-language design brief
   --briefs <file.json>     batch: [{ "name": "...", "brief": "..." }, ...]
@@ -117,16 +117,21 @@ function summarize(spec: DesignSpec, notes: string[]): string {
   lines.push(`  brief      ${spec.brief.split('\n')[0]}`);
   lines.push(`  decider    ${spec.meta.decider} (${spec.meta.model})`);
   lines.push(`  latency    ${spec.meta.latencyMs} ms`);
-  lines.push(`  cost       ~$${spec.meta.estimatedUsd.toFixed(6)} (${spec.meta.inputTokens} in tokens)`);
+  const totalUsd = spec.meta.estimatedUsd + spec.meta.writerEstimatedUsd;
   lines.push(
-    `  copy       ${spec.meta.copyWriter}${spec.meta.copyWriter === 'llm' ? ` (${spec.meta.copyModel}, ${spec.meta.copyLatencyMs} ms)` : ''}`,
+    `  cost       ~$${totalUsd.toFixed(6)}` +
+      `  (decide $${spec.meta.estimatedUsd.toFixed(6)} + write $${spec.meta.writerEstimatedUsd.toFixed(6)})`,
+  );
+  lines.push(
+    `  writer     ${spec.meta.writer}${
+      spec.meta.writer === 'llm' ? ` (${spec.meta.writerModel}, ${spec.meta.writerLatencyMs} ms)` : ''
+    }${spec.content ? ` — brand "${spec.content.brand}"` : ''}`,
   );
   if (spec.meta.imageCount > 0) {
     lines.push(
       `  images     ${spec.meta.imageCount} @ steps ${spec.meta.imageSteps} / guidance ${spec.meta.imageCfg} (${spec.meta.imageMs} ms)`,
     );
-  }
-  lines.push(`  composite  ${spec.composite.normalized.toFixed(3)} / 1.000`);
+  }  lines.push(`  composite  ${spec.composite.normalized.toFixed(3)} / 1.000`);
   lines.push('');
   lines.push('  decisions');
   for (const d of spec.decisions) {
@@ -186,7 +191,7 @@ async function main(): Promise<void> {
     let totalUsd = 0;
     for (const item of raw) {
       const r = await runOne(item.name, item.brief, { ...args, quiet: true });
-      totalUsd += r.spec.meta.estimatedUsd;
+      totalUsd += r.spec.meta.estimatedUsd + r.spec.meta.writerEstimatedUsd;
       console.log(
         `  ${item.name.padEnd(24)} ${r.spec.meta.decider.padEnd(6)} ${String(r.spec.meta.latencyMs).padStart(5)}ms  -> ${r.file}`,
       );
@@ -207,6 +212,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  console.error(`\n  turboslop failed: ${err instanceof Error ? err.message : String(err)}\n`);
+  console.error(`\n  TurboSlop failed: ${err instanceof Error ? err.message : String(err)}\n`);
   process.exit(1);
 });

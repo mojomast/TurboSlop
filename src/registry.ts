@@ -1,5 +1,5 @@
 /**
- * turboslop — the design registry.
+ * TurboSlop — the design registry.
  *
  * The control surface needs to show every design that exists, including ones
  * produced by the CLI before the surface existed. So records are DERIVED from
@@ -23,11 +23,13 @@ export interface DesignRecord {
   createdAt: string;
   source: 'cli' | 'surface';
   decisions: Record<string, string>;
+  /** The brand the page was written for — the useful thing to show in a list. */
+  brand: string;
   composite: number;
   review: string[];
   decider: string;
-  copyWriter: string;
-  copyModel: string;
+  writer: string;
+  writerModel: string;
   imageCount: number;
   imageMs: number;
   htmlFile: string;
@@ -78,18 +80,19 @@ function toRecord(slug: string, spec: DesignSpec, sidecarEntry: SidecarEntry | u
   for (const d of spec.decisions) decisions[d.axis] = d.picked;
   return {
     slug,
-    title: sidecarEntry?.title ?? titleFromBrief(spec.brief),
+    title: sidecarEntry?.title ?? spec.content?.brand ?? titleFromBrief(spec.brief),
     brief: spec.brief,
     parent: sidecarEntry?.parent ?? null,
     revision: sidecarEntry?.revision ?? 1,
     createdAt: sidecarEntry?.createdAt ?? new Date(0).toISOString(),
     source: sidecarEntry?.source ?? 'cli',
     decisions,
+    brand: spec.content?.brand ?? '',
     composite: spec.composite.normalized,
     review: spec.review,
     decider: spec.meta.decider,
-    copyWriter: spec.meta.copyWriter,
-    copyModel: spec.meta.copyModel,
+    writer: spec.meta.writer,
+    writerModel: spec.meta.writerModel,
     imageCount: spec.meta.imageCount,
     imageMs: spec.meta.imageMs,
     htmlFile: path.join(outDir, `${slug}.html`),

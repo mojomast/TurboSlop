@@ -1,5 +1,5 @@
 /**
- * turboslop — the catalog.
+ * TurboSlop — the catalog.
  *
  * This is the *only* vocabulary the tool can speak. Jev never authors markup or
  * invents a value: it selects and ranks from the candidates declared here. That
@@ -158,9 +158,131 @@ export const DENSITY_LEVELS = [
 export const DENSITY_IDS = ['quiet', 'balanced', 'dense'] as const;
 export type DensityId = (typeof DENSITY_IDS)[number];
 
+/* ================================================================== *
+ * COMPOSITION — the page archetype.
+ *
+ * The other axes decide how a page LOOKS; this decides how it is STRUCTURED.
+ * Without it every output was the same skeleton — hero, rail, grid, stats,
+ * about, contact — wearing different colours, which is the most visible kind of
+ * sameness a design tool can produce.
+ * ================================================================== */
+export const COMPOSITIONS: Candidate[] = [
+  {
+    id: 'classic-stack',
+    label: 'Classic stack',
+    description:
+      'Full-width hero, then sections stacked in a single confident column: work, capabilities, numbers, story, contact. The dependable default.',
+  },
+  {
+    id: 'split-hero',
+    label: 'Split hero',
+    description:
+      'The opening is divided: statement on one side, visual or facts on the other. Work alternates left and right down the page in a zig-zag.',
+  },
+  {
+    id: 'editorial-lede',
+    label: 'Editorial lede',
+    description:
+      'A magazine opening. Very large statement, an indexed list of work rather than cards, a pull quote set large, and running text in measured columns.',
+  },
+  {
+    id: 'bento-grid',
+    label: 'Bento grid',
+    description:
+      'The page is a modular board of mixed-size tiles rather than a sequence of bands. Cards, facts and quotes all share one grid.',
+  },
+  {
+    id: 'gallery-first',
+    label: 'Gallery first',
+    description:
+      'Visual work leads immediately below a compact masthead. Text is deliberately minimal; the grid of pieces is the argument.',
+  },
+  {
+    id: 'data-first',
+    label: 'Data first',
+    description:
+      'Numbers and specifics lead: a prominent figures row and a dense spec table. Copy is short and factual; decoration is minimal.',
+  },
+  {
+    id: 'manifesto',
+    label: 'Manifesto',
+    description:
+      'One long typographic argument. Numbered points, generous space, almost no imagery — the page reads like a position statement.',
+  },
+];
+
+/* ================================================================== *
+ * EFFECTS — a curated CSS effect kit.
+ *
+ * Bundles, not toggles. Individually, effects can combine into incoherence
+ * (grain + glass + letterpress on one surface); as kits, the model picks a
+ * coherent visual treatment and the engine knows how to build all of it.
+ *
+ * This is where most of the surface-level variety comes from: two designs can
+ * share a palette, a typeface and a composition and still look nothing alike.
+ * ================================================================== */
+export const EFFECT_KITS: Candidate[] = [
+  {
+    id: 'flat-plain',
+    label: 'Flat and plain',
+    description:
+      'No ornament. Solid fills, hairline borders, no shadow, no texture, no gradient. The design carries itself through type and spacing alone.',
+  },
+  {
+    id: 'hairline-editorial',
+    label: 'Hairline editorial',
+    description:
+      'One-pixel rules between every region, hanging punctuation, tabular figures, and an accent rule beside the opening paragraph. Printed-page discipline.',
+  },
+  {
+    id: 'technical-drawing',
+    label: 'Technical drawing',
+    description:
+      'A faint measurement grid, accent crosshairs at headings, dashed outlines around work items, and tick marks. Everything looks annotated and verified.',
+  },
+  {
+    id: 'soft-material',
+    label: 'Soft material',
+    description:
+      'Layered soft shadows, a light-from-above top edge, inner highlight, generous corner radii. Surfaces feel physical and slightly raised.',
+  },
+  {
+    id: 'organic-mesh',
+    label: 'Organic mesh',
+    description:
+      'Large blurred colour washes bleeding in from the edges, and asymmetric blob-like corner radii. Fluid, hand-made, never geometric.',
+  },
+  {
+    id: 'brutalist-block',
+    label: 'Brutalist block',
+    description:
+      'Two-pixel borders, hard offset shadows in the accent colour, square corners, and a slight rotation on some tiles. Loud, confrontational, print-poster energy.',
+  },
+  {
+    id: 'cinematic-depth',
+    label: 'Cinematic depth',
+    description:
+      'Letterbox gradient bands top and bottom, a vignette, soft glow behind display type and heavy shadow under imagery. Photographic and atmospheric.',
+  },
+  {
+    id: 'luminous-glass',
+    label: 'Luminous glass',
+    description:
+      'Frosted translucent panels with an iridescent gradient hairline, an inner highlight, and a soft glow on the primary action. Iridescent, modern, light.',
+  },
+  {
+    id: 'tactile-paper',
+    label: 'Tactile paper',
+    description:
+      'Visible paper grain on raised bands, letterpress inset shadows, and a subtle emboss on display type. Physical, worn, printed.',
+  },
+];
+
 /* ------------------------------------------------------------------ */
 export const CANDIDATES = {
   emotion: EMOTIONS,
+  composition: COMPOSITIONS,
+  effects: EFFECT_KITS,
   palette: PALETTES,
   typography: TYPEFACES,
   layout: LAYOUTS,
@@ -172,6 +294,8 @@ export const TYPE_BY_ID = Object.fromEntries(TYPEFACES.map((t) => [t.id, t]));
 export const LAYOUT_BY_ID = Object.fromEntries(LAYOUTS.map((l) => [l.id, l]));
 export const MOTION_BY_ID = Object.fromEntries(MOTIONS.map((m) => [m.id, m]));
 export const EMOTION_BY_ID = Object.fromEntries(EMOTIONS.map((e) => [e.id, e]));
+export const COMPOSITION_BY_ID = Object.fromEntries(COMPOSITIONS.map((c) => [c.id, c]));
+export const EFFECTS_BY_ID = Object.fromEntries(EFFECT_KITS.map((e) => [e.id, e]));
 
 /* ================================================================== *
  * ATMOSPHERE — curated from the variation harvest.

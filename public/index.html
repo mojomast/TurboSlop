@@ -14,6 +14,7 @@
 /* ============================================================
    TurboSlop control surface.
    Self-contained on purpose: no build step, no framework.
+   Three columns: library · preview · composer + designs.
    ============================================================ */
 @layer reset, tokens, layout, components, states;
 
@@ -77,7 +78,7 @@
 
   .shell {
     display: grid;
-    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr) minmax(0, 26rem);
+    grid-template-columns: minmax(0, 19rem) minmax(0, 1fr) minmax(0, 24rem);
     gap: 1px;
     background: var(--line);
     min-block-size: 0;
@@ -85,10 +86,15 @@
   }
   .shell > * { background: var(--bg); min-block-size: 0; min-inline-size: 0; overflow-y: auto; }
 
+  /* The centre column is a stage: slim toolbar, then the preview filling
+     every remaining pixel. It never scrolls. */
+  .shell > .stage { display: flex; flex-direction: column; overflow: hidden; }
+
   @media (max-width: 1200px) {
     body { block-size: auto; overflow: auto; grid-template-rows: auto auto; }
     .shell { grid-template-columns: minmax(0, 1fr); }
     .shell > * { overflow: visible; }
+    .shell > .stage { block-size: min(72svh, 40rem); min-block-size: 20rem; }
   }
 
   .stack { display: grid; gap: var(--pad); padding: var(--pad); align-content: start; }
@@ -199,6 +205,7 @@
     font-size: 0.8125rem;
     transition: transform var(--dur) var(--ease), filter var(--dur) var(--ease);
     border: 1px solid transparent;
+    white-space: nowrap;
   }
   .btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
   .btn:active { transform: none; }
@@ -232,6 +239,9 @@
   /* ---------- panels ---------- */
   .card { border: 1px solid var(--line); border-radius: var(--r-lg); padding: 0.75rem; background: var(--bg-raised); }
   .card + .card { margin-block-start: 0.5rem; }
+
+  .composer-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+  .composer-head #new-design { margin-inline-start: auto; }
 
   .tabs { display: flex; gap: 1px; background: var(--line); border-block-end: 1px solid var(--line); position: sticky; inset-block-start: 0; z-index: 2; }
   .tabs button {
@@ -267,24 +277,104 @@
   .design + .design { margin-block-start: 0.35rem; }
   .design:hover { border-color: var(--line-strong); background: var(--bg-raised); }
   .design[aria-current="true"] { border-color: var(--accent); background: oklch(from var(--accent) l c h / 0.06); }
-  .design .meta { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.625rem; color: var(--faint); }
   .design .name { font-size: 0.8125rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .design .sub { color: var(--muted); font-size: 0.6875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .design .meta { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.625rem; color: var(--faint); }
   .rev { color: var(--violet); }
   .dots { display: inline-flex; gap: 2px; align-items: center; }
   .dots i { inline-size: 14px; block-size: 6px; border-radius: 2px; }
 
   /* ---------- decisions ---------- */
-  .dec { display: grid; grid-template-columns: 5.5rem 1fr auto; gap: 0.5rem; align-items: center; padding: 0.3rem 0; }
+  .dec { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) auto; gap: 0.5rem; align-items: center; padding: 0.3rem 0; }
   .dec .axis { font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
-  .dec .pick { font-size: 0.8125rem; }
-  .bar { block-size: 4px; border-radius: 2px; background: var(--bg-sunk); overflow: hidden; }
+  .dec .pick { font-size: 0.8125rem; min-inline-size: 0; }
+  .bar { block-size: 4px; border-radius: 2px; background: var(--bg-sunk); overflow: hidden; margin-block-start: 0.25rem; }
   .bar i { display: block; block-size: 100%; background: var(--accent); }
   .bar[data-low="1"] i { background: var(--warn); }
   .conf { font-family: var(--font-mono); font-size: 0.625rem; color: var(--muted); min-inline-size: 2.2rem; text-align: end; }
 
-  /* ---------- preview ---------- */
-  .frame { inline-size: 100%; aspect-ratio: 16 / 10; border: 1px solid var(--line-strong); border-radius: var(--r); background: #fff; }
+  /* ---------- preview stage ---------- */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    padding: 0.5rem var(--pad);
+    border-block-end: 1px solid var(--line);
+    background: var(--bg-raised);
+  }
+  .toolbar__meta { display: flex; align-items: baseline; gap: 0.6rem; flex: 1 1 12rem; min-inline-size: 0; flex-wrap: wrap; }
+  .toolbar__meta h2 { min-inline-size: 0; max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .toolbar__actions { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-inline-start: auto; }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.1rem 0.45rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.06em;
+    color: var(--fg);
+    white-space: nowrap;
+    max-inline-size: 16rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .score { font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.04em; color: var(--accent); white-space: nowrap; }
+  .score[data-low="1"] { color: var(--warn); }
+
+  .frame { flex: 1 1 auto; min-block-size: 0; inline-size: 100%; background: #fff; }
   .frame iframe { inline-size: 100%; block-size: 100%; border: 0; display: block; }
+
+  /* ---------- metrics, directly under the preview ---------- */
+  .metrics {
+    flex: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border-block-start: 1px solid var(--line);
+  }
+  .metric {
+    background: var(--bg-raised);
+    padding: 0.5rem var(--pad);
+    display: grid;
+    gap: 0.1rem;
+    min-inline-size: 0;
+  }
+  .metric__k {
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .metric__v {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--fg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .metric__v[data-accent="1"] { color: var(--accent); }
+  .metric__sub {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    line-height: 1.4;
+    color: var(--muted);
+    /* Wrap rather than truncate: these are the numbers people come here for. */
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  @media (max-width: 640px) {
+    .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  .stage-empty { flex: 1 1 auto; min-block-size: 0; display: grid; place-items: center; padding: var(--pad); }
 
   .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 0.4rem; }
   .gallery figure { display: grid; gap: 0.2rem; }
@@ -297,6 +387,7 @@
   .log [data-phase="error"] { color: var(--bad); }
   .log [data-phase="done"] { color: var(--good); }
   .log [data-phase="images"] { color: var(--info); }
+  .log [data-phase="content"] { color: var(--violet); }
 
   .spinner { inline-size: 12px; block-size: 12px; border: 2px solid oklch(from var(--accent) l c h / 0.3); border-block-start-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
   @keyframes spin { to { rotate: 360deg; } }
@@ -307,8 +398,13 @@
   .toast { position: fixed; inset-block-end: 1rem; inset-inline-end: 1rem; z-index: 50; display: grid; gap: 0.4rem; }
   .toast div { background: var(--bg-raised); border: 1px solid var(--accent); border-radius: var(--r); padding: 0.5rem 0.75rem; font-size: 0.8125rem; box-shadow: 0 12px 30px -12px #000; }
 
+  @media (max-width: 480px) {
+    .dec { grid-template-columns: 4.25rem minmax(0, 1fr) auto; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+    .btn:hover { transform: none; }
   }
 }
 
@@ -357,10 +453,68 @@
     </div>
   </aside>
 
-  <!-- ================= CENTER: composer ================= -->
-  <section class="stack">
+  <!-- ================= CENTRE: the preview stage ================= -->
+  <section class="stage">
+    <div class="toolbar" id="detail-toolbar" hidden>
+      <div class="toolbar__meta">
+        <span class="eyebrow">Selected</span>
+        <h2 id="detail-title"></h2>
+        <span class="pill" id="detail-brand" hidden></span>
+        <span class="score" id="detail-score"></span>
+      </div>
+      <div class="toolbar__actions">
+        <a class="btn btn--sm btn--ghost" id="open-tab" target="_blank" rel="noopener">Open ↗</a>
+        <button class="btn btn--sm btn--ghost" id="export-zip">Download .zip</button>
+        <button class="btn btn--sm" id="copy-one">Copy one-shot HTML</button>
+      </div>
+    </div>
+
+    <div class="frame" id="frame" hidden><iframe id="preview" title="Design preview"></iframe></div>
+
+    <!-- Cost / tokens / models / time for the selected design -->
+    <div class="metrics" id="metrics" hidden>
+      <div class="metric">
+        <span class="metric__k">Cost</span>
+        <span class="metric__v" id="m-cost" data-accent="1">—</span>
+        <span class="metric__sub" id="m-cost-sub"></span>
+      </div>
+      <div class="metric">
+        <span class="metric__k">Tokens</span>
+        <span class="metric__v" id="m-tokens">—</span>
+        <span class="metric__sub" id="m-tokens-sub"></span>
+      </div>
+      <div class="metric">
+        <span class="metric__k">Models</span>
+        <span class="metric__v" id="m-models">—</span>
+        <span class="metric__sub" id="m-models-sub"></span>
+      </div>
+      <div class="metric">
+        <span class="metric__k">Generation</span>
+        <span class="metric__v" id="m-time">—</span>
+        <span class="metric__sub" id="m-time-sub"></span>
+      </div>
+      <div class="metric" id="m-images-cell" hidden>
+        <span class="metric__k">Images</span>
+        <span class="metric__v" id="m-images">—</span>
+        <span class="metric__sub" id="m-images-sub"></span>
+      </div>
+    </div>
+
+    <div class="stage-empty" id="stage-empty">
+      <div class="empty">
+        <span class="big">Nothing selected</span>
+        <span class="hint">Pick a design from the list, or write a brief to make a new one.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= RIGHT: composer, then designs ================= -->
+  <aside class="stack">
     <div class="card">
-      <div class="eyebrow" id="mode-label">New design</div>
+      <div class="composer-head">
+        <div class="eyebrow" id="mode-label">New design</div>
+        <button class="btn btn--sm btn--ghost" id="new-design" type="button" title="Clear the selection and start a new design" hidden>× New design</button>
+      </div>
       <div class="stack" style="padding: 0.75rem 0 0">
         <label class="lbl">
           <span id="brief-label">Brief</span>
@@ -377,7 +531,7 @@
             <button data-decider="live" aria-pressed="false">Jev</button>
             <button data-decider="local" aria-pressed="false">Local</button>
           </div>
-          <label class="switch"><input type="checkbox" id="copy-on" checked><span class="track"></span><span class="hint">write copy</span></label>
+          <label class="switch"><input type="checkbox" id="copy-on" checked><span class="track"></span><span class="hint">write content</span></label>
           <label class="switch"><input type="checkbox" id="images-on"><span class="track"></span><span class="hint">generate images</span></label>
         </div>
 
@@ -406,32 +560,18 @@
       <div class="log" id="log" style="margin-block-start:0.6rem"></div>
     </div>
 
-    <div class="card" id="detail-card" hidden>
-      <div class="row">
-        <div class="eyebrow">Selected</div>
-        <span class="spacer" style="margin-inline-start:auto"></span>
-        <a class="btn btn--sm btn--ghost" id="open-tab" target="_blank" rel="noopener">Open ↗</a>
-        <button class="btn btn--sm btn--ghost" id="export-zip">Download .zip</button>
-        <button class="btn btn--sm" id="copy-one">Copy one-shot HTML</button>
-      </div>
-      <h2 id="detail-title" style="margin-block:0.5rem 0.25rem"></h2>
-      <p class="hint" id="detail-sub"></p>
-      <div class="frame" style="margin-block-start:0.6rem"><iframe id="preview" title="Design preview" loading="lazy"></iframe></div>
-
-      <div class="eyebrow" style="margin-block-start:1rem">Decisions</div>
-      <div id="decisions"></div>
-      <div id="notes" class="stack" style="padding:0.5rem 0 0"></div>
-    </div>
-  </section>
-
-  <!-- ================= RIGHT: designs ================= -->
-  <aside class="stack">
     <div class="row">
-      <div class="eyebrow">Previous designs</div>
+      <div class="eyebrow">Designs</div>
       <button class="btn btn--sm btn--ghost" id="refresh" style="margin-inline-start:auto">Refresh</button>
     </div>
     <p class="hint" id="design-count"></p>
     <div id="designs"></div>
+
+    <div class="card" id="detail-card" hidden>
+      <div class="eyebrow">Decisions</div>
+      <div id="decisions" style="margin-block-start:0.4rem"></div>
+      <div id="notes" class="stack" style="padding:0.6rem 0 0"></div>
+    </div>
   </aside>
 </main>
 
@@ -563,8 +703,11 @@
         const col = { emotion: '#d8ff3e', palette: '#57d1ff', typography: '#a98bff', layout: '#ff5c38', motion: '#4ade80' }[axis];
         dots.append(el('i', { style: `background:${col}`, title: `${axis}: ${d.decisions[axis] ?? '?'}` }));
       }
-      const btn = el('button', { className: 'design', type: 'button', 'aria-current': String(state.selected === d.slug) },
-        el('span', { className: 'name' }, d.title || d.slug),
+      const primary = d.brand || d.title || d.slug;
+      const secondary = d.brand && d.title && d.title !== d.brand ? d.title : null;
+      const btn = el('button', { className: 'design', type: 'button' },
+        el('span', { className: 'name' }, primary),
+        secondary ? el('span', { className: 'sub' }, secondary) : null,
         el('span', { className: 'meta' },
           el('span', {}, d.decisions.emotion ?? '?'),
           el('span', {}, '·'),
@@ -576,6 +719,7 @@
           dots,
         ),
       );
+      if (state.selected === d.slug) btn.setAttribute('aria-current', 'true');
       btn.onclick = () => select(d.slug);
       list.append(btn);
     }
@@ -584,22 +728,30 @@
   async function select(slug) {
     state.selected = slug;
     await refreshDesigns();
-    const { record, spec } = await api(`/api/designs/${slug}`);
-    state.detail = { record, spec };
+    const { record, spec, costs } = await api(`/api/designs/${slug}`);
+    state.detail = { record, spec, costs };
 
-    $('#mode-label').textContent = `Iterate on ${record.slug}${record.revision > 1 ? ` (r${record.revision})` : ''}`;
+    const label = record.brand || record.slug;
+    $('#mode-label').textContent = `Iterate on ${label}${record.revision > 1 ? ` (r${record.revision})` : ''}`;
     $('#brief-label').textContent = 'Original brief (locked)';
     $('#brief').value = spec.brief.split('\n')[0];
     $('#brief').readOnly = true;
     $('#iterate-wrap').hidden = false;
     $('#instructions').value = '';
     $('#go').textContent = 'Iterate';
+    $('#new-design').hidden = false;
 
-    $('#detail-card').hidden = false;
-    $('#detail-title').textContent = spec.copy?.title ?? record.title;
-    $('#detail-sub').textContent = `${record.slug} · ${record.decisions.emotion} / ${record.decisions.palette} · composite ${record.composite.toFixed(3)}${record.review.length ? ` · review: ${record.review.join(', ')}` : ''}`;
+    $('#detail-toolbar').hidden = false;
+    $('#frame').hidden = false;
+    $('#stage-empty').hidden = true;
     $('#preview').src = `/preview/${slug}/`;
     $('#open-tab').href = `/preview/${slug}/`;
+    $('#detail-title').textContent = spec.content?.title ?? record.title ?? record.slug;
+    const brand = $('#detail-brand');
+    if (record.brand) { brand.hidden = false; brand.textContent = record.brand; } else { brand.hidden = true; brand.textContent = ''; }
+    const score = $('#detail-score');
+    score.textContent = `composite ${record.composite.toFixed(3)}`;
+    score.dataset.low = String(record.review.length > 0);
 
     const dec = $('#decisions');
     dec.replaceChildren();
@@ -617,14 +769,97 @@
     const notes = $('#notes');
     notes.replaceChildren();
     const items = [];
-    items.push(`decided by ${spec.meta.decider} · ${spec.meta.model} · ${spec.meta.latencyMs}ms · ~$${spec.meta.estimatedUsd.toFixed(6)}`);
-    if (spec.meta.copyWriter === 'llm') items.push(`copy by ${spec.meta.copyModel} · ${spec.meta.copyLatencyMs}ms`);
-    else items.push('copy: canonical');
-    if (spec.meta.imageCount) items.push(`${spec.meta.imageCount} image(s) · steps ${spec.meta.imageSteps} / guidance ${spec.meta.imageCfg} · ${spec.meta.imageMs}ms`);
+    items.push(`${spec.meta.decider === 'live' ? 'Jev' : 'Local decider'} chose ${spec.decisions.length} axes`);
     if (spec.review.length) items.push(`flagged for review: ${spec.review.join(', ')}`);
+    if (spec.meta.writer !== 'llm') items.push('content: specimen fallback (no writer configured)');
+    if (!spec.assets?.length) items.push('artwork: none — CSS gradient fallbacks in use');
     for (const t of items) notes.append(el('div', { className: 'hint' }, t));
 
+    $('#detail-card').hidden = false;
     renderImages(spec);
+    renderMetrics(spec, costs);
+  }
+
+  /* ---------- cost / tokens / models / time, under the preview ---------- */
+  const fmtInt = (n) => Number(n || 0).toLocaleString('en-US');
+  const fmtUsd = (n) => `$${Number(n || 0).toFixed(6)}`;
+  /** Compact form for the sub-line, where width is tight. */
+  const fmtUsdShort = (n) => `$${Number(n || 0).toFixed(4)}`;
+  const fmtMs = (n) => (Number(n) >= 1000 ? `${(Number(n) / 1000).toFixed(2)} s` : `${Math.round(Number(n) || 0)} ms`);
+
+  function renderMetrics(spec, costs) {
+    const m = spec.meta || {};
+    const c = costs || {
+      jev: m.estimatedUsd || 0,
+      writer: m.writerEstimatedUsd || 0,
+      total: (m.estimatedUsd || 0) + (m.writerEstimatedUsd || 0),
+    };
+
+    $('#m-cost').textContent = fmtUsd(c.total);
+    $('#m-cost-sub').textContent = `decide ${fmtUsdShort(c.jev)} · write ${fmtUsdShort(c.writer)}`;
+
+    const jevTok = m.inputTokens || 0;
+    const wIn = m.writerInputTokens || 0;
+    const wOut = m.writerOutputTokens || 0;
+    $('#m-tokens').textContent = `${fmtInt(jevTok + wIn + wOut)} total`;
+    $('#m-tokens-sub').textContent = `decide ${fmtInt(jevTok)} in · write ${fmtInt(wIn)} in / ${fmtInt(wOut)} out`;
+
+    $('#m-models').textContent = m.model || '—';
+    $('#m-models-sub').textContent = m.writer === 'llm' ? `writer: ${m.writerModel}` : 'writer: specimen fallback';
+
+    const totalMs = (m.latencyMs || 0) + (m.writerLatencyMs || 0) + (m.imageMs || 0);
+    $('#m-time').textContent = fmtMs(totalMs);
+    $('#m-time-sub').textContent =
+      `decide ${fmtMs(m.latencyMs)} · write ${fmtMs(m.writerLatencyMs)}` +
+      (m.imageMs ? ` · images ${fmtMs(m.imageMs)}` : '');
+
+    const cell = $('#m-images-cell');
+    if (m.imageCount) {
+      cell.hidden = false;
+      $('#m-images').textContent = `${m.imageCount} @ ${m.imageSteps} steps`;
+      $('#m-images-sub').textContent = `guidance ${m.imageCfg} · ${fmtMs(m.imageMs)}`;
+    } else {
+      cell.hidden = true;
+    }
+
+    $('#metrics').hidden = false;
+  }
+
+  /* Exit iterate mode: unselect, unlock the brief, blank the composer. */
+  function clearDesign() {
+    state.selected = null;
+    state.detail = null;
+
+    document.querySelectorAll('.design[aria-current]').forEach((b) => b.removeAttribute('aria-current'));
+
+    $('#mode-label').textContent = 'New design';
+    $('#brief-label').textContent = 'Brief';
+    $('#brief').readOnly = false;
+    $('#brief').value = '';
+    $('#iterate-wrap').hidden = true;
+    $('#instructions').value = '';
+    $('#go').textContent = 'Generate design';
+    $('#new-design').hidden = true;
+
+    $('#preview').src = 'about:blank';
+    $('#detail-toolbar').hidden = true;
+    $('#frame').hidden = true;
+    $('#metrics').hidden = true;
+    $('#stage-empty').hidden = false;
+    $('#open-tab').removeAttribute('href');
+    $('#detail-title').textContent = '';
+    $('#detail-brand').hidden = true;
+    $('#detail-brand').textContent = '';
+    $('#detail-score').textContent = '';
+    delete $('#detail-score').dataset.low;
+
+    $('#detail-card').hidden = true;
+    $('#decisions').replaceChildren();
+    $('#notes').replaceChildren();
+    $('#images').replaceChildren();
+
+    // Keep the list in sync (drops any stale aria-current) without deleting anything.
+    refreshDesigns();
   }
 
   function renderImages(spec) {
@@ -759,6 +994,7 @@
     else run('new');
   };
 
+  $('#new-design').onclick = clearDesign;
   $('#refresh').onclick = () => refreshDesigns();
   $('#export-zip').onclick = () => { if (state.selected) location.href = `/api/designs/${state.selected}/export.zip`; };
   $('#copy-one').onclick = async () => {

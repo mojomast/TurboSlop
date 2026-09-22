@@ -1,5 +1,5 @@
 /**
- * turboslop — image generation (Supra2 hosted inference).
+ * TurboSlop — image generation (Supra2 hosted inference).
  *
  * Generates visual assets for a composed design. Enabled explicitly; every
  * parameter the service exposes is surfaced rather than hidden.

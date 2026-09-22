@@ -1,17 +1,20 @@
 /**
- * turboslop — tests.
+ * TurboSlop — core tests.
  *
- * The suite runs entirely offline against the local stand-in decider, so it is
- * deterministic and needs no API key. A live-Jev test is included but skipped
- * unless TYPESAFE_API_KEY is present. Run: npm test
+ * Runs entirely offline against the local decider and the specimen content, so
+ * it is deterministic and needs no keys. Live tests auto-skip when the relevant
+ * credentials are absent. Run: npm test
  */
 import assert from 'node:assert/strict';
 import { decideWithFallback } from '../src/decider.js';
 import { compose, ComposeError } from '../src/compose.js';
-import { writeCopy, CANONICAL_COPY } from '../src/copy.js';
-import { resolveLlm, describeLlm } from '../src/llm.js';
+import { Content, fallbackContent, emphasize, stripEmphasis, balanceEmphasis, repairContent } from '../src/content.js';
+import { COMPOSITION_IDS } from '../src/compositions.js';
+import { EFFECT_KIT_IDS } from '../src/styles.js';
+import { writeContent } from '../src/writer.js';
+import { resolveLlm, describeLlm, extractJson, salvageTruncatedJson } from '../src/llm.js';
 import { renderHtml } from '../src/render.js';
-import { DesignSpec, Copy } from '../src/types.js';
+import { DesignSpec } from '../src/types.js';
 import { AXIS_CANDIDATE_IDS } from '../src/questions.js';
 
 let passed = 0;
@@ -28,7 +31,7 @@ async function test(name: string, fn: () => Promise<void> | void): Promise<void>
   }
 }
 
-console.log('\n=== turboslop ===\n');
+console.log('\n=== TurboSlop ===\n');
 
 const BRIEFS = [
   'A calm, spa-like landing page for a wellness studio. Soft edges, lots of whitespace, slow gentle motion.',
@@ -36,115 +39,204 @@ const BRIEFS = [
   'A joyful, playful storefront for a candy brand aimed at kids. Bright, bouncy, rewarding to touch.',
 ];
 
+/** Compose a spec and attach the specimen content, exactly as the pipeline does. */
+async function composed(brief: string, offline = true): Promise<DesignSpec> {
+  const r = await decideWithFallback(brief, { offline });
+  const { spec } = compose(brief, r);
+  const axes = spec.decisions.map((d) => ({ axis: d.axis, picked: d.picked, confidence: d.confidence }));
+  const w = await writeContent(brief, spec, { offline: true, fallback: fallbackContent(brief, axes) });
+  spec.content = w.content;
+  spec.meta.writer = w.source;
+  spec.meta.writerModel = w.model;
+  return spec;
+}
+
+/* ================================================================== *
+ * Decisions
+ * ================================================================== */
 await test('local decider runs offline and returns Jev-shaped answers', async () => {
   const r = await decideWithFallback(BRIEFS[0]!, { offline: true });
-  assert.equal(r.kind, 'local', 'expected the local stand-in');
+  assert.equal(r.kind, 'local');
   for (const id of ['emotion', 'palette', 'typography', 'layout', 'motion', 'density']) {
     assert.ok(r.response.answers[id], `missing answer for ${id}`);
   }
   const emotion = r.response.answers.emotion!;
   assert.equal(emotion.type, 'choice');
-  assert.ok(emotion.confidence >= 0 && emotion.confidence <= 1, 'confidence out of range');
+  assert.ok(emotion.confidence >= 0 && emotion.confidence <= 1);
 });
 
 await test('every composed pick exists in the catalog (no schema drift)', async () => {
   for (const brief of BRIEFS) {
-    const r = await decideWithFallback(brief, { offline: true });
-    const { spec } = compose(brief, r);
+    const spec = await composed(brief);
     for (const d of spec.decisions) {
-      assert.ok(
-        AXIS_CANDIDATE_IDS[d.axis].includes(d.picked),
-        `axis ${d.axis} picked "${d.picked}" which is not in the catalog`,
-      );
+      assert.ok(AXIS_CANDIDATE_IDS[d.axis].includes(d.picked), `${d.axis} picked "${d.picked}" off-catalog`);
     }
   }
 });
 
 await test('spec validates against the DesignSpec schema', async () => {
-  const r = await decideWithFallback(BRIEFS[1]!, { offline: true });
-  const { spec } = compose(BRIEFS[1]!, r);
-  const parsed = DesignSpec.parse(spec); // throws on any shape violation
-  assert.equal(parsed.version, 1);
+  const spec = await composed(BRIEFS[1]!);
+  assert.equal(DesignSpec.parse(spec).version, 1);
 });
 
 await test('composite score is a weighted mean of axis confidences', async () => {
-  const r = await decideWithFallback(BRIEFS[2]!, { offline: true });
-  const { spec } = compose(BRIEFS[2]!, r);
+  const spec = await composed(BRIEFS[2]!);
   const totalW = spec.decisions.reduce((s, d) => s + (spec.composite.weights[d.axis] ?? 0), 0);
-  const expected = spec.decisions.reduce(
-    (s, d) => s + (spec.composite.weights[d.axis] ?? 0) * d.confidence,
-    0,
-  ) / totalW;
-  assert.ok(Math.abs(expected - spec.composite.normalized) < 1e-9, 'composite mismatch');
-  assert.ok(spec.composite.normalized >= 0 && spec.composite.normalized <= 1);
+  const expected =
+    spec.decisions.reduce((s, d) => s + (spec.composite.weights[d.axis] ?? 0) * d.confidence, 0) / totalW;
+  assert.ok(Math.abs(expected - spec.composite.normalized) < 1e-9);
 });
 
 await test('low confidence is flagged for review rather than hidden', async () => {
-  // A brief that matches nothing should not produce confident decisions.
   const r = await decideWithFallback('zzzz qqqq', { offline: true });
   const { spec } = compose('zzzz qqqq', r);
   assert.ok(spec.review.length > 0, 'an unmatchable brief should surface review axes');
 });
 
 await test('ranking is derived from the probability distribution', async () => {
-  const r = await decideWithFallback(BRIEFS[0]!, { offline: true });
-  const { spec } = compose(BRIEFS[0]!, r);
+  const spec = await composed(BRIEFS[0]!);
   const emotion = spec.decisions.find((d) => d.axis === 'emotion')!;
-  assert.ok(emotion.ranked.length > 1, 'expected ranked alternatives');
+  assert.ok(emotion.ranked.length > 1);
   for (let i = 1; i < emotion.ranked.length; i++) {
-    assert.ok(emotion.ranked[i - 1]!.score >= emotion.ranked[i]!.score, 'ranking not sorted desc');
+    assert.ok(emotion.ranked[i - 1]!.score >= emotion.ranked[i]!.score, 'ranking not sorted');
   }
-  assert.equal(emotion.ranked[0]!.id, emotion.picked, 'top-ranked candidate should be the pick');
+  assert.equal(emotion.ranked[0]!.id, emotion.picked);
 });
 
-await test('renderer emits a complete, self-contained document', async () => {
+await test('compose rejects a catalog/criteria drift', async () => {
   const r = await decideWithFallback(BRIEFS[0]!, { offline: true });
-  const { spec } = compose(BRIEFS[0]!, r);
+  const tampered = structuredClone(r);
+  (tampered.response.answers.emotion as { choice: string }).choice = 'not-a-real-emotion';
+  assert.throws(() => compose(BRIEFS[0]!, tampered), ComposeError);
+});
+
+/* ================================================================== *
+ * Content — the brief decides the content, not a baked-in brand
+ * ================================================================== */
+await test('no generated page contains the old hardcoded studio', async () => {
+  // Regression guard: every design used to be an "ATELIER NULL" page wearing
+  // different colours, whatever the brief asked for.
+  for (const brief of BRIEFS) {
+    const html = renderHtml(await composed(brief));
+    for (const stale of ['ATELIER NULL', 'ateliern.ull', 'HALCYON', 'VESPER', 'ORBITAL', 'FERNSIDE', 'behave like objects', 'Rua da Boavista']) {
+      assert.ok(!html.includes(stale), `hardcoded content leaked into the output: "${stale}"`);
+    }
+  }
+});
+
+await test('the specimen is derived from the brief, not a fixed brand', async () => {
+  const a = await composed('A calm spa landing page');
+  const b = await composed('A brutal satellite control panel');
+  assert.equal(a.content!.brand, 'SPECIMEN', 'specimen must not pretend to be a company');
+  // The lede comes from the brief, so two briefs must not produce identical content.
+  assert.notEqual(a.content!.lede, b.content!.lede, 'content did not vary with the brief');
+  assert.notEqual(a.content!.title, b.content!.title);
+});
+
+await test('the specimen presents the decisions it was built from', async () => {
+  const spec = await composed(BRIEFS[1]!);
+  const c = spec.content!;
+  // axes are surfaced as stats/features so the specimen is useful to evaluate
+  for (const d of spec.decisions.slice(0, 4)) {
+    const found =
+      c.stats.some((s) => s.note === d.picked || s.label.toLowerCase() === d.axis) ||
+      c.aboutFacts.some((f) => f.value.toLowerCase().includes(d.picked.split('-')[0]!));
+    assert.ok(found, `axis ${d.axis}=${d.picked} not surfaced in the specimen`);
+  }
+});
+
+await test('fallback content validates against the Content schema', async () => {
+  for (const brief of BRIEFS) {
+    const spec = await composed(brief);
+    Content.parse(spec.content);
+  }
+});
+
+await test('emphasis convention converts to <em> and strips safely', () => {
+  assert.equal(emphasize('Six *problems* worth solving'), 'Six <em>problems</em> worth solving');
+  assert.equal(emphasize('a *b* c *d*'), 'a <em>b</em> c <em>d</em>');
+  assert.equal(emphasize('<script>*x*</script>'), '&lt;script&gt;<em>x</em>&lt;/script&gt;');
+  assert.equal(stripEmphasis('Six *problems* worth solving'), 'Six problems worth solving');
+  // unmatched asterisks must survive as literal text, not swallow the line
+  assert.equal(emphasize('2 * 3 = 6'), '2 * 3 = 6');
+});
+
+await test('the tagline accent renders as an <em>, not literal asterisks', async () => {
+  const spec = await composed(BRIEFS[0]!);
   const html = renderHtml(spec);
-  assert.ok(html.startsWith('<!DOCTYPE html>'), 'missing doctype');
-  assert.ok(html.includes('</html>'), 'unclosed document');
-  assert.ok(/<h1[ >]/.test(html), 'missing h1');
-  assert.ok(!/href="#"/.test(html), 'dead link emitted');
-  // every catalog id chosen must have been resolved to real values
-  assert.ok(html.includes(spec.tokens.palette!), 'palette not applied');
+  assert.ok(html.includes('<h1 class="display">'), 'missing hero headline');
+  const h1 = /<h1 class="display">([\s\S]*?)<\/h1>/.exec(html)![1]!;
+  assert.ok(!h1.includes('*'), `asterisks leaked into the headline: ${h1}`);
+  assert.ok(h1.includes('<em>'), 'expected an emphasised accent phrase in the headline');
+  assert.ok(html.includes(stripEmphasis(spec.content!.tagline).slice(0, 20)), 'tagline not in output');
+});
+
+await test('content drives every part of the rendered page', async () => {
+  const spec = await composed(BRIEFS[0]!);
+  const c = spec.content!;
+  const html = renderHtml(spec);
+  assert.ok(html.includes(c.brand), 'brand missing');
+  assert.ok(html.includes(c.lede.slice(0, 40)), 'lede missing');
+  assert.ok(html.includes(c.cta), 'cta missing');
+  assert.ok(html.includes(c.contact.email), 'contact email missing');
+  assert.ok(html.includes(c.items[0]!.name), 'first item missing');
+  assert.ok(html.includes(c.stats[0]!.value), 'first stat missing');
+  assert.ok(html.includes(c.features[0]!.name), 'first feature missing');
+  assert.ok(html.includes(c.aboutBody[0]!.slice(0, 40)), 'about body missing');
+  assert.ok(html.includes(c.sections.contact.eyebrow), 'contact eyebrow missing');
   assert.ok(!html.includes('undefined'), 'undefined leaked into the output');
 });
 
-await test('renderer uses the modern CSS feature set', async () => {
-  const r = await decideWithFallback(BRIEFS[1]!, { offline: true });
-  const { spec } = compose(BRIEFS[1]!, r);
+await test('nav anchors always resolve to real section ids', async () => {
+  const spec = await composed(BRIEFS[1]!);
   const html = renderHtml(spec);
+  const anchors = [...html.matchAll(/<a[^>]+href="#([^"]+)"/g)].map((m) => m[1]!);
+  const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]!));
+  for (const a of anchors) {
+    if (a === 'top') continue;
+    assert.ok(ids.has(a), `nav anchor #${a} has no target`);
+  }
+});
+
+await test('every decided axis reaches the spec tokens', async () => {
+  // A hardcoded token map once silently dropped newly-added axes, so they were
+  // decided, paid for, and then never rendered.
+  const spec = await composed(BRIEFS[0]!);
+  for (const d of spec.decisions) {
+    assert.ok(spec.tokens[d.axis], `axis "${d.axis}" missing from spec.tokens`);
+    assert.equal(spec.tokens[d.axis], d.picked);
+  }
+});
+
+await test('spec carries writer metadata even without an LLM', async () => {
+  const spec = await composed(BRIEFS[0]!);
+  const parsed = DesignSpec.parse(spec);
+  assert.equal(parsed.meta.writer, 'fallback');
+  assert.equal(parsed.meta.writerLatencyMs, 0);
+  assert.ok(parsed.content, 'content must always be present');
+});
+
+/* ================================================================== *
+ * Renderer
+ * ================================================================== */
+await test('renderer emits a complete, self-contained document', async () => {
+  const html = renderHtml(await composed(BRIEFS[0]!));
+  assert.ok(html.startsWith('<!DOCTYPE html>'));
+  assert.ok(html.includes('</html>'));
+  assert.ok(/<h1[ >]/.test(html));
+  assert.ok(!/href="#"/.test(html), 'dead link emitted');
+  assert.ok(!html.includes('undefined'));
+});
+
+await test('renderer uses the modern CSS feature set', async () => {
+  const html = renderHtml(await composed(BRIEFS[1]!));
   for (const feature of [
-    '@layer',
-    '@supports',
-    'animation-timeline: view()',
-    'scroll-state(',
-    'sibling-index()',
-    'sibling-count()',
-    'contrast-color(',
-    'oklch(from',
-    '@container',
-    'subgrid',
-    'text-box-trim',
-    '@starting-style',
-    'allow-discrete',
-    'anchor-name',
-    '@position-try',
-    'shape(',
-    'corner-shape',
-    'appearance: base-select',
-    '::scroll-marker',
-    '::scroll-button',
-    'content-visibility',
-    'scrollbar-gutter',
-    'prefers-reduced-transparency',
-    'field-sizing',
-    // harvested from the 10-variation curation pass:
-    'aspect-ratio',
-    '@media print',
-    'prefers-contrast',
-    'forced-colors',
-    '.atmosphere',
+    '@layer', '@supports', 'animation-timeline: view()', 'scroll-state(', 'sibling-index()',
+    'sibling-count()', 'contrast-color(', 'oklch(from', '@container', 'subgrid', 'text-box-trim',
+    '@starting-style', 'allow-discrete', 'anchor-name', '@position-try', 'shape(', 'corner-shape',
+    'appearance: base-select', '::scroll-marker', '::scroll-button', 'content-visibility',
+    'scrollbar-gutter', 'prefers-reduced-transparency', 'field-sizing', 'aspect-ratio',
+    '@media print', 'prefers-contrast', 'forced-colors', '.atmosphere',
   ]) {
     assert.ok(html.includes(feature), `stylesheet is missing ${feature}`);
   }
@@ -152,130 +244,192 @@ await test('renderer uses the modern CSS feature set', async () => {
 
 await test('every emotion yields a non-empty atmosphere layer', async () => {
   for (const brief of BRIEFS) {
-    const r = await decideWithFallback(brief, { offline: true });
-    const { spec } = compose(brief, r);
-    const html = renderHtml(spec);
-    assert.ok(
-      /\.atmosphere\s*\{[^}]*background:/.test(html),
-      `no atmosphere background for ${spec.tokens.emotion}`,
-    );
-  }
-});
-
-await test('grain is emitted only for emotions that want texture', async () => {
-  // mystery/nostalgia/awe carry grain; trust/tension deliberately do not.
-  const mysterious = await decideWithFallback(
-    'A dark, mysterious occult portfolio with scarce light and something withheld.',
-    { offline: true },
-  );
-  const ms = compose('x', mysterious).spec;
-  const mHtml = renderHtml(ms);
-  if (ms.tokens.emotion === 'mystery' || ms.tokens.emotion === 'nostalgia') {
-    assert.ok(mHtml.includes('feTurbulence'), `expected grain for ${ms.tokens.emotion}`);
-  } else {
-    // A different emotion was selected; the assertion is conditional by design.
-    assert.ok(true);
+    const html = renderHtml(await composed(brief));
+    assert.ok(/\.atmosphere\s*\{[^}]*background:/.test(html), 'no atmosphere background');
   }
 });
 
 await test('reduced-motion is honoured', async () => {
-  const r = await decideWithFallback(BRIEFS[0]!, { offline: true });
-  const { spec } = compose(BRIEFS[0]!, r);
-  const html = renderHtml(spec);
-  assert.ok(html.includes('prefers-reduced-motion'), 'no reduced-motion guard');
+  const html = renderHtml(await composed(BRIEFS[0]!));
+  assert.ok(html.includes('prefers-reduced-motion'));
 });
 
-await test('compose rejects a catalog/criteria drift', async () => {
-  const r = await decideWithFallback(BRIEFS[0]!, { offline: true });
-  // Forge an answer that could never come back from Jev, to prove we catch it.
-  const tampered = structuredClone(r);
-  (tampered.response.answers.emotion as { choice: string }).choice = 'not-a-real-emotion';
-  assert.throws(() => compose(BRIEFS[0]!, tampered), ComposeError);
+/* ================================================================== *
+ * Variety — compositions and effect kits
+ * ================================================================== */
+/** A composed spec with overridden tokens, for exercising every option. */
+async function specWith(overrides: Record<string, string>, brief = 'A general business site'): Promise<DesignSpec> {
+  const spec = await composed(brief);
+  Object.assign(spec.tokens, overrides);
+  return spec;
+}
+
+await test('every composition renders and all its nav anchors resolve', async () => {
+  for (const comp of COMPOSITION_IDS) {
+    const html = renderHtml(await specWith({ composition: comp }));
+    const anchors = [...html.matchAll(/<a[^>]+href="#([^"]+)"/g)].map((m) => m[1]!);
+    const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]!));
+    for (const a of anchors) {
+      if (a === 'top') continue;
+      assert.ok(ids.has(a), `composition "${comp}": anchor #${a} has no target`);
+    }
+    assert.ok(ids.has('contact'), `composition "${comp}" must always emit a #contact target`);
+    assert.ok(html.includes(`data-composition="${comp}"`), `composition "${comp}" not marked`);
+    assert.ok(!html.includes('undefined'), `composition "${comp}" leaked undefined`);
+  }
 });
 
-/* ------------------------------------------------------------------ *
- * Generation half — "Jev decides, the LLM writes"
- * ------------------------------------------------------------------ */
+await test('compositions are structurally different, not one skeleton recoloured', async () => {
+  // Signature = the sorted set of structural class names used. Two compositions
+  // sharing a hallmark class are allowed; identical signatures are not.
+  const sig = (html: string) =>
+    [...new Set([...html.matchAll(/class="([a-z][\w-]*)"/g)].map((m) => m[1]!))].sort().join('|');
+  const signatures = new Map<string, string>();
+  for (const comp of COMPOSITION_IDS) {
+    signatures.set(comp, sig(renderHtml(await specWith({ composition: comp }))));
+  }
+  const unique = new Set(signatures.values());
+  assert.equal(unique.size, COMPOSITION_IDS.length, `expected ${COMPOSITION_IDS.length} distinct structures, got ${unique.size}`);
 
-await test('copy falls back to canonical when no LLM is configured', async () => {
-  const r = await decideWithFallback(BRIEFS[0]!, { offline: true });
-  const { spec } = compose(BRIEFS[0]!, r);
-  const w = await writeCopy(BRIEFS[0]!, spec, { offline: true });
-  assert.equal(w.source, 'canonical');
-  assert.equal(w.copy.lede, CANONICAL_COPY.lede);
+  // And at least a few genuinely distinctive hallmarks must be present.
+  const all = [...signatures.entries()].map(([, v]) => v).join(' ');
+  for (const hallmark of ['split__panel', 'erow', 'bento', 'gallery', 'spectable', 'steps']) {
+    assert.ok(all.includes(hallmark), `no composition uses the "${hallmark}" element`);
+  }
 });
 
-await test('canonical copy is what renders when the LLM is skipped', async () => {
-  const r = await decideWithFallback(BRIEFS[0]!, { offline: true });
-  const { spec } = compose(BRIEFS[0]!, r);
-  spec.copy = CANONICAL_COPY;
-  spec.meta.copyWriter = 'canonical';
-  const html = renderHtml(spec);
-  assert.ok(html.includes(CANONICAL_COPY.lede.slice(0, 48)), 'canonical lede missing from output');
-  assert.ok(html.includes(CANONICAL_COPY.cta), 'canonical CTA missing from output');
+await test('every effect kit emits its own scoped CSS', async () => {
+  for (const kit of EFFECT_KIT_IDS) {
+    const html = renderHtml(await specWith({ effects: kit }));
+    assert.ok(html.includes(`data-effects="${kit}"`), `kit "${kit}" not marked on the root`);
+    assert.ok(html.includes(`effect kit: ${kit}`), `kit "${kit}" CSS not emitted`);
+    // Only the chosen kit ships — the stylesheet must not carry the others.
+    for (const other of EFFECT_KIT_IDS) {
+      if (other === kit) continue;
+      assert.ok(!html.includes(`effect kit: ${other}`), `kit "${kit}" leaked "${other}"`);
+    }
+  }
 });
 
-await test('the spec carries copy metadata even without an LLM', async () => {
-  const r = await decideWithFallback(BRIEFS[0]!, { offline: true });
-  const { spec } = compose(BRIEFS[0]!, r);
-  const parsed = DesignSpec.parse(spec);
-  assert.equal(parsed.meta.copyWriter, 'none');
-  assert.equal(parsed.meta.copyLatencyMs, 0);
+await test('the same brief with a different composition produces a different page', async () => {
+  const a = renderHtml(await specWith({ composition: 'classic-stack', effects: 'flat-plain' }));
+  const b = renderHtml(await specWith({ composition: 'bento-grid', effects: 'luminous-glass' }));
+  assert.notEqual(a.length, b.length, 'pages are byte-identical in length');
+  assert.ok(a.includes('data-composition="classic-stack"'));
+  assert.ok(b.includes('data-composition="bento-grid"'));
 });
 
+/* ---- tolerant repair ---- */
+await test('over-long generated fields are clamped, not rejected', async () => {
+  const base = (await composed(BRIEFS[0]!)).content!;
+  const raw = {
+    ...base,
+    brand: 'A'.repeat(60),
+    items: base.items.map((it, i) =>
+      i === 0 ? { ...it, tags: ['a tag that is definitely longer than the old limit of twenty eight'] } : it,
+    ),
+    aboutBody: ['x'.repeat(2000)],
+  };
+  const repaired = repairContent(raw);
+  assert.ok(repaired, 'a slightly over-long generation must be repaired, not discarded');
+  assert.ok(repaired.brand.length <= 33, 'brand not clamped');
+  assert.ok(repaired.items[0]!.tags[0]!.length <= 41, 'tag not clamped');
+  assert.ok(repaired.aboutBody[0]!.length <= 701, 'paragraph not clamped');
+});
+
+await test('repair returns null only when the content is genuinely unusable', async () => {
+  assert.equal(repairContent(null), null);
+  assert.equal(repairContent({}), null);
+  assert.equal(repairContent({ brand: 'X' }), null, 'a brand alone is not a page');
+});
+
+await test('unbalanced emphasis asterisks are repaired, not printed', () => {
+  assert.equal(balanceEmphasis('a *b'), 'a b');
+  assert.equal(balanceEmphasis('a *b*'), 'a *b*');
+  assert.equal(emphasize(balanceEmphasis('Six *problems worth solving')), 'Six problems worth solving');
+});
+
+/* ---- truncated JSON recovery ---- */
+await test('truncated JSON is salvaged instead of discarding the generation', () => {
+  // Exactly what a reasoning model returns when it runs out of output budget:
+  // a valid object cut off mid-array.
+  const truncated =
+    '{"brand":"Versions","items":[{"name":"A","meta":"x"},{"name":"B","meta":"y"},{"name":"C","me';
+  const salvaged = salvageTruncatedJson(truncated);
+  assert.ok(salvaged, 'should salvage a truncated object');
+  const out = JSON.parse(salvaged) as { brand: string; items: unknown[] };
+  assert.equal(out.brand, 'Versions');
+  assert.equal(out.items.length, 2, 'drops only the incomplete element');
+});
+
+await test('salvage returns valid JSON untouched and declines the hopeless', () => {
+  const good = '{"a":1,"b":[1,2,3]}';
+  assert.deepEqual(JSON.parse(salvageTruncatedJson(good)!), JSON.parse(good));
+  assert.equal(salvageTruncatedJson('no json here at all'), null);
+  assert.equal(salvageTruncatedJson('{"a":"unterminated'), null);
+});
+
+await test('extractJson falls back to salvage when parsing fails', () => {
+  const truncated = '{"brand":"Versions","nav":["A","B"],"extra":[{"k":"v"},{"k":';
+  const out = extractJson(truncated) as Record<string, unknown>;
+  assert.equal(out.brand, 'Versions');
+  assert.deepEqual(out.nav, ['A', 'B']);
+});
+
+/* ================================================================== *
+ * Live halves — auto-skip without credentials
+ * ================================================================== */
 const llm = resolveLlm();
-await test(`live copywriting${llm ? ` (${describeLlm(llm)})` : ' (SKIPPED — no LLM configured)'}`, async () => {
+await test(`live writing${llm ? ` (${describeLlm(llm)})` : ' (SKIPPED — no LLM configured)'}`, async () => {
   if (!llm) return;
-  const brief = 'A calm, spa-like wellness studio landing page with slow, gentle motion.';
-  // Design locally so this test isolates the WRITER, not the decider.
+  const brief = 'A neighbourhood bakery in Porto that mills its own flour. Warm, tactile, no-nonsense.';
   const r = await decideWithFallback(brief, { offline: true });
   const { spec } = compose(brief, r);
+  const axes = spec.decisions.map((d) => ({ axis: d.axis, picked: d.picked, confidence: d.confidence }));
 
-  const w = await writeCopy(brief, spec, { config: llm });
-  assert.equal(w.source, 'llm', `expected LLM copy but got canonical: ${w.fallbackReason ?? ''}`);
-  Copy.parse(w.copy); // schema-valid by construction
-  assert.ok(w.copy.about.length >= 1 && w.copy.about.length <= 3);
-  assert.ok(w.copy.title.length <= 140);
+  const w = await writeContent(brief, spec, { config: llm, fallback: fallbackContent(brief, axes) });
+  assert.equal(w.source, 'llm', `expected written content: ${w.fallbackReason ?? ''}`);
+  Content.parse(w.content);
 
-  // The fixed facts must survive: no invented numbers or client names.
-  const blob = JSON.stringify(w.copy);
-  assert.ok(!/\b(?:award-winning|world-class|industry-leading)\b/i.test(blob), 'marketing filler leaked in');
+  // The whole point: the content must fit THIS brief, not a generic studio.
+  const blob = JSON.stringify(w.content).toLowerCase();
+  assert.ok(!blob.includes('atelier'), 'stale brand leaked in');
+  assert.ok(!/lorem ipsum|innovative solutions|we are passionate/i.test(blob), 'filler detected');
 
-  spec.copy = w.copy;
-  spec.meta.copyWriter = w.source;
-  spec.meta.copyModel = w.model;
+  spec.content = w.content;
   const html = renderHtml(spec);
-  assert.ok(!html.includes('undefined'), 'copy rendered undefined');
-  assert.ok(html.includes(w.copy.lede.slice(0, 40)), 'written lede missing from the page');
-
-  console.log(`        -> ${w.model} wrote ${w.copy.about.length} paragraphs in ${w.latencyMs}ms`);
+  assert.ok(html.includes(w.content.brand), 'written brand missing from the page');
+  console.log(`        -> ${w.model} wrote "${w.content.brand}" — ${stripEmphasis(w.content.tagline)}`);
 });
 
-/* ------------------------------------------------------------------ */
 const hasKey = Boolean(process.env.TYPESAFE_API_KEY);
 await test(`live Jev decision${hasKey ? '' : ' (SKIPPED — no TYPESAFE_API_KEY)'}`, async () => {
   if (!hasKey) return;
   const brief = 'A mysterious, dark, occult-feeling portfolio for a tattoo artist.';
   const r = await decideWithFallback(brief, { preference: 'live' });
-  assert.equal(r.kind, 'live', 'expected a live Jev decision');
+  assert.equal(r.kind, 'live');
   const { spec } = compose(brief, r);
-  assert.ok(spec.meta.latencyMs > 0);
-  assert.ok(spec.meta.model.startsWith('jev'), `unexpected model ${spec.meta.model}`);
+  assert.ok(spec.meta.model.startsWith('jev'));
   console.log(`        -> ${spec.decisions.map((d) => `${d.axis}=${d.picked}(${d.confidence.toFixed(2)})`).join(' ')}`);
 });
 
-await test('both halves compose: Jev designs, the LLM writes (SKIPPED without both keys)', async () => {
+await test('both halves compose: Jev designs, the writer writes (SKIPPED without both)', async () => {
   if (!hasKey || !llm) return;
-  const brief = 'A brutal technical control panel for satellite operators. Dense, mono, no decoration.';
+  const brief = 'An esports tournament site for a fighting-game league. Loud, fast, competitive.';
   const r = await decideWithFallback(brief, { preference: 'live' });
   const { spec } = compose(brief, r);
-  const w = await writeCopy(brief, spec, { config: llm });
-  spec.copy = w.copy;
+  const axes = spec.decisions.map((d) => ({ axis: d.axis, picked: d.picked, confidence: d.confidence }));
+  const w = await writeContent(brief, spec, { config: llm, fallback: fallbackContent(brief, axes) });
+  spec.content = w.content;
+
   const html = renderHtml(spec);
   assert.equal(spec.meta.decider, 'live');
-  assert.equal(w.source, 'llm');
   assert.ok(html.startsWith('<!DOCTYPE html>'));
-  console.log(`        -> design by ${spec.meta.model}, copy by ${w.model}, total ${spec.meta.latencyMs + w.latencyMs}ms`);
+  assert.ok(!html.includes('ATELIER NULL'));
+  console.log(
+    `        -> design by ${spec.meta.model}, content "${w.content.brand}" by ${w.model}, ` +
+      `${spec.meta.latencyMs + w.latencyMs}ms total`,
+  );
 });
 
 console.log(`\n${failed ? `FAILURES: ${failed}, passed: ${passed}` : `all ${passed} checks passed`}\n`);

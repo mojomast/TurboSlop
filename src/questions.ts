@@ -1,5 +1,5 @@
 /**
- * turboslop — questions, thresholds and weights.
+ * TurboSlop — questions, thresholds and weights.
  *
  * THIS IS THE FILE A HUMAN REVIEWS.
  *
@@ -17,7 +17,7 @@
  *     tokens, so we ask everything we might need up front and let code decide
  *     which answers it uses.
  */
-import { CANDIDATES, DENSITY_LEVELS, EMOTIONS, PALETTES, TYPEFACES, LAYOUTS, MOTIONS } from './catalog.js';
+import { CANDIDATES, COMPOSITIONS, EFFECT_KITS, DENSITY_LEVELS, EMOTIONS, PALETTES, TYPEFACES, LAYOUTS, MOTIONS } from './catalog.js';
 import type { Axis } from './types.js';
 
 /* ------------------------------------------------------------------ *
@@ -31,6 +31,8 @@ import type { Axis } from './types.js';
  * ------------------------------------------------------------------ */
 export const THRESHOLDS: Record<Axis, number> = {
   emotion: 0.5,
+  composition: 0.45,
+  effects: 0.45,
   palette: 0.5,
   typography: 0.5,
   layout: 0.45,
@@ -44,12 +46,14 @@ export const THRESHOLDS: Record<Axis, number> = {
  * "make emotion matter more" is a one-number change, not a prompt rewrite.
  * ------------------------------------------------------------------ */
 export const WEIGHTS: Record<Axis, number> = {
-  emotion: 0.25,
-  palette: 0.2,
-  typography: 0.2,
-  layout: 0.15,
-  motion: 0.1,
-  density: 0.1,
+  emotion: 0.2,
+  composition: 0.13,
+  effects: 0.12,
+  palette: 0.14,
+  typography: 0.14,
+  layout: 0.1,
+  motion: 0.09,
+  density: 0.08,
 };
 
 /* ------------------------------------------------------------------ *
@@ -94,6 +98,26 @@ export function buildQuestions(): QuestionSet {
         'What emotional response should `brief` produce in a first-time visitor within the first three seconds? ' +
         'Choose the single dominant emotion the page is built to evoke. If the brief names a feeling, weight that heavily.',
       criteria: criteriaFrom(EMOTIONS),
+    },
+
+    /* ---- structural axis: how the page is put together ---- */
+    composition: {
+      type: 'choice',
+      instructions:
+        'Which page structure best serves what `brief` describes? This decides how content is ARRANGED, not how it looks. ' +
+        'Choose a structure that suits what the brief actually needs — a product with strong visuals wants a gallery, a technical ' +
+        'offering wants data, an opinionated studio wants a manifesto, a general business is usually a classic stack.',
+      criteria: criteriaFrom(COMPOSITIONS),
+    },
+
+    /* ---- surface treatment: the CSS effect kit ---- */
+    effects: {
+      type: 'choice',
+      instructions:
+        'Which surface treatment should this page use? This controls ornament: rules, shadows, texture, blur, borders and rotation. ' +
+        'Choose the treatment that best expresses the emotional intent in `brief` and suits its subject. ' +
+        'Prefer the plainer kit when the brief is about clarity or restraint.',
+      criteria: criteriaFrom(EFFECT_KITS),
     },
 
     /* ---- supporting axes ---- */
@@ -158,6 +182,8 @@ export function buildQuestions(): QuestionSet {
 /** Axis question ids in significance order — the order decisions are composed. */
 export const AXIS_QUESTION_IDS: { axis: Axis; id: string }[] = [
   { axis: 'emotion', id: 'emotion' },
+  { axis: 'composition', id: 'composition' },
+  { axis: 'effects', id: 'effects' },
   { axis: 'palette', id: 'palette' },
   { axis: 'typography', id: 'typography' },
   { axis: 'layout', id: 'layout' },
@@ -168,6 +194,8 @@ export const AXIS_QUESTION_IDS: { axis: Axis; id: string }[] = [
 /** All candidate ids per axis — used to validate that Jev stayed in the deck. */
 export const AXIS_CANDIDATE_IDS: Record<Axis, string[]> = {
   emotion: CANDIDATES.emotion.map((c) => c.id),
+  composition: COMPOSITIONS.map((c) => c.id),
+  effects: EFFECT_KITS.map((e) => e.id),
   palette: CANDIDATES.palette.map((c) => c.id),
   typography: CANDIDATES.typography.map((c) => c.id),
   layout: CANDIDATES.layout.map((c) => c.id),

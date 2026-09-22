@@ -1,5 +1,5 @@
 /**
- * turboslop — Jev transport.
+ * TurboSlop — Jev transport.
  *
  * A thin, typed client for POST /v1/systemone. Deliberately small: the wire
  * format is simple, and keeping our own transport (rather than depending on the
@@ -75,8 +75,6 @@ export async function callJev(opts: JevCallOptions): Promise<JevCallResult> {
       signal: controller.signal,
     });
 
-    const latencyMs = Date.now() - started;
-
     if (!res.ok) {
       const text = await res.text().catch(() => '');
       // 429 / 529 are transient; surface that so the caller can retry or fall back.
@@ -85,6 +83,10 @@ export async function callJev(opts: JevCallOptions): Promise<JevCallResult> {
     }
 
     const raw = await res.json();
+    // Measured AFTER the body: fetch resolves on headers, so timing it there
+    // would report time-to-first-byte rather than the actual decision.
+    const latencyMs = Date.now() - started;
+
     const parsed = JevResponse.parse(raw);
     return { parsed, latencyMs, model: parsed.model };
   } catch (err) {

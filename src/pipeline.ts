@@ -1,5 +1,5 @@
 /**
- * turboslop — the pipeline, in one place.
+ * TurboSlop — the pipeline, in one place.
  *
  * Both the CLI and the control-surface server drive this, so there is exactly
  * one definition of what "generate a design" means:
@@ -13,7 +13,8 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { decideWithFallback, type DeciderPreference } from './decider.js';
 import { compose } from './compose.js';
-import { writeCopy } from './copy.js';
+import { fallbackContent } from './content.js';
+import { writeContent } from './writer.js';
 import {
   IMAGE_PRESETS,
   generateAssets,
@@ -23,8 +24,9 @@ import {
   type ImagePreset,
 } from './images.js';
 import { renderHtml } from './render.js';
+import { jevCost, writerCost } from './pricing.js';
 import type { DesignSpec } from './types.js';
-export type ProgressPhase = 'decide' | 'copy' | 'images' | 'render' | 'write' | 'done' | 'error';
+export type ProgressPhase = 'decide' | 'content' | 'images' | 'render' | 'write' | 'done' | 'error';
 
 export interface ProgressEvent {
   phase: ProgressPhase;
@@ -60,7 +62,7 @@ export interface RunResult {
   html: string;
   notes: string[];
   files: { html: string; spec: string; assets: string[] };
-  timings: { decideMs: number; copyMs: number; imageMs: number; totalMs: number };
+  timings: { decideMs: number; writerMs: number; imageMs: number; totalMs: number };
 }
 
 export function slugify(input: string): string {
@@ -131,17 +133,34 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
       ` (${spec.decisions.map((d) => d.picked).join(' · ')})`,
   );
 
-  // ---- 2. copy (LLM) ------------------------------------------------------
-  say('copy', opts.noCopy ? 'Skipping copy (canonical)' : 'Writing copy…');
-  const written = await writeCopy(briefForDecider, spec, { offline: opts.noCopy });
-  if (written.source === 'llm') spec.copy = written.copy;
-  spec.meta.copyWriter = written.source;
-  spec.meta.copyModel = written.model;
-  spec.meta.copyLatencyMs = written.latencyMs;
-  spec.meta.copyInputTokens = written.inputTokens;
-  spec.meta.copyOutputTokens = written.outputTokens;
-  if (written.fallbackReason) notes.push(`copy fell back to canonical — ${written.fallbackReason}`);
-  say('copy', written.source === 'llm' ? `Copy written in ${written.latencyMs}ms` : 'Using canonical copy');
+  // ---- 2. content (LLM) ---------------------------------------------------
+  // The design is decided; now write everything the page SAYS, in that register.
+  const axes = spec.decisions.map((d) => ({
+    axis: d.axis,
+    picked: d.picked,
+    confidence: d.confidence,
+  }));
+  const fallback = fallbackContent(briefForDecider, axes);
+
+  say('content', opts.noCopy ? 'Skipping the writer — using specimen content' : 'Writing content…');
+  const written = await writeContent(briefForDecider, spec, { offline: opts.noCopy, fallback });
+  // Always present: either written or the honest specimen.
+  spec.content = written.content;
+  spec.meta.writer = written.source;
+  spec.meta.writerModel = written.model;
+  spec.meta.writerLatencyMs = written.latencyMs;
+  spec.meta.writerInputTokens = written.inputTokens;
+  spec.meta.writerOutputTokens = written.outputTokens;
+  spec.meta.writerEstimatedUsd = writerCost(written.inputTokens, written.outputTokens);
+  if (written.fallbackReason) {
+    notes.push(`writer fell back to the specimen — ${written.fallbackReason}`);
+  }
+  say(
+    'content',
+    written.source === 'llm'
+      ? `Content written in ${written.latencyMs}ms — brand "${written.content.brand}"`
+      : 'Using specimen content',
+  );
 
   // ---- 3. images (optional, never fatal) ----------------------------------
   if (opts.images.enabled) {
@@ -224,7 +243,7 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
     files: { html: htmlFile, spec: specFile, assets: spec.assets.map((a) => a.file) },
     timings: {
       decideMs: decided.latencyMs,
-      copyMs: written.latencyMs,
+      writerMs: written.latencyMs,
       imageMs: spec.meta.imageMs,
       totalMs,
     },

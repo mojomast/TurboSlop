@@ -1,5 +1,5 @@
 /**
- * turboslop — composition.
+ * TurboSlop — composition.
  *
  * Turns raw answers into a validated `DesignSpec`.
  *
@@ -25,6 +25,7 @@ import {
   WEIGHTS,
 } from './questions.js';
 import { DENSITY_IDS } from './catalog.js';
+import { jevCost } from './pricing.js';
 import type { Axis, DesignSpec } from './types.js';
 import type { DecideResult } from './decider.js';
 
@@ -161,18 +162,15 @@ export function compose(brief: string, result: DecideResult): ComposeResult {
     );
   }
 
-  /* ---- tokens: a flat map the renderer consumes ---- */
-  const tokens: Record<string, string> = {
-    emotion: decisions.find((d) => d.axis === 'emotion')!.picked,
-    palette: chosenPaletteId,
-    typography: decisions.find((d) => d.axis === 'typography')!.picked,
-    layout: decisions.find((d) => d.axis === 'layout')!.picked,
-    motion: decisions.find((d) => d.axis === 'motion')!.picked,
-    density: decisions.find((d) => d.axis === 'density')!.picked,
-  };
+  /* ---- tokens: a flat axis -> pick map the renderer consumes ----
+     Built from ALL axes generically. A hardcoded list here silently drops any
+     axis added later, which is exactly how the composition and effects axes
+     ended up decided-but-unused. */
+  const tokens: Record<string, string> = {};
+  for (const d of decisions) tokens[d.axis] = d.picked;
 
   const usage = response.usage ?? { input_tokens: 0, output_tokens: 0 };
-  const estimatedUsd = (usage.input_tokens / 1_000_000) * JEV_USD_PER_MTOKEN_INPUT;
+  const estimatedUsd = jevCost(usage.input_tokens);
 
   const spec: DesignSpec = {
     version: 1,
@@ -188,12 +186,13 @@ export function compose(brief: string, result: DecideResult): ComposeResult {
       inputTokens: usage.input_tokens,
       outputTokens: usage.output_tokens,
       estimatedUsd,
-      // Overwritten by the CLI once the copywriter has run.
-      copyWriter: 'none',
-      copyModel: 'none',
-      copyLatencyMs: 0,
-      copyInputTokens: 0,
-      copyOutputTokens: 0,
+      // Overwritten by the CLI once the writer has run.
+      writer: 'none',
+      writerModel: 'none',
+      writerLatencyMs: 0,
+      writerInputTokens: 0,
+      writerOutputTokens: 0,
+      writerEstimatedUsd: 0,
       imageSteps: 0,
       imageCfg: 0,
       imageCount: 0,
