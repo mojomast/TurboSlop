@@ -454,6 +454,59 @@ await test('reasoning tokens are reported, and are zero when thinking is off', a
   assert.equal(res.thinking, 'disabled');
 });
 
+await test('every design record carries per-generation metrics', async () => {
+  // The control surface lists designs without loading each spec, so the metrics
+  // have to travel with the record.
+  const { listDesigns } = await import('../src/registry.js');
+  const os = await import('node:os');
+  const fs = await import('node:fs/promises');
+  const path = await import('node:path');
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'forge-reg-'));
+
+  // Write a spec + html the way the pipeline does, then read it back.
+  const spec = await composed(BRIEFS[0]!);
+  spec.meta.latencyMs = 400;
+  spec.meta.inputTokens = 2500;
+  spec.meta.estimatedUsd = 0.000105;
+  spec.meta.writerLatencyMs = 7000;
+  spec.meta.writerInputTokens = 900;
+  spec.meta.writerOutputTokens = 1300;
+  spec.meta.writerEstimatedUsd = 0.000915;
+  await fs.writeFile(path.join(tmp, 'demo.spec.json'), JSON.stringify(spec));
+  await fs.writeFile(path.join(tmp, 'demo.html'), '<!DOCTYPE html><html></html>');
+
+  const [d] = await listDesigns(tmp);
+  assert.ok(d, 'record not listed');
+  assert.equal(d.decideMs, 400);
+  assert.equal(d.writeMs, 7000);
+  assert.equal(d.totalMs, 7400, 'total sums decide + write + images');
+  assert.equal(d.jevTokens, 2500);
+  assert.equal(d.writerTokensOut, 1300);
+  assert.ok(Math.abs(d.costJev - 0.000105) < 1e-9);
+  assert.ok(Math.abs(d.costWriter - 0.000915) < 1e-9);
+  assert.ok(Math.abs(d.costTotal - 0.00102) < 1e-9, 'costTotal must be the sum of both halves');
+});
+
+await test('cost is recomputed for specs that predate the field', async () => {
+  const { listDesigns } = await import('../src/registry.js');
+  const os = await import('node:os');
+  const fs = await import('node:fs/promises');
+  const path = await import('node:path');
+  const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'forge-reg2-'));
+
+  const spec = await composed(BRIEFS[0]!);
+  // Simulate an older spec: token counts present, cost fields absent/zero.
+  spec.meta.writerEstimatedUsd = 0;
+  spec.meta.writerInputTokens = 1000;
+  spec.meta.writerOutputTokens = 2000;
+  await fs.writeFile(path.join(tmp, 'old.spec.json'), JSON.stringify(spec));
+
+  const [d] = await listDesigns(tmp);
+  assert.ok(d, 'record not listed');
+  // 1000 * $0.15/M + 2000 * $0.60/M
+  assert.ok(Math.abs(d.costWriter - (0.00015 + 0.0012)) < 1e-9, `expected recomputed cost, got ${d.costWriter}`);
+});
+
 /* ================================================================== *
  * Live halves — auto-skip without credentials
  * ================================================================== */

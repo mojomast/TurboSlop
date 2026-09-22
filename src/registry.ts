@@ -11,6 +11,7 @@
  */
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { jevCost, writerCost } from './pricing.js';
 import { DesignSpec } from './types.js';
 
 export interface DesignRecord {
@@ -32,6 +33,18 @@ export interface DesignRecord {
   writerModel: string;
   imageCount: number;
   imageMs: number;
+  /** Per-generation metrics, so the list can show them without loading a spec. */
+  decideMs: number;
+  writeMs: number;
+  totalMs: number;
+  jevTokens: number;
+  writerTokensIn: number;
+  writerTokensOut: number;
+  writerReasoningTokens: number;
+  /** Cost split, because the writer is ~90% of spend and the split matters. */
+  costJev: number;
+  costWriter: number;
+  costTotal: number;
   htmlFile: string;
   specFile: string;
   htmlBytes: number;
@@ -78,6 +91,11 @@ export function titleFromBrief(brief: string): string {
 function toRecord(slug: string, spec: DesignSpec, sidecarEntry: SidecarEntry | undefined, htmlBytes: number, outDir: string): DesignRecord {
   const decisions: Record<string, string> = {};
   for (const d of spec.decisions) decisions[d.axis] = d.picked;
+
+  const m = spec.meta;
+  const costJev = m.estimatedUsd || jevCost(m.inputTokens);
+  const costWriter = m.writerEstimatedUsd || writerCost(m.writerInputTokens, m.writerOutputTokens);
+
   return {
     slug,
     title: sidecarEntry?.title ?? spec.content?.brand ?? titleFromBrief(spec.brief),
@@ -95,6 +113,16 @@ function toRecord(slug: string, spec: DesignSpec, sidecarEntry: SidecarEntry | u
     writerModel: spec.meta.writerModel,
     imageCount: spec.meta.imageCount,
     imageMs: spec.meta.imageMs,
+    decideMs: m.latencyMs || 0,
+    writeMs: m.writerLatencyMs || 0,
+    totalMs: (m.latencyMs || 0) + (m.writerLatencyMs || 0) + (m.imageMs || 0),
+    jevTokens: m.inputTokens || 0,
+    writerTokensIn: m.writerInputTokens || 0,
+    writerTokensOut: m.writerOutputTokens || 0,
+    writerReasoningTokens: m.writerReasoningTokens || 0,
+    costJev,
+    costWriter,
+    costTotal: costJev + costWriter,
     htmlFile: path.join(outDir, `${slug}.html`),
     specFile: path.join(outDir, `${slug}.spec.json`),
     htmlBytes,
