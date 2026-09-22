@@ -140,6 +140,8 @@ const MIME: Record<string, string> = {
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
   '.svg': 'image/svg+xml',
+  '.woff2': 'font/woff2',
+  '.md': 'text/markdown; charset=utf-8',
 };
 
 async function serveFile(res: http.ServerResponse, filePath: string): Promise<boolean> {

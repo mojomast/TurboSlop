@@ -436,6 +436,35 @@
   ::-webkit-scrollbar { inline-size: 10px; block-size: 10px; }
   ::-webkit-scrollbar-thumb { background: #24242c; border: 3px solid var(--bg); border-radius: 999px; }
 }
+
+/* ================================================================== *
+ * CONTACT SHEET — several directions for one brief, side by side
+ * ================================================================== */
+.sheet { display: grid; gap: 0.75rem; align-content: start; }
+.sheet__bar { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+.sheet__metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.sheet__metrics .metric { background: var(--bg-sunk); }
+.sheet__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr)); gap: 0.75rem; align-items: start; }
+.sheet__grid[data-vp="mobile"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
+
+.dir { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-sunk); display: grid; overflow: hidden; }
+.dir[data-selected="1"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.dir[data-dropped="1"] { opacity: 0.45; }
+.dir__head { padding: 0.5rem 0.6rem; display: grid; gap: 0.12rem; border-block-end: 1px solid var(--line); }
+.dir__head h3 { font-size: 0.8125rem; font-family: var(--font-sans); font-weight: 600; color: var(--fg); }
+.dir__head .hint { font-family: var(--font-mono); font-size: 0.625rem; }
+.dir__preview { position: relative; background: var(--bg); border-block-end: 1px solid var(--line); }
+.dir__preview iframe { inline-size: 100%; block-size: 15rem; border: 0; display: block; background: #fff; }
+.sheet__grid[data-vp="mobile"] .dir__preview iframe { inline-size: 390px; max-inline-size: 100%; margin-inline: auto; block-size: 20rem; }
+.dir__preview .badge { position: absolute; inset-block-start: 0.35rem; inset-inline-start: 0.35rem; font-family: var(--font-mono); font-size: 0.5625rem; background: #000c; color: #fff; border-radius: 3px; padding: 0.05rem 0.3rem; }
+.dir__struct { padding: 0.4rem 0.6rem; font-family: var(--font-mono); font-size: 0.5625rem; color: var(--faint); display: flex; flex-wrap: wrap; gap: 0.2rem; border-block-end: 1px solid var(--line); }
+.dir__struct span { border: 1px solid var(--line-strong); border-radius: 3px; padding: 0 0.25rem; }
+.dir__locks { padding: 0.4rem 0.6rem; display: flex; flex-wrap: wrap; gap: 0.25rem 0.6rem; border-block-end: 1px solid var(--line); }
+.dir__locks label { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.625rem; color: var(--muted); font-family: var(--font-mono); cursor: pointer; }
+.dir__actions { padding: 0.4rem 0.6rem; display: flex; gap: 0.4rem; align-items: center; }
+.dir__actions label { display: inline-flex; gap: 0.3rem; align-items: center; font-size: 0.6875rem; cursor: pointer; }
+.dir__actions .spacer { margin-inline-start: auto; }
+.sheet__note { font-family: var(--font-mono); font-size: 0.625rem; color: var(--faint); }
 </style>
 </head>
 <body>
@@ -528,6 +557,28 @@
         <span class="hint">Pick a design from the list, or write a brief to make a new one.</span>
       </div>
     </div>
+
+    <!-- ============ CONTACT SHEET: compare directions for one brief ============ -->
+    <div class="sheet" id="sheet" hidden>
+      <div class="sheet__bar">
+        <div class="row" style="gap:0.5rem;align-items:center">
+          <span class="eyebrow">Directions</span>
+          <span class="sheet__note" id="sheet-label"></span>
+        </div>
+        <div class="row" style="gap:0.4rem;align-items:center">
+          <div class="seg" role="group" aria-label="Preview viewport">
+            <button data-vp="desktop" aria-pressed="true">Desktop</button>
+            <button data-vp="mobile" aria-pressed="false">Mobile</button>
+          </div>
+          <button class="btn btn--sm btn--ghost" id="sheet-regen">Regenerate unlocked</button>
+          <button class="btn btn--sm" id="sheet-finalize" disabled>Finalize selected</button>
+          <button class="btn btn--sm btn--ghost" id="sheet-close">Close</button>
+        </div>
+      </div>
+      <div class="sheet__metrics" id="sheet-metrics" hidden></div>
+      <p class="hint" id="sheet-help">Pick one to finalize. Lock any aspect you like before regenerating the rest — regeneration is local and costs nothing.</p>
+      <div class="sheet__grid" id="sheet-grid" data-vp="desktop"></div>
+    </div>
   </section>
 
   <!-- ================= RIGHT: composer, then designs ================= -->
@@ -574,6 +625,19 @@
           <button class="btn btn--ghost" id="cancel" hidden>Cancel</button>
           <span class="hint" id="go-hint"></span>
         </div>
+
+        <hr style="border:0;border-block-start:1px solid var(--line);margin-block:0.2rem">
+
+        <div class="eyebrow">Or compare directions</div>
+        <div class="row">
+          <label class="lbl" style="flex:0 1 5.5rem"><span>How many</span><input class="field" id="dir-count" type="number" min="4" max="8" value="6"></label>
+          <label class="lbl" style="flex:0 1 6rem"><span>Seed</span><input class="field" id="dir-seed" type="number" min="0" placeholder="random"></label>
+          <label class="lbl" style="flex:1 1 9rem"><span>Fit first <span style="color:var(--faint)">←→</span> explore</span><input class="field" id="dir-explore" type="range" min="0" max="1" step="0.05" value="0.45"></label>
+        </div>
+        <div class="row">
+          <button class="btn" id="directions">Generate directions</button>
+          <span class="hint" id="dir-hint">1 decision + 1 inventory call for the whole set</span>
+        </div>
       </div>
     </div>
 
@@ -613,6 +677,7 @@
   const state = {
     catalog: {}, features: null, presets: [], designs: [], selected: null,
     detail: null, decider: 'auto', imagesOn: false, busy: false, es: null, jobId: null,
+    session: null, sheetOpen: false,
   };
 
   function toast(msg, ms = 3200) {
@@ -888,6 +953,8 @@
   function clearDesign() {
     state.selected = null;
     state.detail = null;
+    state.session = null;
+    if (state.sheetOpen) { $('#sheet').hidden = true; state.sheetOpen = false; }
 
     document.querySelectorAll('.design[aria-current]').forEach((b) => b.removeAttribute('aria-current'));
 
@@ -971,7 +1038,7 @@
     };
   }
 
-  function watch(jobId, title) {
+  function watch(jobId, title, onDone) {
     state.jobId = jobId;
     $('#progress-title').textContent = title;
     $('#log').replaceChildren();
@@ -986,6 +1053,7 @@
         setBusy(false);
         const job = await api(`/api/jobs/${jobId}`);
         if (job.state === 'done') {
+          if (onDone) { await onDone(job); return; }
           toast('Design ready');
           await refreshDesigns();
           await select(job.result.slug);
@@ -1028,6 +1096,217 @@
     }
   }
 
+
+  /* ---------------- contact sheet ----------------
+     Several directions for ONE brief. The set comes from a single decision call
+     plus a single shared inventory call; every preview is rendered locally.
+     Selecting, locking and regenerating are all model-free, so the previews you
+     are comparing cannot change underneath you. */
+  const LOCK_AXES = ['palette', 'typography', 'effects', 'motion', 'density'];
+
+  function dirPayload() {
+    const num = (id) => { const v = $(id).value.trim(); return v === '' ? undefined : Number(v); };
+    return {
+      brief: $('#brief').value.trim(),
+      decider: state.decider,
+      copy: $('#copy-on').checked,
+      count: Number($('#dir-count').value) || 6,
+      seed: num('#dir-seed'),
+      explore: Number($('#dir-explore').value),
+    };
+  }
+
+  async function generateDirections() {
+    const p = dirPayload();
+    if (!p.brief) return toast('Write a brief first');
+    try {
+      $('#dir-hint').textContent = 'deciding…';
+      const { jobId } = await api('/api/directions', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p),
+      });
+      watch(jobId, 'Deciding, then rendering the set locally…', async (job) => {
+        $('#dir-hint').textContent = '1 decision + 1 inventory call for the whole set';
+        if (!job.result || !job.result.sessionId) return toast('No session was created', 6000);
+        await loadSession(job.result.sessionId);
+      });
+    } catch (err) {
+      $('#dir-hint').textContent = '1 decision + 1 inventory call for the whole set';
+      toast(String(err.message || err), 6000);
+    }
+  }
+
+  async function loadSession(id) {
+    const { session } = await api(`/api/sessions/${id}`);
+    state.session = session;
+    renderSheet();
+  }
+
+  function showSheet(on) {
+    state.sheetOpen = on;
+    $('#sheet').hidden = !on;
+    if (on) {
+      $('#stage-empty').hidden = true;
+      $('#frame').hidden = true;
+      $('#detail-toolbar').hidden = true;
+      $('#metrics').hidden = true;
+      $('#new-design').hidden = false;
+    }
+  }
+
+  function renderSheet() {
+    const s = state.session;
+    if (!s) return;
+    showSheet(true);
+
+    $('#sheet-label').textContent =
+      `${s.directions.length} directions · seed ${s.seed} · explore ${s.explore} · ${s.previewLabel}`;
+
+    const m = s.metrics || {};
+    const box = $('#sheet-metrics');
+    box.hidden = false;
+    box.replaceChildren();
+    const cell = (k, v, sub) => el('div', { className: 'metric' },
+      el('span', { className: 'metric__k' }, k),
+      el('span', { className: 'metric__v' }, v),
+      el('span', { className: 'metric__sub' }, sub || ''));
+    cell('Model calls', String(m.modelCalls ?? '—'), 'entire set');
+    cell('Decide', fmtMs(m.decideMs), s.decider === 'live' ? 'Jev' : 'local stand-in');
+    cell('Inventory', fmtMs(m.inventoryMs), s.inventorySource === 'llm' ? 'one shared write' : 'specimen');
+    cell('Render', fmtMs(m.renderMs), `${s.directions.length} local renders`);
+    cell('Preview cost', fmtUsdShort(m.estimateUsd), 'estimated');
+    cell('Seed', String(s.seed), 'reproducible');
+
+    const grid = $('#sheet-grid');
+    grid.replaceChildren();
+    const locks = new Set(s.locks || []);
+
+    s.directions.forEach((d, i) => {
+      const card = el('article', { className: 'dir', dataset: { index: String(i) } });
+      if (s.selectedIndex === i) card.dataset.selected = '1';
+
+      card.append(el('header', { className: 'dir__head' },
+        el('span', { className: 'eyebrow' }, `#${i + 1} · ${d.lead}-led · ${d.family}`),
+        el('h3', {}, d.blueprintLabel),
+        el('span', { className: 'hint' },
+          `fit ${d.fit.toFixed(3)} · novelty ${d.novelty.toFixed(2)} · ${d.palette} · ${d.effects}`),
+        el('span', { className: 'hint' }, d.rationale || ''),
+      ));
+
+      card.append(el('div', { className: 'dir__preview' },
+        el('iframe', { src: `/preview/${s.id}/${i}`, loading: 'lazy', title: `${d.blueprintLabel} preview` }),
+        el('span', { className: 'badge' }, 'preview'),
+      ));
+
+      const struct = el('div', { className: 'dir__struct' });
+      for (const b of d.structure.blocks) struct.append(el('span', {}, b));
+      card.append(struct);
+
+      const lockBox = el('div', { className: 'dir__locks' });
+      LOCK_AXES.forEach((axis) => {
+        const cb = el('input', { type: 'checkbox' });
+        cb.checked = locks.has(axis);
+        cb.onchange = () => updateLocks(i);
+        lockBox.append(el('label', {}, cb, axis));
+      });
+      card.append(lockBox);
+
+      const actions = el('div', { className: 'dir__actions' });
+      const pick = el('input', { type: 'radio', name: 'dirpick' });
+      pick.checked = s.selectedIndex === i;
+      pick.onchange = () => chooseDirection(i);
+      actions.append(el('label', {}, pick, 'use this'));
+      actions.append(el('span', { className: 'spacer' }));
+      actions.append(el('a', {
+        className: 'btn btn--sm btn--ghost', href: `/preview/${s.id}/${i}`, target: '_blank', rel: 'noopener',
+      }, 'Open ↗'));
+      card.append(actions);
+
+      grid.append(card);
+    });
+
+    $('#sheet-finalize').disabled = s.selectedIndex === null || s.selectedIndex === undefined;
+    $('#sheet-help').textContent = locks.size
+      ? `Locked: ${[...locks].join(', ')}. Regenerate to re-roll everything else.`
+      : 'Pick one to finalize. Lock any aspect you like before regenerating the rest — regeneration is local and costs nothing.';
+  }
+
+  function collectLocks(card) {
+    const boxes = [...card.querySelectorAll('.dir__locks input')];
+    return boxes.map((cb, i) => (cb.checked ? LOCK_AXES[i] : null)).filter(Boolean);
+  }
+
+  async function updateLocks(index) {
+    const card = $(`#sheet-grid .dir[data-index="${index}"]`);
+    const locks = collectLocks(card);
+    const { session } = await api(`/api/sessions/${state.session.id}/select`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ index: state.session.selectedIndex, locks }),
+    });
+    state.session = session;
+    // Deliberately not a full re-render: that would reload every iframe.
+    $('#sheet-help').textContent = locks.length
+      ? `Locked: ${locks.join(', ')}. Regenerate to re-roll everything else.`
+      : 'Pick one to finalize. Lock any aspect you like before regenerating the rest.';
+  }
+
+  async function chooseDirection(index) {
+    const { session } = await api(`/api/sessions/${state.session.id}/select`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ index, locks: state.session.locks || [] }),
+    });
+    state.session = session;
+    document.querySelectorAll('#sheet-grid .dir').forEach((c) => {
+      c.dataset.selected = c.dataset.index === String(index) ? '1' : '';
+    });
+    document.querySelectorAll('#sheet-grid input[type=radio]').forEach((r, i) => { r.checked = i === index; });
+    $('#sheet-finalize').disabled = false;
+    $('#sheet-finalize').scrollIntoView({ block: 'nearest' });
+  }
+
+  async function regenerateSheet() {
+    const s = state.session;
+    if (!s) return;
+    try {
+      $('#sheet-help').textContent = 'Re-rolling the unlocked directions…';
+      const { session } = await api(`/api/sessions/${s.id}/regenerate`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          locks: s.locks || [],
+          fromIndex: s.selectedIndex === null || s.selectedIndex === undefined ? 0 : s.selectedIndex,
+          count: s.directions.length,
+        }),
+      });
+      state.session = session;
+      renderSheet();
+      toast(`New directions · seed ${session.seed} · no model calls`);
+    } catch (err) { toast(String(err.message || err), 6000); }
+  }
+
+  async function finalizeSelected() {
+    const s = state.session;
+    if (!s || s.selectedIndex === null || s.selectedIndex === undefined) return toast('Pick a direction first');
+    try {
+      const { jobId } = await api(`/api/sessions/${s.id}/finalize`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ index: s.selectedIndex, finalCopy: $('#copy-on').checked }),
+      });
+      watch(jobId, 'Writing final copy for the chosen direction…', async (job) => {
+        if (!job.result || !job.result.slug) return toast('Finalize produced no design', 6000);
+        toast('Final design ready');
+        showSheet(false);
+        await refreshDesigns();
+        await select(job.result.slug);
+      });
+    } catch (err) { toast(String(err.message || err), 6000); }
+  }
+
+  function closeSheet() {
+    state.session = null;
+    showSheet(false);
+    $('#stage-empty').hidden = false;
+    $('#new-design').hidden = true;
+  }
+
   /* ---------------- wiring ---------------- */
   document.querySelectorAll('[role="tab"]').forEach((tab) => {
     tab.onclick = () => {
@@ -1052,6 +1331,17 @@
     if ($('#iterate-wrap').hidden === false && state.selected) run('iterate', state.selected);
     else run('new');
   };
+
+  $('#directions').onclick = generateDirections;
+  $('#sheet-regen').onclick = regenerateSheet;
+  $('#sheet-finalize').onclick = finalizeSelected;
+  $('#sheet-close').onclick = closeSheet;
+  document.querySelectorAll('[data-vp]').forEach((b) => {
+    b.onclick = () => {
+      document.querySelectorAll('[data-vp]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      $('#sheet-grid').dataset.vp = b.dataset.vp;
+    };
+  });
 
   $('#new-design').onclick = clearDesign;
   $('#refresh').onclick = () => refreshDesigns();
