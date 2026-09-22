@@ -32,6 +32,28 @@ function esc(s: string): string {
 const empty = (what: string) =>
   `        <p class="note">No ${what} supplied for this brief.</p>`;
 
+/**
+ * The contact details a brief actually supplied.
+ *
+ * `any` is the only thing callers should branch on: a page either has a real
+ * way to make contact or it says so. Nothing here invents a value.
+ */
+function contactOf(c: Content) {
+  const k = c.contact ?? {};
+  return {
+    email: k.email,
+    phone: k.phone,
+    address: k.address,
+    url: k.url,
+    handle: k.handle,
+    note: k.note,
+    any: Boolean(k.email || k.phone || k.address || k.url || k.handle),
+  };
+}
+
+/** A `tel:` href from a loosely-formatted phone number. */
+const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
+
 /** An image slot. Falls back to a gradient plate, so a page never breaks without art. */
 function plate(assets: Asset[], i: number, cls = 'plate'): string {
   const a = assets.length ? assets[i % assets.length] : undefined;
@@ -46,7 +68,7 @@ function plate(assets: Asset[], i: number, cls = 'plate'): string {
  * ================================================================== */
 function itemsRail(items: Item[], ctx: BlockCtx): string {
   return `        <div class="rail stagger" role="region" aria-label="${esc(
-    stripEmphasis(ctx.content.sections.items.title),
+    stripEmphasis(ctx.content.sections.items?.title ?? MODULE_LABELS.items),
   )}, scrollable">
 ${items
   .map(
@@ -108,7 +130,7 @@ ${items
 function itemsTable(items: Item[], ctx: BlockCtx): string {
   return `        <div class="table-wrap">
           <table class="spectable">
-            <caption class="visually-hidden">${esc(stripEmphasis(ctx.content.sections.items.title))}</caption>
+            <caption class="visually-hidden">${esc(stripEmphasis(ctx.content.sections.items?.title ?? MODULE_LABELS.items))}</caption>
             <thead><tr><th scope="col">#</th><th scope="col">Name</th><th scope="col">Detail</th><th scope="col">Tags</th></tr></thead>
             <tbody>
 ${items
@@ -327,25 +349,58 @@ ${c.features
         </ul>`;
 
 function contactBlock(c: Content, variant: string): string {
-  const details = `        <p class="display"><a class="link-u" href="mailto:${esc(c.contact.email)}">${esc(c.contact.email)}</a></p>
-        <p class="cluster" style="margin-block-start: var(--s-4)">
-          <span class="tag">${esc(c.contact.address)}</span>
-          <a class="tag" href="tel:${esc(c.contact.phone.replace(/[^\d+]/g, ''))}">${esc(c.contact.phone)}</a>
-        </p>`;
+  const k = contactOf(c);
 
-  if (variant === 'email') return details;
+  // No details in the brief: say so, rather than manufacturing an address and a
+  // phone number so the template looks complete.
+  if (!k.any) {
+    return `        <p class="note">The brief specified no way to get in touch. Rather than invent an
+        address or a phone number to fill this section, the page leaves it out — the
+        footer names the brand and nothing more.</p>`;
+  }
 
-  const form = `        <form class="grid contact-form" style="margin-block-start: var(--s-8)" onsubmit="return false">
+  const bits: string[] = [];
+  if (k.email) {
+    bits.push(
+      `        <p class="display"><a class="link-u" href="mailto:${esc(k.email)}">${esc(k.email)}</a></p>`,
+    );
+  }
+  const tags: string[] = [];
+  if (k.phone) tags.push(`          <a class="tag" href="${esc(telHref(k.phone))}">${esc(k.phone)}</a>`);
+  if (k.address) tags.push(`          <span class="tag">${esc(k.address)}</span>`);
+  if (k.handle) tags.push(`          <span class="tag">${esc(k.handle)}</span>`);
+  if (k.url) {
+    tags.push(
+      `          <a class="tag" href="${esc(k.url)}" rel="noopener">${esc(k.url.replace(/^https?:\/\//, ''))}</a>`,
+    );
+  }
+  if (tags.length) {
+    bits.push(`        <p class="cluster" style="margin-block-start: var(--s-4)">\n${tags.join('\n')}\n        </p>`);
+  }
+  if (k.note) bits.push(`        <p class="note">${esc(k.note)}</p>`);
+  const details = bits.join('\n');
+
+  /* A form is only rendered when there is somewhere for it to go. `mailto:` is a
+     real submission path that needs no server, so the form works offline; the
+     page says so plainly instead of showing a dead input that silently fails. */
+  const canSubmit = Boolean(k.email);
+  const form = canSubmit
+    ? `        <form class="grid contact-form" action="mailto:${esc(k.email!)}" method="post" enctype="text/plain" style="margin-block-start: var(--s-8)">
           <label class="span-6"><span class="eyebrow">Name</span><input class="field" name="name" autocomplete="name" required></label>
           <label class="span-6"><span class="eyebrow">Email</span><input class="field" name="email" type="email" autocomplete="email" required></label>
           <label class="span-full"><span class="eyebrow">Message</span><textarea class="field" name="message" rows="3"></textarea></label>
           <p class="span-full"><button class="btn" type="submit">${esc(c.cta)}</button></p>
-        </form>`;
+          <p class="span-full note">Opens your own email client — this page has no server behind it.</p>
+        </form>`
+    : '';
 
+  if (variant === 'email' || !form) {
+    return form ? `${details}\n${form}` : details;
+  }
   if (variant === 'split') {
     return `        <div class="split"><div>${details}</div><div>${form}</div></div>`;
   }
-  return details + '\n' + form;
+  return `${details}\n${form}`;
 }
 
 /* ================================================================== *
@@ -488,19 +543,50 @@ export function renderHero(variant: HeroVariant, ctx: BlockCtx): string {
 /* ================================================================== *
  * Navigation
  * ================================================================== */
-export function renderNav(variant: NavVariant, blueprint: Blueprint, ctx: BlockCtx): string {
+/** Default link text per module. Used when the writer supplies no exact match. */
+export const MODULE_LABELS: Record<ModuleId, string> = {
+  items: 'Work',
+  features: 'Capabilities',
+  stats: 'Numbers',
+  about: 'About',
+  process: 'Process',
+  quote: 'Words',
+  gallery: 'Gallery',
+  schedule: 'Programme',
+  pricing: 'Prices',
+  faq: 'Questions',
+  contact: 'Contact',
+};
+
+export interface NavTarget {
+  module: ModuleId;
+  /** The rendered instance id — always unique, always resolvable in-page. */
+  id: string;
+  label: string;
+}
+
+/**
+ * Navigation.
+ *
+ * Labels are matched to their TARGET, not to a position in an array. The old
+ * code advanced through the writer's label list by a different offset than the
+ * anchors it was building, so once a blueprint repeated a module the link text
+ * landed on the wrong section.
+ */
+export function renderNav(
+  variant: NavVariant,
+  blueprint: Blueprint,
+  ctx: BlockCtx,
+  targets: NavTarget[],
+): string {
   if (variant === 'none') return '';
   const c = ctx.content;
-  const anchors = ['top', ...blueprint.sections.map((x) => x.module)];
-  const labels: Record<string, string> = {
-    top: 'Home', items: 'Work', features: 'Capabilities', stats: 'Numbers', about: 'About',
-    process: 'Process', quote: 'Words', gallery: 'Gallery', schedule: 'Programme',
-    pricing: 'Prices', faq: 'Questions', contact: 'Contact',
-  };
-  const links = anchors
-    .slice(1, 6)
-    .map((a, i) => `<li><a href="#${a}">${esc(c.nav[i + 1] ?? labels[a] ?? a)}</a></li>`)
+  const links = targets
+    .filter((t) => t.module !== 'contact')
+    .slice(0, 4)
+    .map((t) => `<li><a href="#${esc(t.id)}">${esc(t.label)}</a></li>`)
     .join('');
+  const contactTarget = targets.find((t) => t.module === 'contact');
 
   if (variant === 'minimal') {
     return `  <header class="site-head site-head--minimal"><div class="wrap"><nav aria-label="Primary">
@@ -509,24 +595,33 @@ export function renderNav(variant: NavVariant, blueprint: Blueprint, ctx: BlockC
   }
   if (variant === 'inline-links') {
     return `  <header class="site-head site-head--inline"><div class="wrap"><nav aria-label="Primary">
-      <ul class="nav-list">${links}<li><a href="#contact" class="btn btn--sm">${esc(c.cta)}</a></li></ul>
+      <ul class="nav-list">${links}${
+        contactTarget ? `<li><a href="#${esc(contactTarget.id)}" class="btn btn--sm">${esc(c.cta)}</a></li>` : ''
+      }</ul>
     </nav></div></header>`;
   }
   if (variant === 'stacked') {
     return `  <header class="site-head site-head--stacked"><div class="wrap"><nav aria-label="Primary">
       <a href="#top" class="brand">${esc(c.brand)}</a>
-      <ul class="nav-list">${links}</ul>
+      <ul class="nav-list">${links}${
+        contactTarget ? `<li><a href="#${esc(contactTarget.id)}">${esc(contactTarget.label)}</a></li>` : ''
+      }</ul>
     </nav></div></header>`;
   }
 
+  /* The plain bar carries no tool chrome: the header belongs to the brief's own
+     brand. Decision provenance lives in the spec, the export README and the
+     control surface — never in the page a visitor reads. */
   const cta =
-    variant === 'bar-cta'
-      ? `<a class="btn btn--sm" href="#contact">${esc(c.cta)}</a>`
-      : `<button class="btn btn--ghost anchor-host" popovertarget="provenance">Provenance</button>`;
+    variant === 'bar-cta' && contactTarget
+      ? `<a class="btn btn--sm" href="#${esc(contactTarget.id)}">${esc(c.cta)}</a>`
+      : '';
 
   return `  <header class="site-head"><div class="wrap"><nav aria-label="Primary">
       <a href="#top" class="brand">${esc(c.brand)}</a>
-      <ul class="nav-list">${links}</ul>
+      <ul class="nav-list">${links}${
+        !cta && contactTarget ? `<li><a href="#${esc(contactTarget.id)}">${esc(contactTarget.label)}</a></li>` : ''
+      }</ul>
       ${cta}
   </nav></div></header>`;
 }
@@ -536,50 +631,69 @@ export function renderNav(variant: NavVariant, blueprint: Blueprint, ctx: BlockC
  * ================================================================== */
 export function renderFooter(variant: FooterVariant, ctx: BlockCtx): string {
   const c = ctx.content;
+  const k = contactOf(c);
   const year = '<span data-year></span>';
-  const social = '';
+  const emailLink = k.email
+    ? `<a class="link-u" href="mailto:${esc(k.email)}">${esc(k.email)}</a>`
+    : '';
+  const postal = [k.address, k.handle].filter(Boolean).join(' · ');
 
   switch (variant) {
     case 'minimal':
       return `  <footer class="footer footer--minimal"><div class="wrap">
-      <p class="eyebrow">${esc(c.brand)} · <a class="link-u" href="mailto:${esc(c.contact.email)}">${esc(c.contact.email)}</a> · © ${year}</p>
+      <p class="eyebrow">${esc(c.brand)}${emailLink ? ` · ${emailLink}` : ''} · © ${year}</p>
   </div></footer>`;
 
     case 'columns':
       return `  <footer class="footer footer--columns"><div class="wrap">
       <div class="grid footer__cols">
         <div class="col-4"><p class="eyebrow">${esc(c.brand)}</p><p>${esc(c.footerNote)}</p></div>
-        <div class="col-4"><p class="eyebrow">Contact</p><p>${esc(c.contact.email)}<br>${esc(c.contact.phone)}<br>${esc(c.contact.address)}</p></div>
+        <div class="col-4"><p class="eyebrow">Contact</p><p>${
+          k.any
+            ? [emailLink || esc(k.email ?? ''), k.phone ? esc(k.phone) : '', k.address ? esc(k.address) : '', k.url ? esc(k.url) : '']
+                .filter(Boolean)
+                .join('<br>')
+            : 'Not specified in the brief'
+        }</p></div>
         <div class="col-4"><p class="eyebrow">©</p><p>${year}</p></div>
       </div>
   </div></footer>`;
 
     case 'cta-band':
       return `  <footer class="footer footer--cta"><div class="wrap">
-      <h2 class="footer__cta">${emphasize(c.sections.contact.title)}</h2>
-      <p class="cluster"><a class="btn" href="mailto:${esc(c.contact.email)}">${esc(c.cta)}</a><span class="tag">${esc(c.contact.email)}</span></p>
+      <h2 class="footer__cta">${emphasize(c.sections.contact?.title ?? `Work with ${c.brand}`)}</h2>
+      <p class="cluster">${
+        k.email
+          ? `<a class="btn" href="mailto:${esc(k.email)}">${esc(c.cta)}</a><span class="tag">${esc(k.email)}</span>`
+          : `<span class="tag">No contact details supplied for this brief</span>`
+      }</p>
   </div></footer>`;
 
-    case 'ledger':
+    case 'ledger': {
+      const rows: string[] = [];
+      if (k.email) rows.push(`<dt>Email</dt><dd>${emailLink}</dd>`);
+      if (k.phone) rows.push(`<dt>Phone</dt><dd><a class="link-u" href="${esc(telHref(k.phone))}">${esc(k.phone)}</a></dd>`);
+      if (k.address) rows.push(`<dt>Address</dt><dd>${esc(k.address)}</dd>`);
+      if (k.url) rows.push(`<dt>Web</dt><dd><a class="link-u" href="${esc(k.url)}" rel="noopener">${esc(k.url)}</a></dd>`);
+      if (k.handle) rows.push(`<dt>Handle</dt><dd>${esc(k.handle)}</dd>`);
+      rows.push(`<dt>©</dt><dd>${year}</dd>`);
       return `  <footer class="footer footer--ledger"><div class="wrap">
       <dl class="spec spec--inline">
-        <dt>Email</dt><dd><a class="link-u" href="mailto:${esc(c.contact.email)}">${esc(c.contact.email)}</a></dd>
-        <dt>Phone</dt><dd>${esc(c.contact.phone)}</dd>
-        <dt>Address</dt><dd>${esc(c.contact.address)}</dd>
-        <dt>©</dt><dd>${year}</dd>
+        ${rows.join('\n        ')}
       </dl>
   </div></footer>`;
+    }
 
     case 'colophon':
       return `  <footer class="footer footer--colophon"><div class="wrap">
       <span class="rule" data-reveal="line"></span>
       <p class="colophon">${esc(c.brand)} — ${esc(c.footerNote)}</p>
-      <p class="mono">${esc(c.contact.address)} · ${esc(c.contact.email)}</p>
+      ${postal || k.email ? `<p class="mono">${[postal, k.email].filter((x): x is string => Boolean(x)).map(esc).join(' · ')}</p>` : ''}
   </div></footer>`;
 
     default:
       return `  <footer class="footer footer--masthead"><div class="wrap">
-      <p class="eyebrow">${esc(c.brand)} — ${esc(c.contact.address)}</p>
+      <p class="eyebrow">${esc(c.brand)}${postal ? ` — ${esc(postal)}` : ''}</p>
       <p class="masthead" aria-hidden="true">${esc(c.brand)}</p>
       <p class="eyebrow">${esc(c.footerNote)} · © ${year}</p>
   </div></footer>`;

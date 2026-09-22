@@ -7,9 +7,26 @@
  *
  * Every visual value comes from the catalog entries the direction selected, and
  * every word comes from `spec.content`.
+ *
+ * ## Identity
+ *
+ * Every rendered section gets a UNIQUE, STABLE id, even when a blueprint
+ * repeats a module. The first instance of `items` is `items`; the second is
+ * `items-2`. Navigation targets the first instance. Previously both the hero and
+ * `<main>` carried `id="top"`, and a repeated module emitted the same id twice,
+ * so duplicates were both invalid and ambiguous as link targets.
  */
-import { BLUEPRINT_BY_ID, type Blueprint } from './blueprint.js';
-import { renderFooter, renderHero, renderModule, renderNav, sectionHead, type BlockCtx } from './blocks.js';
+import { BLUEPRINT_BY_ID, type Blueprint, type ModuleId } from './blueprint.js';
+import {
+  MODULE_LABELS,
+  renderFooter,
+  renderHero,
+  renderModule,
+  renderNav,
+  sectionHead,
+  type BlockCtx,
+  type NavTarget,
+} from './blocks.js';
 import { atmosphereFor, EFFECTS_BY_ID, LAYOUT_BY_ID, MOTION_BY_ID, PALETTE_BY_ID, TYPE_BY_ID } from './catalog.js';
 import type { DensityId } from './catalog.js';
 import { stripEmphasis } from './content.js';
@@ -24,7 +41,56 @@ function esc(s: string): string {
 
 const FALLBACK_BLUEPRINT: Blueprint = BLUEPRINT_BY_ID['statement-display']!;
 
-export function renderHtml(spec: DesignSpec): string {
+export interface RenderOptions {
+  /**
+   * Preview renders are shown to a human inside the contact sheet before any
+   * final copy exists. They are labelled as such on the page itself, so a
+   * screenshot can never be mistaken for a finished design.
+   */
+  preview?: boolean;
+  /** Which copy is in this render, for the preview label. */
+  copySource?: 'shared-inventory' | 'specimen' | 'final';
+  /** Extra @font-face / motif CSS to inject (bundled fonts, generated motifs). */
+  extraCss?: string;
+}
+
+/**
+ * Unique, stable instance ids for a blueprint's sections.
+ * Exported so the asset/slot layers can address the same instances.
+ */
+export function sectionInstanceIds(blueprint: Blueprint): string[] {
+  const counts = new Map<ModuleId, number>();
+  return blueprint.sections.map((sec) => {
+    const n = (counts.get(sec.module) ?? 0) + 1;
+    counts.set(sec.module, n);
+    return n === 1 ? sec.module : `${sec.module}-${n}`;
+  });
+}
+
+/** The nav targets: the first instance of each module, in blueprint order. */
+export function navTargetsFor(blueprint: Blueprint, spec: DesignSpec): NavTarget[] {
+  const ids = sectionInstanceIds(blueprint);
+  const content = spec.content;
+  // Labels are matched to their target. The writer's labels are used only when
+  // there is exactly one per section, so a short list cannot shift onto the
+  // wrong link.
+  const labels = content && content.nav.length === blueprint.sections.length ? content.nav : null;
+
+  const seen = new Set<ModuleId>();
+  const out: NavTarget[] = [];
+  blueprint.sections.forEach((sec, i) => {
+    if (seen.has(sec.module)) return;
+    seen.add(sec.module);
+    out.push({
+      module: sec.module,
+      id: ids[i]!,
+      label: labels?.[i] ?? MODULE_LABELS[sec.module],
+    });
+  });
+  return out;
+}
+
+export function renderHtml(spec: DesignSpec, opts: RenderOptions = {}): string {
   const palette = PALETTE_BY_ID[spec.tokens.palette ?? ''];
   const type = TYPE_BY_ID[spec.tokens.typography ?? ''];
   const layout = LAYOUT_BY_ID[spec.tokens.layout ?? ''];
@@ -58,18 +124,25 @@ export function renderHtml(spec: DesignSpec): string {
     blueprint,
   };
 
-  /* Sections, in the blueprint's order. Only modules it declares are rendered,
-     which is what stops every page being work/features/stats/about/contact. */
+  const instanceIds = sectionInstanceIds(blueprint);
+  const navTargets = navTargetsFor(blueprint, spec);
+
+  /* Sections, in the blueprint's order, each with its own unique id. Only
+     modules the blueprint declares are rendered, which is what stops every page
+     being work/features/stats/about/contact. */
   const sections = blueprint.sections
-    .map((sec) => {
+    .map((sec, i) => {
+      const id = instanceIds[i]!;
+      const heading = c.sections?.[sec.module];
       const head = sectionHead(
-        (c.sections as Record<string, { title: string; eyebrow: string; note: string }>)[sec.module]?.title ??
-          sec.module,
-        (c.sections as Record<string, { eyebrow: string }>)[sec.module]?.eyebrow ?? sec.module,
-        (c.sections as Record<string, { note: string }>)[sec.module]?.note ?? '',
-        sec.module,
+        heading?.title ?? MODULE_LABELS[sec.module],
+        heading?.eyebrow ?? MODULE_LABELS[sec.module],
+        heading?.note ?? '',
+        id,
       );
-      return `  <section class="sec" id="${sec.module}" data-block="${sec.module}:${sec.variant}" aria-labelledby="${sec.module}-title">
+      return `  <section class="sec" id="${esc(id)}" data-block="${esc(sec.module)}:${esc(
+        sec.variant,
+      )}" aria-labelledby="${esc(id)}-title">
     <div class="wrap">
 ${head}
 ${renderModule(sec.module, sec.variant, ctx)}
@@ -83,21 +156,22 @@ ${renderModule(sec.module, sec.variant, ctx)}
     type.googleFonts.map((f) => `family=${f}`).join('&') +
     '&display=swap';
 
-  const decisionList = spec.decisions
-    .map(
-      (d) =>
-        `<dt>${esc(d.axis)}</dt><dd>${esc(d.picked)} <small>(conf ${d.confidence.toFixed(2)}${
-          d.review ? ', review' : ''
-        })</small></dd>`,
-    )
-    .join('\n        ');
-
-  const effectsLabel = EFFECTS_BY_ID[effects]?.label ?? effects;
+  const previewBanner = opts.preview
+    ? `\n<div class="preview-flag" role="note"><b>Preview</b> — ${
+        opts.copySource === 'final'
+          ? 'final copy'
+          : opts.copySource === 'specimen'
+            ? 'local specimen copy, no writer configured'
+            : 'shared content inventory, not final copy'
+      }. Blueprint <code>${esc(blueprint.id)}</code>.</div>`
+    : '';
 
   return `<!DOCTYPE html>
 <html lang="en" data-emotion="${esc(emotion)}" data-blueprint="${esc(blueprint.id)}" data-lead="${esc(
     blueprint.lead,
-  )}" data-effects="${esc(effects)}" data-palette="${esc(palette.id)}">
+  )}" data-effects="${esc(effects)}" data-palette="${esc(palette.id)}"${
+    opts.preview ? ' data-preview="1"' : ''
+  }>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -118,38 +192,18 @@ ${renderModule(sec.module, sec.variant, ctx)}
 <link rel="stylesheet" href="${esc(fontHref)}">
 <style>
 ${css}
+${opts.extraCss ?? ''}
 </style>
 </head>
 <body>
-
+${previewBanner}
 <div class="scroll-progress" aria-hidden="true"></div>
 <div class="atmosphere" aria-hidden="true"></div>
 ${atm.grain > 0 ? '<div class="grain" aria-hidden="true"></div>' : ''}
 
-${renderNav(blueprint.nav, blueprint, ctx)}
+${renderNav(blueprint.nav, blueprint, ctx, navTargets)}
 
-<!-- Provenance lives here, not in the page's own chrome: the header and footer
-     belong to the brief's brand, not to the tool that generated it. -->
-<div id="provenance" class="pop" popover>
-  <h2>How this page was built</h2>
-  <p>A brief was answered by <strong>${esc(
-    spec.meta.decider === 'live' ? 'Jev' : 'the local stand-in decider',
-  )}</strong>
-  (${esc(spec.meta.model)}) in ${spec.meta.latencyMs} ms. ${
-    spec.meta.writer === 'llm'
-      ? `The content was written by <strong>${esc(spec.meta.writerModel)}</strong> in ${spec.meta.writerLatencyMs} ms.`
-      : 'No writer was configured, so this is specimen content.'
-  }
-  Code assembled the page from the decisions below — the model never wrote markup.</p>
-  <dl class="spec">
-        ${decisionList}
-      <dt>blueprint</dt><dd>${esc(blueprint.id)} <small>(${esc(blueprint.lead)}-led)</small></dd>
-      <dt>effects</dt><dd>${esc(effectsLabel)}</dd>
-      <dt>seed</dt><dd>${spec.seed}</dd>
-  </dl>
-</div>
-
-<main id="top">
+<main>
 ${renderHero(blueprint.hero, ctx)}
 
 ${sections}

@@ -379,8 +379,15 @@ export function validateBlueprint(bp: Blueprint): BlueprintIssue[] {
   if (bp.grid.columns !== 1 && bp.grid.columns < 8) add('grid-columns', 'a multi-column grid below 8 columns is unusable');
   if (bp.hero === 'index' && !modules.includes('items')) add('hero-index', 'an index hero needs items to index');
 
-  // contact should be reachable, though not necessarily last.
-  if (!modules.includes('contact')) add('no-contact', 'every page needs a way to make contact');
+  // Contact is deliberately NOT mandatory. A brief may supply no way to get in
+  // touch at all — a festival poster may carry only a date and a venue, and a
+  // manifesto may carry nothing. Inventing an email and a phone number so the
+  // section looks complete is fabricating business details, which this tool
+  // does not do. When a page does offer contact, it must be reachable.
+  if (bp.lead === 'offer' && !modules.includes('contact')) {
+    // An offer with no route to act on it is not an offer.
+    add('offer-needs-contact', 'an offer-led page needs a way to act on the offer');
+  }
 
   return issues;
 }

@@ -58,6 +58,36 @@ export const PullQuote = z.object({
   attribution: z.string().max(60).default(''),
 });
 
+/**
+ * How a page can be contacted.
+ *
+ * Every field is optional, and the whole object is optional, because a brief
+ * does not always supply a way to make contact — a festival poster may carry
+ * only a date and a venue, and a manifesto may carry nothing at all. The old
+ * shape demanded an email, a phone number AND a postal address on every page,
+ * which meant the writer invented them. That is fabricating business details to
+ * satisfy a template, which this tool does not do.
+ *
+ * At least one field must be present when the object IS present: an empty
+ * contact block is worse than none.
+ */
+export const Contact = z
+  .object({
+    email: z.string().min(3).max(80).optional(),
+    phone: z.string().min(3).max(40).optional(),
+    address: z.string().min(2).max(120).optional(),
+    /** A real URL the brief implies (booking page, docs, shop). */
+    url: z.string().min(4).max(120).optional(),
+    /** A social handle, when that is how the brief says people find them. */
+    handle: z.string().min(2).max(40).optional(),
+    /** Anything the brief does say about reaching them, verbatim-ish. */
+    note: z.string().max(160).optional(),
+  })
+  .refine((v) => Object.values(v).some((x) => typeof x === 'string' && x.trim().length > 0), {
+    message: 'contact needs at least one of email/phone/address/url/handle/note',
+  });
+export type Contact = z.infer<typeof Contact>;
+
 /** A numbered step in a process / method list. */
 export const ProcessStep = z.object({
   name: z.string().min(2).max(40),
@@ -75,15 +105,34 @@ export const Content = z.object({
   tagline: z.string().min(8).max(160),
   lede: z.string().min(20).max(400),
   cta: z.string().min(2).max(40),
-  /** Nav labels, in order. The last one should be the contact. */
-  nav: z.array(z.string().min(2).max(20)).min(3).max(6),
+  /**
+   * Optional label overrides, matched POSITIONALLY to the blueprint's sections.
+   * When the count does not match the blueprint the labels are ignored and the
+   * renderer derives them from the modules — the previous code indexed into this
+   * array with the wrong offset, so labels drifted onto the wrong links.
+   */
+  nav: z.array(z.string().min(2).max(20)).max(8).default([]),
 
-  sections: z.object({
-    items: Section,
-    features: Section,
-    about: Section,
-    contact: Section,
-  }),
+  /**
+   * Per-module heading blocks. Partial on purpose: a blueprint renders only the
+   * modules it declares, so the writer is asked only for those. The renderer
+   * falls back to the module name when one is absent.
+   */
+  sections: z
+    .object({
+      items: Section.optional(),
+      features: Section.optional(),
+      stats: Section.optional(),
+      about: Section.optional(),
+      process: Section.optional(),
+      quote: Section.optional(),
+      gallery: Section.optional(),
+      schedule: Section.optional(),
+      pricing: Section.optional(),
+      faq: Section.optional(),
+      contact: Section.optional(),
+    })
+    .default({}),
 
   /* ---- modules -----------------------------------------------------------
      Each is optional. A blueprint declares which modules it needs, the writer is
@@ -95,11 +144,11 @@ export const Content = z.object({
   aboutFacts: z.array(Fact).max(5).default([]),
   aboutBody: z.array(z.string().min(40).max(700)).max(3).default([]),
 
-  contact: z.object({
-    email: z.string().min(3).max(80),
-    phone: z.string().min(3).max(40),
-    address: z.string().min(2).max(120),
-  }),
+  /**
+   * How to reach them — present only when the brief actually implies a way.
+   * Never invented to fill a slot.
+   */
+  contact: Contact.optional(),
 
   /** One line of footer provenance/voice. */
   footerNote: z.string().min(2).max(160),
@@ -242,11 +291,22 @@ export function repairContent(raw: unknown): Content | null {
       return label && value ? { label, value } : undefined;
     }),
     aboutBody: list(r.aboutBody, 3, (v) => str(v, LIMITS.aboutParagraph, 40)),
-    contact: {
-      email: str(contact.email, LIMITS.contactField, 3),
-      phone: str(contact.phone, LIMITS.contactField, 3),
-      address: str(contact.address, LIMITS.contactField, 2),
-    },
+    // Only the fields the brief actually supports. An absent field stays absent
+    // rather than being filled with a plausible-looking invention.
+    contact: (() => {
+      const fields = {
+        email: str(contact.email, LIMITS.contactField, 3),
+        phone: str(contact.phone, LIMITS.contactField, 3),
+        address: str(contact.address, LIMITS.contactField, 2),
+        url: str(contact.url, LIMITS.contactField, 4),
+        handle: str(contact.handle, LIMITS.contactField, 2),
+        note: str(contact.note, LIMITS.contactField, 1),
+      };
+      const present = Object.fromEntries(
+        Object.entries(fields).filter(([, v]) => typeof v === 'string' && v.length > 0),
+      );
+      return Object.keys(present).length ? present : undefined;
+    })(),
     footerNote: str(r.footerNote, LIMITS.footerNote, 2),
     ticker: list(r.ticker, 8, (v) => str(v, LIMITS.tickerWord, 2)),
     pullQuote: (() => {
@@ -265,10 +325,9 @@ export function repairContent(raw: unknown): Content | null {
 
   // Guards: only what a page cannot be rendered without. Module arrays may be
   // empty — a blueprint that does not use `stats` should not be blocked for
-  // lacking them.
+  // lacking them. Contact is genuinely optional: we no longer require an
+  // invented email, phone and address on every page.
   if (!candidate.brand || !candidate.tagline || !candidate.lede) return null;
-  if (!candidate.contact.email || !candidate.contact.phone || !candidate.contact.address) return null;
-  if (candidate.nav.length < 3) candidate.nav = ['Work', 'Features', 'About', 'Contact'];
 
   const parsed = Content.safeParse(candidate);
   if (!parsed.success && process.env.FORGE_DEBUG_REPAIR === '1') {
@@ -300,6 +359,8 @@ export function validateContentForBlueprint(
     schedule: content.items.length > 0,
     pricing: content.features.length > 0 && content.stats.length > 0,
     faq: content.features.length > 0,
+    // A contact section can always be rendered honestly — with the details the
+    // brief supplied, or with a plain statement that it supplied none.
     contact: true,
   };
   for (const m of required) if (!has[m]) missing.push(m);
@@ -421,11 +482,9 @@ export function fallbackContent(brief: string, axes: FallbackAxis[]): Content {
       'Set FORGE_LLM_PROVIDER and a matching key to have a language model write real content for your brief. The design decisions are unaffected either way.',
     ],
 
-    contact: {
-      email: 'studio@example.com',
-      phone: '+00 000 000 000',
-      address: 'No address — no writer configured',
-    },
+    // No contact details: a specimen has none to give, and inventing an email
+    // and phone number to fill the slot is exactly the behaviour we removed.
+    // The contact section states this plainly instead.
 
     footerNote: 'Specimen content. The design, not the words.',
 

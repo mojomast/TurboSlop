@@ -178,13 +178,76 @@ await test('content drives every part of the rendered page', async () => {
   assert.ok(html.includes(c.brand), 'brand missing');
   assert.ok(html.includes(c.lede.slice(0, 40)), 'lede missing');
   assert.ok(html.includes(c.cta), 'cta missing');
-  assert.ok(html.includes(c.contact.email), 'contact email missing');
   assert.ok(html.includes(c.items[0]!.name), 'first item missing');
   assert.ok(html.includes(c.stats[0]!.value), 'first stat missing');
   assert.ok(html.includes(c.features[0]!.name), 'first feature missing');
   assert.ok(html.includes(c.aboutBody[0]!.slice(0, 40)), 'about body missing');
-  assert.ok(html.includes(c.sections.contact.eyebrow), 'contact eyebrow missing');
+  if (c.sections.contact?.eyebrow) {
+    assert.ok(html.includes(c.sections.contact.eyebrow), 'contact eyebrow missing');
+  }
   assert.ok(!html.includes('undefined'), 'undefined leaked into the output');
+});
+
+await test('contact details are never invented to fill the section', async () => {
+  // The specimen has no contact details, and the page must say so rather than
+  // fabricate an address and a phone number.
+  const spec = await composed(BRIEFS[0]!);
+  assert.equal(spec.content!.contact, undefined, 'the specimen must not carry contact details');
+  const html = renderHtml(spec);
+  assert.ok(
+    /specified no way to get in touch|No contact details supplied/i.test(html),
+    'a page with no contact details must say so honestly',
+  );
+  assert.ok(!/mailto:[^\s"}]+@example\.com/.test(html), 'no placeholder email address');
+  assert.ok(!/tel:\+?0/.test(html), 'no placeholder phone number');
+});
+
+await test('a form is only rendered when it has a real submission path', async () => {
+  // A form must either submit somewhere or be clearly a preview. A dead form
+  // that silently does nothing is the failure mode this guards.
+  const spec = await composed(BRIEFS[0]!);
+  const noContact = renderHtml(spec);
+  assert.ok(!/<form/.test(noContact), 'no contact details means no form at all');
+
+  spec.content = Content.parse({
+    ...spec.content!,
+    contact: { email: 'hello@kilnandquiet.example' },
+  });
+  const withEmail = renderHtml(spec);
+  assert.ok(/<form[^>]+action="mailto:hello@kilnandquiet\.example"/.test(withEmail), 'form needs a real action');
+  assert.ok(!/onsubmit="return false"/.test(withEmail), 'the dead no-op handler must be gone');
+  assert.ok(/Opens your own email client/.test(withEmail), 'the submission path must be explained');
+});
+
+await test('every rendered id is unique, even when a blueprint repeats a module', async () => {
+  // `catalogue-rail` renders `items` twice. Both `<main>` and the hero once
+  // carried id="top" as well. Duplicate ids make anchors ambiguous and are
+  // invalid HTML.
+  const repeats = ['catalogue-rail', 'catalogue-market', 'product-spec'];
+  for (const bp of repeats) {
+    const spec = await composed(BRIEFS[0]!);
+    spec.blueprint = bp;
+    const html = renderHtml(spec);
+    const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]!);
+    const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
+    assert.deepEqual([...new Set(dupes)], [], `blueprint ${bp} emitted duplicate ids: ${dupes.join(', ')}`);
+    assert.equal(ids.filter((id) => id === 'top').length, 1, `blueprint ${bp} must have exactly one #top`);
+  }
+});
+
+await test('nav anchors resolve to the instance the blueprint means', async () => {
+  // When a module repeats, the nav must point at the FIRST instance, and every
+  // emitted target must exist in the document.
+  const spec = await composed(BRIEFS[0]!);
+  spec.blueprint = 'catalogue-rail';
+  const html = renderHtml(spec);
+  const anchors = [...html.matchAll(/<a[^>]+href="#([^"]+)"/g)].map((m) => m[1]!);
+  const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]!));
+  for (const a of anchors) assert.ok(ids.has(a), `nav anchor #${a} has no target`);
+  // The rail renders items twice; the nav must name the first one only.
+  assert.ok(ids.has('items') && ids.has('items-2'), 'both item instances must be addressable');
+  assert.ok(anchors.includes('items'), 'nav should target the first items instance');
+  assert.ok(!anchors.includes('items-2'), 'nav should not target the repeated instance');
 });
 
 await test('nav anchors always resolve to real section ids', async () => {
