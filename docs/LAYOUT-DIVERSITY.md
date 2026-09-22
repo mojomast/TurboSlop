@@ -179,7 +179,7 @@ Baseline: 11 designs, live decider and writer throughout.
 
 Cost is flat-to-slightly-lower despite the writer now receiving a *narrower*
 request and the pages being structurally richer. Thinking mode being off
-(see [`docs/*RESEARCH.md`](.)) is what keeps the writer leg near 7s.
+(see [`JEV-RESEARCH.md`](JEV-RESEARCH.md)) is what keeps the writer leg near 7s.
 
 Six-direction batch: **45.2 s and $0.0063 total** (~7.5 s and ~$0.001 each).
 
