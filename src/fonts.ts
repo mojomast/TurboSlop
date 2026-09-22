@@ -157,3 +157,33 @@ export function describeFontPack(): string {
   const families = FONT_PACK.map((f) => `${f.direction}=${f.family}`).join(', ');
   return `TurboSlop font pack: ${FONT_PACK.length} bundled OFL variable families, ${(total / 1024).toFixed(1)} KB — ${families}.`;
 }
+
+/* ------------------------------------------------------------------ *
+ * Integration helpers
+ *
+ * A catalog typeface is a RECIPE (weight, tracking, scale, construction), and
+ * the bundled pack supplies the actual file. Putting the bundled family first in
+ * the stack is what makes an exported page render as intended with no network.
+ * ------------------------------------------------------------------ */
+/** The bundled family name serving a catalog typeface id, if any. */
+export function bundledFamilyFor(typefaceId: string): string | undefined {
+  return FONT_PACK.find((f) => f.direction === fontDirectionFor(typefaceId))?.family;
+}
+
+/** A CSS font stack with the bundled face first, falling back to `original`. */
+export function bundledStackFor(typefaceId: string, original: string): string {
+  const fam = bundledFamilyFor(typefaceId);
+  if (!fam) return original;
+  // If the original already names it, do not duplicate.
+  return original.includes(fam) ? original : `'${fam}', ${original}`;
+}
+
+/** The directions a page needs, given the typeface it chose. */
+export function directionsFor(typefaceId: string): FontDirection[] {
+  return [fontDirectionFor(typefaceId)];
+}
+
+/** Every bundled family name, for the export manifest and the surface. */
+export function bundledFamilies(): string[] {
+  return FONT_PACK.map((f) => f.family);
+}

@@ -35,6 +35,7 @@
 import { atmosphereFor } from './catalog.js';
 import type { LayoutCandidate, MotionCandidate, PaletteCandidate, TypeCandidate } from './catalog.js';
 import type { DensityId } from './catalog.js';
+import { bundledStackFor, fontDirectionFor, fontFaceCssFor } from './fonts.js';
 import { effectKitCss, elementCss } from './styles.js';
 
 export interface LayoutInput {
@@ -46,6 +47,13 @@ export interface LayoutInput {
   density: DensityId;
   /** The chosen CSS effect kit id. */
   effects: string;
+  /**
+   * Where the bundled woff2 files sit relative to the page. Defaults to
+   * `fonts/`, which is where the pipeline copies them, so a page on disk, a
+   * preview served by the control surface and a ZIP export all resolve the same
+   * way — with no remote font request.
+   */
+  fontBasePath?: string;
 }
 
 /** Spacing multiplier + reading measure per density decision. Higher = roomier. */
@@ -65,7 +73,17 @@ export function buildStylesheet(input: LayoutInput): string {
   const { palette, type, layout, motion, density, emotion } = input;
   const d = DENSITY[density];
   const atm = atmosphereFor(emotion);
-  return `/* ============================================================
+
+  /* Bundled type: the face is declared here and the stacks below put it first,
+     so the page never depends on a remote font request to look right. */
+  const fontCss = fontFaceCssFor([fontDirectionFor(type.id)], input.fontBasePath ?? 'fonts/');
+  const displayStack = bundledStackFor(type.id, type.display);
+  const bodyStack = bundledStackFor(type.id, type.body);
+  const monoStack = bundledStackFor('mono-technical', type.mono);
+
+  return `${fontCss}
+
+/* ============================================================
    TurboSlop — generated stylesheet
    emotion: ${emotion} · palette: ${palette.id} · type: ${type.id}
    layout: ${layout.id} · motion: ${motion.id} · density: ${density}
@@ -119,10 +137,12 @@ export function buildStylesheet(input: LayoutInput): string {
     --hair-strong: oklch(from ${palette.fg} l c h / 0.30);
     --surface:     oklch(from ${palette.bg} calc(l + 0.03) c h);
 
-    /* Type */
-    --font-display: ${type.display};
-    --font-body: ${type.body};
-    --font-mono: ${type.mono};
+    /* Type. The bundled family comes first; the catalog stack is the fallback.
+       The catalog entry is the RECIPE (weight, tracking, scale); the font file
+       is bundled, so the page needs no remote request to look right. */
+    --font-display: ${displayStack};
+    --font-body: ${bodyStack};
+    --font-mono: ${monoStack};
     --display-weight: ${type.displayWeight};
     --track: ${type.tracking};
 

@@ -11,11 +11,15 @@
  */
 import http from 'node:http';
 import { randomUUID } from 'node:crypto';
-import { readFile, stat, writeFile } from 'node:fs/promises';
+import { readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CANDIDATES, ATMOSPHERE, PALETTE_VISUAL } from './catalog.js';
 import { stripEmphasis } from './content.js';
+import { describeFontPack, FONT_PACK } from './fonts.js';
+import { FRAME_KINDS, frameForLead } from './frames.js';
+import { ICON_NAMES } from './icons.js';
+import { MOTIF_FAMILIES, motifFamilyForEmotion } from './motifs.js';
 import { hasApiKey } from './jev.js';
 import { IMAGE_PRESETS, describeImageService, resolveImageService } from './images.js';
 import { INTEROP_2026_FEATURES, MODERN_CSS_FEATURES } from './layout.js';
@@ -23,6 +27,15 @@ import { describeLlm, resolveLlm } from './llm.js';
 import { jevCost, writerCost } from './pricing.js';
 import { runPipeline, slugify } from './pipeline.js';
 import { getDesign, listDesigns, nextIterationSlug, recordDesign, uniqueSlug } from './registry.js';
+import {
+  createSession,
+  finalizeSession,
+  listSessions,
+  loadSession,
+  regenerateSession,
+  saveSession,
+  type DirectionSession,
+} from './sessions.js';
 import { createZip, type ZipEntry } from './zip.js';
 import type { DeciderPreference } from './decider.js';
 import type { DesignSpec } from './types.js';
@@ -62,7 +75,13 @@ interface Job {
   brief: string;
   state: JobState;
   events: JobEvent[];
-  result?: { slug: string; composite: number; notes: string[]; timings: Record<string, number> };
+  result?: {
+    slug?: string;
+    sessionId?: string;
+    composite?: number;
+    notes: string[];
+    timings: Record<string, number>;
+  };
   error?: string;
   subscribers: Set<(e: JobEvent | { phase: 'end' }) => void>;
   startedAt: number;
@@ -146,17 +165,23 @@ async function serveFile(res: http.ServerResponse, filePath: string): Promise<bo
  * CMS field, anything.
  */
 async function inlineAssets(html: string, slug: string): Promise<string> {
-  const refs = [...html.matchAll(/(?:src|href)="(assets\/[^"]+)"/g)].map((m) => m[1]!);
+  // Both artwork and the bundled fonts, so a single-file export renders exactly
+  // as intended with no request of any kind — remote or local.
+  const refs = [...html.matchAll(/(?:src|href|url\()["']?(assets\/[^"')]+|fonts\/[^"')]+)/g)].map(
+    (m) => m[1] ?? m[2]!,
+  );
   let out = html;
   for (const ref of new Set(refs)) {
-    const rel = ref.replace(/^assets\//, '');
-    if (!ASSET_RE.test(rel)) continue;
+    const isAsset = ref.startsWith('assets/');
+    const rel = ref.replace(/^(assets|fonts)\//, '');
+    if (isAsset && !ASSET_RE.test(rel)) continue;
+    if (!isAsset && !/^[A-Za-z0-9._-]+\.(woff2|md)$/.test(rel)) continue;
     try {
-      const buf = await readFile(path.join(OUT_DIR, 'assets', rel));
+      const buf = await readFile(path.join(OUT_DIR, isAsset ? 'assets' : 'fonts', rel));
       const mime = MIME[path.extname(rel).toLowerCase()] ?? 'application/octet-stream';
       out = out.split(ref).join(`data:${mime};base64,${buf.toString('base64')}`);
     } catch {
-      /* a missing asset leaves the reference intact rather than breaking the page */
+      /* a missing file leaves the reference intact rather than breaking the page */
     }
   }
   return out;
@@ -253,6 +278,17 @@ async function buildZip(slug: string): Promise<Buffer> {
     } catch {
       /* skip a missing asset rather than failing the whole export */
     }
+  }
+
+  /* The page references fonts/ relatively, so the export must carry them — and
+     the licences must travel with the files, as OFL requires. */
+  try {
+    for (const f of await readdir(path.join(OUT_DIR, 'fonts'))) {
+      if (!f.endsWith('.woff2') && f !== 'LICENSES.md') continue;
+      entries.push({ path: `fonts/${f}`, data: await readFile(path.join(OUT_DIR, 'fonts', f)) });
+    }
+  } catch {
+    /* no bundled fonts on disk: the page still falls back to system faces */
   }
 
   // A self-contained page too, so the archive works with no assets folder.
@@ -369,6 +405,156 @@ async function startJob(opts: {
 }
 
 /* ================================================================== *
+ * Direction-session jobs (the contact sheet)
+ * ================================================================== */
+interface DirectionsRequest {
+  brief?: string;
+  decider?: DeciderPreference;
+  copy?: boolean;
+  seed?: number;
+  explore?: number;
+  count?: number;
+}
+
+/**
+ * One decision call, ONE shared content inventory, N local renders.
+ *
+ * Deliberately not N full generations: previewing six directions must not cost
+ * six writer calls and six image batches. The session records exactly how many
+ * model calls it made, and the surface shows that number.
+ */
+async function startDirectionsJob(opts: DirectionsRequest): Promise<Job> {
+  const job: Job = {
+    id: randomUUID(),
+    slug: '',
+    brief: opts.brief!,
+    state: 'running',
+    events: [],
+    subscribers: new Set(),
+    startedAt: Date.now(),
+  };
+  jobs.set(job.id, job);
+
+  void (async () => {
+    try {
+      emit(job, { phase: 'decide', message: 'One decision call for the whole direction set…', at: Date.now() });
+      const session = await createSession(OUT_DIR, PUBLIC_DIR, {
+        brief: opts.brief!,
+        decider: opts.decider ?? 'auto',
+        ...(opts.seed !== undefined ? { seed: opts.seed } : {}),
+        ...(opts.explore !== undefined ? { explore: opts.explore } : {}),
+        ...(opts.count !== undefined ? { count: opts.count } : {}),
+        noWriter: opts.copy === false,
+      });
+      emit(
+        job,
+        { phase: 'content', message: `Inventory: ${session.inventorySource} (${session.metrics.modelCalls} model calls total)`, at: Date.now() },
+      );
+      emit(job, { phase: 'render', message: `${session.directions.length} directions rendered locally`, at: Date.now() });
+      job.result = {
+        sessionId: session.id,
+        notes: [session.previewLabel, ...session.directions.map((d) => d.blueprint)],
+        timings: {
+          decideMs: session.metrics.decideMs,
+          inventoryMs: session.metrics.inventoryMs,
+          renderMs: session.metrics.renderMs,
+          totalMs: session.metrics.totalMs,
+          modelCalls: session.metrics.modelCalls,
+          estimateUsd: session.metrics.estimateUsd,
+        },
+      };
+      job.state = 'done';
+      emit(job, { phase: 'end' });
+    } catch (err) {
+      job.state = 'error';
+      job.error = err instanceof Error ? err.message : String(err);
+      emit(job, { phase: 'error', message: job.error, at: Date.now() });
+      emit(job, { phase: 'end' });
+    }
+  })();
+
+  return job;
+}
+
+/**
+ * Finalize one direction into a real design.
+ *
+ * This is the only place a second writer call happens, because final copy is
+ * written FOR the chosen blueprint and only for the modules it renders.
+ */
+async function startFinalizeJob(
+  session: DirectionSession,
+  index: number,
+  opts: { finalCopy: boolean },
+): Promise<Job> {
+  const slug = await uniqueSlug(OUT_DIR, slugify(session.brief));
+  const job: Job = {
+    id: randomUUID(),
+    slug,
+    brief: session.brief,
+    state: 'running',
+    events: [],
+    subscribers: new Set(),
+    startedAt: Date.now(),
+  };
+  jobs.set(job.id, job);
+
+  void (async () => {
+    try {
+      const chosen = session.directions[index];
+      if (!chosen) throw new Error(`no direction at index ${index}`);
+      emit(
+        job,
+        { phase: 'content', message: opts.finalCopy ? `Writing final copy for ${chosen.blueprint}…` : 'Reusing the shared inventory as final copy', at: Date.now() },
+      );
+      const { spec, write } = await finalizeSession(OUT_DIR, session, slug, {
+        index,
+        finalCopy: opts.finalCopy,
+      });
+
+      await recordDesign(OUT_DIR, {
+        slug,
+        brief: session.brief,
+        ...(spec.content?.brand ? { title: spec.content.brand } : {}),
+        source: 'surface',
+      });
+
+      session.selectedIndex = index;
+      session.finalSlug = slug;
+      session.history.push({
+        at: new Date().toISOString(),
+        event: 'finalized',
+        detail: `${chosen.blueprint} → ${slug}`,
+      });
+      await saveSession(OUT_DIR, session);
+
+      emit(job, { phase: 'write', message: `Wrote ${slug}.html`, at: Date.now() });
+      job.result = {
+        slug,
+        sessionId: session.id,
+        composite: spec.composite.normalized,
+        notes: [
+          write.source === 'llm'
+            ? `final copy: ${write.model} in ${write.latencyMs}ms`
+            : 'final copy: specimen (no writer configured)',
+          `blueprint ${chosen.blueprint}`,
+        ],
+        timings: { writerMs: write.latencyMs, totalMs: Date.now() - job.startedAt },
+      };
+      job.state = 'done';
+      emit(job, { phase: 'end' });
+    } catch (err) {
+      job.state = 'error';
+      job.error = err instanceof Error ? err.message : String(err);
+      emit(job, { phase: 'error', message: job.error, at: Date.now() });
+      emit(job, { phase: 'end' });
+    }
+  })();
+
+  return job;
+}
+
+/* ================================================================== *
  * Routing
  * ================================================================== */
 async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, url: URL): Promise<boolean> {
@@ -393,6 +579,34 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
       paletteVisual: PALETTE_VISUAL,
       features: { interop2026: INTEROP_2026_FEATURES, modern: MODERN_CSS_FEATURES },
       presets: Object.entries(IMAGE_PRESETS).map(([id, preset]) => ({ id, ...preset })),
+      /** The bundled, licensed type pack — no page depends on a remote font. */
+      type: {
+        summary: describeFontPack(),
+        families: FONT_PACK.map((f) => ({
+          direction: f.direction,
+          family: f.family,
+          file: f.file,
+          license: f.license.spdx,
+          note: f.note,
+        })),
+      },
+      /** Code-rendered asset vocabulary the renderer can draw on. */
+      assets: {
+        motifFamilies: [...MOTIF_FAMILIES],
+        frames: [...FRAME_KINDS],
+        icons: [...ICON_NAMES],
+        motifByEmotion: Object.fromEntries(
+          ['awe', 'serenity', 'delight', 'tension', 'nostalgia', 'mystery', 'trust', 'energy', 'intimacy', 'optimism'].map(
+            (e) => [e, motifFamilyForEmotion(e)],
+          ),
+        ),
+        frameByLead: Object.fromEntries(
+          ['statement', 'product', 'catalogue', 'story', 'date', 'data', 'image', 'offer'].map((l) => [
+            l,
+            frameForLead(l, 'other'),
+          ]),
+        ),
+      },
       outDir: OUT_DIR,
     });
     return true;
@@ -439,6 +653,154 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
       text(res, 200, await inlineAssets(html, slug), 'text/html; charset=utf-8');
     } catch {
       text(res, 404, 'not found');
+    }
+    return true;
+  }
+
+  /* ---- direction sessions: the contact sheet ---- */
+  if (p === '/api/directions' && method === 'POST') {
+    try {
+      const body = (await readBody(req)) as DirectionsRequest;
+      const brief = typeof body.brief === 'string' ? body.brief.trim() : '';
+      if (!brief) return json(res, 400, { error: 'brief is required' }), true;
+      const job = await startDirectionsJob({
+        brief,
+        decider: body.decider ?? 'auto',
+        copy: body.copy,
+        ...(typeof body.seed === 'number' ? { seed: body.seed } : {}),
+        ...(typeof body.explore === 'number' ? { explore: body.explore } : {}),
+        ...(typeof body.count === 'number' ? { count: body.count } : {}),
+      });
+      json(res, 202, { jobId: job.id });
+    } catch (err) {
+      json(res, 400, { error: err instanceof Error ? err.message : 'bad request' });
+    }
+    return true;
+  }
+
+  if (p === '/api/sessions' && method === 'GET') {
+    const all = await listSessions(OUT_DIR);
+    // The list is a summary: previews are fetched per session on demand.
+    json(res, 200, {
+      sessions: all.slice(0, 40).map((s) => ({
+        id: s.id,
+        createdAt: s.createdAt,
+        brief: s.brief,
+        seed: s.seed,
+        explore: s.explore,
+        directions: s.directions.length,
+        modelCalls: s.metrics.modelCalls,
+        estimateUsd: s.metrics.estimateUsd,
+        totalMs: s.metrics.totalMs,
+        previewLabel: s.previewLabel,
+        finalSlug: s.finalSlug ?? null,
+      })),
+    });
+    return true;
+  }
+
+  const sessionRoute = /^\/api\/sessions\/(ses_[a-z0-9]+)$/.exec(p);
+  if (sessionRoute && method === 'GET') {
+    const s = await loadSession(OUT_DIR, sessionRoute[1]!);
+    if (!s) return json(res, 404, { error: 'session not found' }), true;
+    json(res, 200, { session: s });
+    return true;
+  }
+
+  /** Record the human's choice and locks. Deliberately model-free. */
+  const selectRoute = /^\/api\/sessions\/(ses_[a-z0-9]+)\/select$/.exec(p);
+  if (selectRoute && method === 'POST') {
+    const s = await loadSession(OUT_DIR, selectRoute[1]!);
+    if (!s) return json(res, 404, { error: 'session not found' }), true;
+    try {
+      const body = (await readBody(req)) as { index?: number; locks?: string[] };
+      const index = typeof body.index === 'number' ? body.index : null;
+      const locks = Array.isArray(body.locks) ? body.locks.filter((x) => typeof x === 'string') : s.locks;
+      if (index !== null && !s.directions[index]) return json(res, 400, { error: 'no such direction' }), true;
+      s.selectedIndex = index;
+      s.locks = locks;
+      s.history.push({
+        at: new Date().toISOString(),
+        event: 'selected',
+        detail: `direction ${index}${locks.length ? `, locked ${locks.join('+')}` : ''}`,
+      });
+      await saveSession(OUT_DIR, s);
+      json(res, 200, { session: s });
+    } catch (err) {
+      json(res, 400, { error: err instanceof Error ? err.message : 'bad request' });
+    }
+    return true;
+  }
+
+  /**
+   * Re-roll the unlocked directions. Purely local: the stored decision and the
+   * stored inventory are reused, so this costs NOTHING and cannot change the
+   * previews you already have.
+   */
+  const regenRoute = /^\/api\/sessions\/(ses_[a-z0-9]+)\/regenerate$/.exec(p);
+  if (regenRoute && method === 'POST') {
+    const s = await loadSession(OUT_DIR, regenRoute[1]!);
+    if (!s) return json(res, 404, { error: 'session not found' }), true;
+    try {
+      const body = (await readBody(req)) as { locks?: string[]; fromIndex?: number; count?: number; seed?: number };
+      const updated = await regenerateSession(OUT_DIR, s, {
+        ...(Array.isArray(body.locks) ? { locks: body.locks.filter((x) => typeof x === 'string') } : {}),
+        ...(typeof body.fromIndex === 'number' ? { fromIndex: body.fromIndex } : {}),
+        ...(typeof body.count === 'number' ? { count: body.count } : {}),
+        ...(typeof body.seed === 'number' ? { seed: body.seed } : {}),
+      });
+      json(res, 200, { session: updated });
+    } catch (err) {
+      json(res, 400, { error: err instanceof Error ? err.message : 'bad request' });
+    }
+    return true;
+  }
+
+  /** Finalize a chosen direction into a real, exportable design. */
+  const finRoute = /^\/api\/sessions\/(ses_[a-z0-9]+)\/finalize$/.exec(p);
+  if (finRoute && method === 'POST') {
+    const s = await loadSession(OUT_DIR, finRoute[1]!);
+    if (!s) return json(res, 404, { error: 'session not found' }), true;
+    try {
+      const body = (await readBody(req)) as { index?: number; finalCopy?: boolean };
+      const index = typeof body.index === 'number' ? body.index : (s.selectedIndex ?? 0);
+      if (!s.directions[index]) return json(res, 400, { error: 'no such direction' }), true;
+      const job = await startFinalizeJob(s, index, { finalCopy: body.finalCopy !== false });
+      json(res, 202, { jobId: job.id, slug: job.slug });
+    } catch (err) {
+      json(res, 400, { error: err instanceof Error ? err.message : 'bad request' });
+    }
+    return true;
+  }
+
+  /**
+   * "A revision of this design" — deliberately a separate endpoint from
+   * regenerating directions. This keeps the chosen design's identity and asks
+   * for a change to it.
+   */
+  const reviseRoute = /^\/api\/sessions\/(ses_[a-z0-9]+)\/revise$/.exec(p);
+  if (reviseRoute && method === 'POST') {
+    const s = await loadSession(OUT_DIR, reviseRoute[1]!);
+    if (!s) return json(res, 404, { error: 'session not found' }), true;
+    if (!s.finalSlug) return json(res, 400, { error: 'finalize the direction first, then revise it' }), true;
+    try {
+      const body = (await readBody(req)) as DesignRequest & { instructions?: string };
+      const parentSlug = s.finalSlug;
+      const parent = await getDesign(OUT_DIR, parentSlug);
+      if (!parent) return json(res, 404, { error: 'parent design not found' }), true;
+      const instructions = typeof body.instructions === 'string' ? body.instructions.trim() : '';
+      if (!instructions) return json(res, 400, { error: 'instructions are required' }), true;
+      const job = await startJob({
+        brief: parent.spec.brief,
+        instructions,
+        parentSlug,
+        decider: body.decider ?? 'auto',
+        noCopy: body.copy === false,
+        images: readImageOptions(body.images),
+      });
+      json(res, 202, { jobId: job.id, slug: job.slug });
+    } catch (err) {
+      json(res, 400, { error: err instanceof Error ? err.message : 'bad request' });
     }
     return true;
   }
@@ -553,17 +915,45 @@ const server = http.createServer((req, res) => {
         return;
       }
 
-      // Live preview: /preview/<slug>/ so the page's relative asset paths resolve
-      const preview = /^\/preview\/([a-z0-9-]+)\/(.*)$/.exec(p);
+      /* Live preview. The path is structured so a page's RELATIVE references
+         (fonts/, assets/) resolve without rewriting the HTML: a page served at
+         /preview/<id>/ finds its fonts at /preview/<id>/fonts/. */
+      const preview = /^\/preview\/([a-z0-9_-]+)\/(.*)$/.exec(p);
       if (preview) {
-        const slug = preview[1]!;
+        const id = preview[1]!;
         const rest = preview[2] ?? '';
-        if (rest === '' || rest === 'index.html') {
-          if (await serveFile(res, path.join(OUT_DIR, `${slug}.html`))) return;
-        } else if (rest.startsWith('assets/')) {
+
+        if (rest.startsWith('fonts/')) {
+          const rel = rest.replace(/^fonts\//, '');
+          if (/^[A-Za-z0-9._-]+\.(woff2|md)$/.test(rel) && (await serveFile(res, path.join(OUT_DIR, 'fonts', rel))))
+            return;
+          text(res, 404, 'not found');
+          return;
+        }
+        if (rest.startsWith('assets/')) {
           const rel = rest.replace(/^assets\//, '');
           if (ASSET_RE.test(rel) && (await serveFile(res, path.join(OUT_DIR, 'assets', rel)))) return;
+          text(res, 404, 'not found');
+          return;
         }
+        if (rest === '' || rest === 'index.html') {
+          if (await serveFile(res, path.join(OUT_DIR, `${id}.html`))) return;
+          // A session's directions are numbered files under previews/<id>/.
+          if (await serveFile(res, path.join(OUT_DIR, 'previews', id, '0.html'))) return;
+          text(res, 404, 'not found');
+          return;
+        }
+        // A specific direction in a session: /preview/<sessionId>/<n>
+        if (/^\d+$/.test(rest) && (await serveFile(res, path.join(OUT_DIR, 'previews', id, `${rest}.html`)))) return;
+        text(res, 404, 'not found');
+        return;
+      }
+
+      // Bundled fonts, served absolutely for pages that ask for /fonts/.
+      const font = /^\/fonts\/([A-Za-z0-9._-]+\.(?:woff2|md))$/.exec(p);
+      if (font) {
+        if (await serveFile(res, path.join(OUT_DIR, 'fonts', font[1]!))) return;
+        if (await serveFile(res, path.join(PUBLIC_DIR, 'fonts', font[1]!))) return;
         text(res, 404, 'not found');
         return;
       }

@@ -50,8 +50,13 @@ export interface RenderOptions {
   preview?: boolean;
   /** Which copy is in this render, for the preview label. */
   copySource?: 'shared-inventory' | 'specimen' | 'final';
-  /** Extra @font-face / motif CSS to inject (bundled fonts, generated motifs). */
+  /** Extra CSS to inject (per-direction motif layers, frame styles). */
   extraCss?: string;
+  /**
+   * Where the bundled woff2 files sit relative to the page. Defaults to
+   * `fonts/`; the control surface passes an absolute `/fonts/`.
+   */
+  fontBasePath?: string;
 }
 
 /**
@@ -110,7 +115,16 @@ export function renderHtml(spec: DesignSpec, opts: RenderOptions = {}): string {
   }
 
   const c = spec.content;
-  const css = buildStylesheet({ emotion, palette, type, layout, motion, density, effects });
+  const css = buildStylesheet({
+    emotion,
+    palette,
+    type,
+    layout,
+    motion,
+    density,
+    effects,
+    ...(opts.fontBasePath ? { fontBasePath: opts.fontBasePath } : {}),
+  });
   const atm = atmosphereFor(emotion);
 
   const assets = spec.assets ?? [];
@@ -151,11 +165,6 @@ ${renderModule(sec.module, sec.variant, ctx)}
     })
     .join('\n\n');
 
-  const fontHref =
-    'https://fonts.googleapis.com/css2?' +
-    type.googleFonts.map((f) => `family=${f}`).join('&') +
-    '&display=swap';
-
   const previewBanner = opts.preview
     ? `\n<div class="preview-flag" role="note"><b>Preview</b> — ${
         opts.copySource === 'final'
@@ -187,9 +196,6 @@ ${renderModule(sec.module, sec.variant, ctx)}
 <meta name="forge-effects" content="${esc(effects)}">
 <meta name="forge-seed" content="${spec.seed}">
 <meta name="forge-composite" content="${spec.composite.normalized.toFixed(3)}">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="${esc(fontHref)}">
 <style>
 ${css}
 ${opts.extraCss ?? ''}
