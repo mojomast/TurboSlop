@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TurboSlop — control surface</title>
+<meta name="description" content="TurboSlop: Jev decides, the LLM writes, the image service illustrates.">
+<meta name="theme-color" content="#08080a">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a0a0c'/%3E%3Cpath d='M18.5 3 7 18.5h6.2L11.4 29 25 13.2h-6.4z' fill='%23d8ff3e'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* ============================================================
+   TurboSlop control surface.
+   Self-contained on purpose: no build step, no framework.
+   ============================================================ */
+@layer reset, tokens, layout, components, states;
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; }
+  /* A `display` rule on a component beats the UA stylesheet's [hidden] rule,
+     so `hidden` silently stops working. Restore it once, globally. */
+  [hidden] { display: none !important; }
+  button, input, select, textarea { font: inherit; color: inherit; background: none; border: none; }
+  button { cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+  ul, ol { list-style: none; padding: 0; }
+  img { display: block; max-inline-size: 100%; }
+}
+
+@layer tokens {
+  :root {
+    color-scheme: dark;
+    --bg: #08080a;
+    --bg-raised: #0f0f13;
+    --bg-sunk: #050506;
+    --line: oklch(from #f2f0ea l c h / 0.12);
+    --line-strong: oklch(from #f2f0ea l c h / 0.26);
+    --fg: #f2f0ea;
+    --muted: #8a8a9b;
+    --faint: #5b5b6b;
+    --accent: #d8ff3e;
+    --accent-ink: #0b0d02;
+    --good: #4ade80;
+    --warn: #ffb020;
+    --bad: #ff5c38;
+    --info: #57d1ff;
+    --violet: #a98bff;
+    --font-display: 'Space Grotesk', system-ui, sans-serif;
+    --font-serif: 'Instrument Serif', Georgia, serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --r: 6px;
+    --r-lg: 12px;
+    --dur: 200ms;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --pad: clamp(0.75rem, 1.4vw, 1.25rem);
+  }
+}
+
+@layer layout {
+  html { overflow-x: clip; scrollbar-gutter: stable; }
+  body {
+    min-block-size: 100svh;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-display);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    block-size: 100svh;
+    overflow: hidden;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr) minmax(0, 26rem);
+    gap: 1px;
+    background: var(--line);
+    min-block-size: 0;
+    overflow: hidden;
+  }
+  .shell > * { background: var(--bg); min-block-size: 0; min-inline-size: 0; overflow-y: auto; }
+
+  @media (max-width: 1200px) {
+    body { block-size: auto; overflow: auto; grid-template-rows: auto auto; }
+    .shell { grid-template-columns: minmax(0, 1fr); }
+    .shell > * { overflow: visible; }
+  }
+
+  .stack { display: grid; gap: var(--pad); padding: var(--pad); align-content: start; }
+  .row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+}
+
+@layer components {
+  /* ---------- top bar ---------- */
+  .top {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 0.75rem var(--pad);
+    border-block-end: 1px solid var(--line);
+    background: var(--bg-raised);
+  }
+  .brand {
+    font-weight: 700;
+    font-size: 1.0625rem;
+    letter-spacing: -0.03em;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    white-space: nowrap;
+  }
+  .brand b { color: var(--accent); }
+  .motto {
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: var(--muted);
+    font-size: 0.9375rem;
+    white-space: nowrap;
+  }
+  .motto::before { content: "“"; opacity: 0.5; }
+  .motto::after { content: "”"; opacity: 0.5; }
+  .top .spacer { margin-inline-start: auto; }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .chip::before { content: ""; inline-size: 6px; block-size: 6px; border-radius: 50%; background: var(--faint); }
+  .chip[data-ok="1"]::before { background: var(--good); }
+  .chip[data-ok="0"]::before { background: var(--warn); }
+  .chip[data-ok="off"]::before { background: var(--faint); }
+  .chip b { color: var(--fg); font-weight: 500; text-transform: none; letter-spacing: 0; font-family: var(--font-display); }
+
+  /* ---------- headings ---------- */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--faint);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .eyebrow::before { content: ""; inline-size: 1rem; block-size: 1px; background: var(--accent); }
+  h2 { font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.01em; }
+  h3 { font-size: 0.8125rem; font-weight: 600; }
+  .hint { color: var(--faint); font-size: 0.75rem; }
+  .mono { font-family: var(--font-mono); font-size: 0.6875rem; letter-spacing: 0.04em; }
+
+  /* ---------- controls ---------- */
+  .field {
+    inline-size: 100%;
+    padding: 0.5rem 0.625rem;
+    background: var(--bg-sunk);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--r);
+    font-size: 0.8125rem;
+    transition: border-color var(--dur) var(--ease);
+  }
+  .field:hover { border-color: oklch(from var(--accent) l c h / 0.4); }
+  textarea.field { resize: vertical; min-block-size: 5rem; line-height: 1.55; }
+  label.lbl { display: grid; gap: 0.3rem; }
+  label.lbl > span {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  select.field { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%; background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; padding-inline-end: 1.75rem; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: var(--r);
+    background: var(--accent);
+    color: var(--accent-ink);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    transition: transform var(--dur) var(--ease), filter var(--dur) var(--ease);
+    border: 1px solid transparent;
+  }
+  .btn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+  .btn:active { transform: none; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; filter: none; }
+  .btn--ghost { background: transparent; color: var(--fg); border-color: var(--line-strong); }
+  .btn--ghost:hover { border-color: var(--accent); color: var(--accent); filter: none; }
+  .btn--sm { padding: 0.3rem 0.55rem; font-size: 0.75rem; }
+  .btn--wide { inline-size: 100%; }
+
+  .seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--r); overflow: hidden; }
+  .seg button {
+    padding: 0.3rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-inline-end: 1px solid var(--line);
+  }
+  .seg button:last-child { border-inline-end: 0; }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+
+  .switch { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; }
+  .switch input { position: absolute; opacity: 0; }
+  .track { inline-size: 34px; block-size: 18px; border-radius: 999px; background: var(--bg-sunk); border: 1px solid var(--line-strong); position: relative; transition: background var(--dur) var(--ease); flex: none; }
+  .track::after { content: ""; position: absolute; inset-block-start: 2px; inset-inline-start: 2px; inline-size: 12px; block-size: 12px; border-radius: 50%; background: var(--muted); transition: transform var(--dur) var(--ease), background var(--dur) var(--ease); }
+  .switch input:checked + .track { background: oklch(from var(--accent) l c h / 0.25); border-color: var(--accent); }
+  .switch input:checked + .track::after { transform: translateX(16px); background: var(--accent); }
+  .switch input:focus-visible + .track { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ---------- panels ---------- */
+  .card { border: 1px solid var(--line); border-radius: var(--r-lg); padding: 0.75rem; background: var(--bg-raised); }
+  .card + .card { margin-block-start: 0.5rem; }
+
+  .tabs { display: flex; gap: 1px; background: var(--line); border-block-end: 1px solid var(--line); position: sticky; inset-block-start: 0; z-index: 2; }
+  .tabs button {
+    flex: 1;
+    padding: 0.6rem 0.5rem;
+    background: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+  .tabs button[aria-selected="true"] { color: var(--accent); background: var(--bg-raised); box-shadow: inset 0 -2px 0 var(--accent); }
+  .panel[hidden] { display: none; }
+
+  /* ---------- catalog ---------- */
+  .opt { display: grid; gap: 0.15rem; padding: 0.5rem; border: 1px solid var(--line); border-radius: var(--r); }
+  .opt + .opt { margin-block-start: 0.35rem; }
+  .opt header { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+  .opt code { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--accent); }
+  .opt p { color: var(--muted); font-size: 0.75rem; line-height: 1.45; }
+  .swatches { display: flex; gap: 2px; margin-block-start: 0.25rem; }
+  .swatches i { inline-size: 16px; block-size: 16px; border-radius: 3px; border: 1px solid var(--line-strong); }
+
+  .feat { display: flex; gap: 0.5rem; padding: 0.35rem 0; border-block-end: 1px dashed var(--line); }
+  .feat:last-child { border-block-end: 0; }
+  .feat code { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--info); flex: none; min-inline-size: 11rem; }
+  .feat span { color: var(--muted); font-size: 0.75rem; }
+  @media (max-width: 1400px) { .feat { flex-direction: column; gap: 0.1rem; } .feat code { min-inline-size: 0; } }
+
+  /* ---------- design list ---------- */
+  .design { display: grid; gap: 0.25rem; padding: 0.5rem 0.6rem; border: 1px solid var(--line); border-radius: var(--r); inline-size: 100%; text-align: start; transition: border-color var(--dur) var(--ease), background var(--dur) var(--ease); }
+  .design + .design { margin-block-start: 0.35rem; }
+  .design:hover { border-color: var(--line-strong); background: var(--bg-raised); }
+  .design[aria-current="true"] { border-color: var(--accent); background: oklch(from var(--accent) l c h / 0.06); }
+  .design .meta { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; font-family: var(--font-mono); font-size: 0.625rem; color: var(--faint); }
+  .design .name { font-size: 0.8125rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rev { color: var(--violet); }
+  .dots { display: inline-flex; gap: 2px; align-items: center; }
+  .dots i { inline-size: 14px; block-size: 6px; border-radius: 2px; }
+
+  /* ---------- decisions ---------- */
+  .dec { display: grid; grid-template-columns: 5.5rem 1fr auto; gap: 0.5rem; align-items: center; padding: 0.3rem 0; }
+  .dec .axis { font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+  .dec .pick { font-size: 0.8125rem; }
+  .bar { block-size: 4px; border-radius: 2px; background: var(--bg-sunk); overflow: hidden; }
+  .bar i { display: block; block-size: 100%; background: var(--accent); }
+  .bar[data-low="1"] i { background: var(--warn); }
+  .conf { font-family: var(--font-mono); font-size: 0.625rem; color: var(--muted); min-inline-size: 2.2rem; text-align: end; }
+
+  /* ---------- preview ---------- */
+  .frame { inline-size: 100%; aspect-ratio: 16 / 10; border: 1px solid var(--line-strong); border-radius: var(--r); background: #fff; }
+  .frame iframe { inline-size: 100%; block-size: 100%; border: 0; display: block; }
+
+  .gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 0.4rem; }
+  .gallery figure { display: grid; gap: 0.2rem; }
+  .gallery img { inline-size: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--r); border: 1px solid var(--line-strong); }
+  .gallery figcaption { font-family: var(--font-mono); font-size: 0.5625rem; color: var(--faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ---------- progress ---------- */
+  .log { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--muted); background: var(--bg-sunk); border: 1px solid var(--line); border-radius: var(--r); padding: 0.5rem 0.6rem; max-block-size: 11rem; overflow: auto; display: grid; gap: 0.15rem; }
+  .log b { color: var(--fg); font-weight: 500; }
+  .log [data-phase="error"] { color: var(--bad); }
+  .log [data-phase="done"] { color: var(--good); }
+  .log [data-phase="images"] { color: var(--info); }
+
+  .spinner { inline-size: 12px; block-size: 12px; border: 2px solid oklch(from var(--accent) l c h / 0.3); border-block-start-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { rotate: 360deg; } }
+
+  .empty { text-align: center; padding: 2rem 1rem; color: var(--faint); display: grid; gap: 0.4rem; justify-items: center; }
+  .empty .big { font-family: var(--font-serif); font-style: italic; font-size: 1.25rem; color: var(--muted); }
+
+  .toast { position: fixed; inset-block-end: 1rem; inset-inline-end: 1rem; z-index: 50; display: grid; gap: 0.4rem; }
+  .toast div { background: var(--bg-raised); border: 1px solid var(--accent); border-radius: var(--r); padding: 0.5rem 0.75rem; font-size: 0.8125rem; box-shadow: 0 12px 30px -12px #000; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+}
+
+@layer states {
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+  ::-webkit-scrollbar { inline-size: 10px; block-size: 10px; }
+  ::-webkit-scrollbar-thumb { background: #24242c; border: 3px solid var(--bg); border-radius: 999px; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <span class="brand">TURBO<b>SLOP</b></span>
+  <span class="motto">Machine-made. Human-judged.</span>
+  <span class="spacer"></span>
+  <span class="chip" id="chip-jev" data-ok="off">Jev <b>…</b></span>
+  <span class="chip" id="chip-llm" data-ok="off">Writer <b>…</b></span>
+  <span class="chip" id="chip-img" data-ok="off">Images <b>…</b></span>
+</header>
+
+<main class="shell">
+
+  <!-- ================= LEFT: library ================= -->
+  <aside>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-tab="catalog">Catalog</button>
+      <button role="tab" aria-selected="false" data-tab="css">CSS moves</button>
+      <button role="tab" aria-selected="false" data-tab="images">Images</button>
+    </div>
+
+    <div class="panel stack" id="panel-catalog">
+      <p class="hint">The only vocabulary the machine may speak. Jev selects from these; it cannot invent one.</p>
+      <div id="catalog"></div>
+    </div>
+
+    <div class="panel stack" id="panel-css" hidden>
+      <p class="hint">Everything the layout engine emits — Interop 2026 plus the modern CSS beyond it. Every feature does a job a script used to do.</p>
+      <div id="features"></div>
+    </div>
+
+    <div class="panel stack" id="panel-images" hidden>
+      <p class="hint">Artwork generated for the selected design, with the exact prompt and settings. Illustrative only — the design works without it.</p>
+      <div id="images"></div>
+    </div>
+  </aside>
+
+  <!-- ================= CENTER: composer ================= -->
+  <section class="stack">
+    <div class="card">
+      <div class="eyebrow" id="mode-label">New design</div>
+      <div class="stack" style="padding: 0.75rem 0 0">
+        <label class="lbl">
+          <span id="brief-label">Brief</span>
+          <textarea class="field" id="brief" rows="4" placeholder="A calm, spa-like landing page for a wellness studio. Soft edges, lots of whitespace, slow gentle motion."></textarea>
+        </label>
+        <label class="lbl" id="iterate-wrap" hidden>
+          <span>What to change</span>
+          <textarea class="field" id="instructions" rows="2" placeholder="Keep the calm but make it feel more premium. Darker ground, larger type."></textarea>
+        </label>
+
+        <div class="row">
+          <div class="seg" role="group" aria-label="Decider">
+            <button data-decider="auto" aria-pressed="true">Auto</button>
+            <button data-decider="live" aria-pressed="false">Jev</button>
+            <button data-decider="local" aria-pressed="false">Local</button>
+          </div>
+          <label class="switch"><input type="checkbox" id="copy-on" checked><span class="track"></span><span class="hint">write copy</span></label>
+          <label class="switch"><input type="checkbox" id="images-on"><span class="track"></span><span class="hint">generate images</span></label>
+        </div>
+
+        <fieldset id="image-opts" hidden style="display:grid;gap:0.6rem;border:1px solid var(--line);border-radius:var(--r);padding:0.6rem">
+          <legend class="eyebrow" style="padding-inline:0.3rem">Image generation</legend>
+          <div class="row">
+            <label class="lbl" style="flex:1 1 8rem"><span>Preset</span><select class="field" id="preset"></select></label>
+            <label class="lbl" style="flex:1 1 5rem"><span>How many</span><input class="field" id="count" type="number" min="1" max="16" value="3"></label>
+            <label class="lbl" style="flex:1 1 5rem"><span>Steps</span><input class="field" id="steps" type="number" min="1" max="100" placeholder="auto"></label>
+            <label class="lbl" style="flex:1 1 5rem"><span>Guidance</span><input class="field" id="guidance" type="number" min="1" max="10" step="0.5" placeholder="auto"></label>
+            <label class="lbl" style="flex:1 1 6rem"><span>Seed</span><input class="field" id="seed" type="number" min="0" placeholder="random"></label>
+          </div>
+          <p class="hint" id="preset-note"></p>
+        </fieldset>
+
+        <div class="row">
+          <button class="btn" id="go">Generate design</button>
+          <button class="btn btn--ghost" id="cancel" hidden>Cancel</button>
+          <span class="hint" id="go-hint"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" id="progress-card" hidden>
+      <div class="row"><span class="spinner" id="spin"></span><h2 id="progress-title">Working…</h2></div>
+      <div class="log" id="log" style="margin-block-start:0.6rem"></div>
+    </div>
+
+    <div class="card" id="detail-card" hidden>
+      <div class="row">
+        <div class="eyebrow">Selected</div>
+        <span class="spacer" style="margin-inline-start:auto"></span>
+        <a class="btn btn--sm btn--ghost" id="open-tab" target="_blank" rel="noopener">Open ↗</a>
+        <button class="btn btn--sm btn--ghost" id="export-zip">Download .zip</button>
+        <button class="btn btn--sm" id="copy-one">Copy one-shot HTML</button>
+      </div>
+      <h2 id="detail-title" style="margin-block:0.5rem 0.25rem"></h2>
+      <p class="hint" id="detail-sub"></p>
+      <div class="frame" style="margin-block-start:0.6rem"><iframe id="preview" title="Design preview" loading="lazy"></iframe></div>
+
+      <div class="eyebrow" style="margin-block-start:1rem">Decisions</div>
+      <div id="decisions"></div>
+      <div id="notes" class="stack" style="padding:0.5rem 0 0"></div>
+    </div>
+  </section>
+
+  <!-- ================= RIGHT: designs ================= -->
+  <aside class="stack">
+    <div class="row">
+      <div class="eyebrow">Previous designs</div>
+      <button class="btn btn--sm btn--ghost" id="refresh" style="margin-inline-start:auto">Refresh</button>
+    </div>
+    <p class="hint" id="design-count"></p>
+    <div id="designs"></div>
+  </aside>
+</main>
+
+<div class="toast" id="toast" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+  const $ = (s, r = document) => r.querySelector(s);
+  const el = (tag, props = {}, ...kids) => {
+    const n = Object.assign(document.createElement(tag), props);
+    for (const k of kids.flat()) if (k != null) n.append(k.nodeType ? k : String(k));
+    return n;
+  };
+  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  const state = {
+    catalog: {}, features: null, presets: [], designs: [], selected: null,
+    detail: null, decider: 'auto', imagesOn: false, busy: false, es: null, jobId: null,
+  };
+
+  function toast(msg, ms = 3200) {
+    const t = el('div', {}, msg);
+    $('#toast').append(t);
+    setTimeout(() => t.remove(), ms);
+  }
+
+  async function api(path, opts) {
+    const res = await fetch(path, opts);
+    const type = res.headers.get('content-type') || '';
+    if (!res.ok) throw new Error((type.includes('json') ? (await res.json()).error : await res.text()) || res.status);
+    return type.includes('json') ? res.json() : res.text();
+  }
+
+  /* ---------------- boot ---------------- */
+  async function boot() {
+    const s = await api('/api/state');
+    state.catalog = s.catalog;
+    state.features = s.features;
+    state.presets = s.presets;
+
+    const av = s.availability;
+    const chip = (id, ok, label) => {
+      const c = $(id);
+      c.dataset.ok = ok;
+      $('b', c).textContent = label;
+      c.title = label;
+    };
+    chip('#chip-jev', av.jev === 'live' ? '1' : '0', av.jev === 'live' ? 'live' : 'local');
+    chip('#chip-llm', av.llm ? '1' : 'off', av.llm ? av.llm.split('/').pop() : 'off');
+    chip('#chip-img', av.images ? '1' : 'off', av.images ? 'ready' : 'off');
+    $('#chip-jev').title = av.jevNote;
+    $('#chip-llm').title = av.llmNote;
+    $('#chip-img').title = av.imagesNote;
+
+    renderCatalog();
+    renderFeatures();
+    renderPresets();
+    await refreshDesigns(s.designs);
+  }
+
+  /* ---------------- left panels ---------------- */
+  function renderCatalog() {
+    const wrap = $('#catalog');
+    wrap.replaceChildren();
+    const order = ['emotion', 'palette', 'typography', 'layout', 'motion'];
+    for (const axis of order) {
+      const items = state.catalog[axis] || [];
+      if (!items.length) continue;
+      const sec = el('div', {}, el('div', { className: 'eyebrow', textContent: axis }));
+      const box = el('div', { style: 'margin-block-start:0.4rem' });
+      for (const c of items) {
+        const head = el('header', {}, el('code', {}, c.id));
+        if (c.bg) {
+          const sw = el('span', { className: 'swatches' });
+          for (const v of [c.bg, c.bgRaised, c.fg, c.muted, c.accent, c.secondary]) sw.append(el('i', { style: `background:${v}` }));
+          head.append(sw);
+        }
+        box.append(el('div', { className: 'opt' }, head, el('p', {}, c.description)));
+      }
+      sec.append(box);
+      wrap.append(sec);
+    }
+  }
+
+  function renderFeatures() {
+    const wrap = $('#features');
+    wrap.replaceChildren();
+    const groups = [
+      ['Interop 2026', state.features.interop2026],
+      ['Beyond Interop', state.features.modern],
+    ];
+    for (const [title, list] of groups) {
+      if (!list?.length) continue;
+      const box = el('div', {}, el('div', { className: 'eyebrow' }, `${title} — ${list.length}`));
+      const body = el('div', { style: 'margin-block-start:0.4rem' });
+      for (const f of list) body.append(el('div', { className: 'feat' }, el('code', {}, f.feature), el('span', {}, f.used)));
+      box.append(body);
+      wrap.append(box);
+    }
+  }
+
+  function renderPresets() {
+    const sel = $('#preset');
+    sel.replaceChildren();
+    for (const p of state.presets) {
+      sel.append(el('option', { value: p.id }, `${p.label} — ${p.steps} steps / guidance ${p.cfg}`));
+    }
+    sel.value = 'preview';
+    $('#preset-note').textContent = state.presets.find((p) => p.id === sel.value)?.note ?? '';
+    sel.onchange = () => { $('#preset-note').textContent = state.presets.find((p) => p.id === sel.value)?.note ?? ''; };
+  }
+
+  /* ---------------- designs ---------------- */
+  async function refreshDesigns(preloaded) {
+    const data = preloaded ? { designs: preloaded } : await api('/api/designs');
+    state.designs = data.designs;
+    $('#design-count').textContent = `${state.designs.length} on disk`;
+
+    const list = $('#designs');
+    list.replaceChildren();
+    if (!state.designs.length) {
+      list.append(el('div', { className: 'empty' }, el('span', { className: 'big' }, 'Nothing yet'), el('span', { className: 'hint' }, 'Write a brief and generate.')));
+      return;
+    }
+    for (const d of state.designs) {
+      const dots = el('span', { className: 'dots' });
+      for (const axis of ['emotion', 'palette', 'typography', 'layout', 'motion']) {
+        const col = { emotion: '#d8ff3e', palette: '#57d1ff', typography: '#a98bff', layout: '#ff5c38', motion: '#4ade80' }[axis];
+        dots.append(el('i', { style: `background:${col}`, title: `${axis}: ${d.decisions[axis] ?? '?'}` }));
+      }
+      const btn = el('button', { className: 'design', type: 'button', 'aria-current': String(state.selected === d.slug) },
+        el('span', { className: 'name' }, d.title || d.slug),
+        el('span', { className: 'meta' },
+          el('span', {}, d.decisions.emotion ?? '?'),
+          el('span', {}, '·'),
+          el('span', {}, d.decisions.palette ?? '?'),
+          d.imageCount ? el('span', {}, '·') : null,
+          d.imageCount ? el('span', { style: 'color:var(--info)' }, `${d.imageCount} img`) : null,
+          d.revision > 1 ? el('span', { className: 'rev' }, `r${d.revision}`) : null,
+          d.parent ? el('span', { className: 'rev', title: `iterated from ${d.parent}` }, '↳') : null,
+          dots,
+        ),
+      );
+      btn.onclick = () => select(d.slug);
+      list.append(btn);
+    }
+  }
+
+  async function select(slug) {
+    state.selected = slug;
+    await refreshDesigns();
+    const { record, spec } = await api(`/api/designs/${slug}`);
+    state.detail = { record, spec };
+
+    $('#mode-label').textContent = `Iterate on ${record.slug}${record.revision > 1 ? ` (r${record.revision})` : ''}`;
+    $('#brief-label').textContent = 'Original brief (locked)';
+    $('#brief').value = spec.brief.split('\n')[0];
+    $('#brief').readOnly = true;
+    $('#iterate-wrap').hidden = false;
+    $('#instructions').value = '';
+    $('#go').textContent = 'Iterate';
+
+    $('#detail-card').hidden = false;
+    $('#detail-title').textContent = spec.copy?.title ?? record.title;
+    $('#detail-sub').textContent = `${record.slug} · ${record.decisions.emotion} / ${record.decisions.palette} · composite ${record.composite.toFixed(3)}${record.review.length ? ` · review: ${record.review.join(', ')}` : ''}`;
+    $('#preview').src = `/preview/${slug}/`;
+    $('#open-tab').href = `/preview/${slug}/`;
+
+    const dec = $('#decisions');
+    dec.replaceChildren();
+    for (const d of spec.decisions) {
+      dec.append(el('div', { className: 'dec' },
+        el('span', { className: 'axis' }, d.axis),
+        el('span', { className: 'pick' },
+          d.picked,
+          el('div', { className: 'bar', 'data-low': String(d.confidence < 0.5) }, el('i', { style: `inline-size:${Math.round(d.confidence * 100)}%` })),
+        ),
+        el('span', { className: 'conf' }, d.confidence.toFixed(2)),
+      ));
+    }
+
+    const notes = $('#notes');
+    notes.replaceChildren();
+    const items = [];
+    items.push(`decided by ${spec.meta.decider} · ${spec.meta.model} · ${spec.meta.latencyMs}ms · ~$${spec.meta.estimatedUsd.toFixed(6)}`);
+    if (spec.meta.copyWriter === 'llm') items.push(`copy by ${spec.meta.copyModel} · ${spec.meta.copyLatencyMs}ms`);
+    else items.push('copy: canonical');
+    if (spec.meta.imageCount) items.push(`${spec.meta.imageCount} image(s) · steps ${spec.meta.imageSteps} / guidance ${spec.meta.imageCfg} · ${spec.meta.imageMs}ms`);
+    if (spec.review.length) items.push(`flagged for review: ${spec.review.join(', ')}`);
+    for (const t of items) notes.append(el('div', { className: 'hint' }, t));
+
+    renderImages(spec);
+  }
+
+  function renderImages(spec) {
+    const wrap = $('#images');
+    wrap.replaceChildren();
+    if (!spec.assets?.length) {
+      wrap.append(el('div', { className: 'empty' }, el('span', { className: 'big' }, 'No artwork'), el('span', { className: 'hint' }, 'This design uses its CSS gradient fallbacks.')));
+      return;
+    }
+    const gal = el('div', { className: 'gallery' });
+    for (const a of spec.assets) {
+      gal.append(el('figure', {},
+        el('img', { src: '/' + a.file, alt: a.alt, loading: 'lazy', width: 256, height: 256 }),
+        el('figcaption', { title: a.prompt }, `${a.kind} · ${a.seed}`),
+      ));
+    }
+    wrap.append(gal);
+    for (const a of spec.assets) {
+      wrap.append(el('div', { className: 'card' },
+        el('div', { className: 'row' }, el('code', { className: 'mono', style: 'color:var(--info)' }, a.kind), el('span', { className: 'hint' }, `seed ${a.seed} · steps ${a.steps} · guidance ${a.cfg} · ${(a.seconds || 0).toFixed(1)}s`)),
+        el('p', { className: 'hint', style: 'margin-block-start:0.3rem' }, a.prompt),
+      ));
+    }
+  }
+
+  /* ---------------- run ---------------- */
+  function setBusy(on) {
+    state.busy = on;
+    $('#go').disabled = on;
+    $('#cancel').hidden = !on;
+    $('#progress-card').hidden = !on && !$('#log').children.length;
+    $('#spin').hidden = !on;
+  }
+
+  function logLine(phase, message) {
+    const line = el('div', { dataset: { phase } }, el('b', {}, phase.padEnd(7, ' ')), ' ', message);
+    $('#log').append(line);
+    $('#log').scrollTop = $('#log').scrollHeight;
+  }
+
+  function imagePayload() {
+    const num = (id) => { const v = $(id).value.trim(); return v === '' ? undefined : Number(v); };
+    return {
+      enabled: $('#images-on').checked,
+      count: Number($('#count').value) || 1,
+      preset: $('#preset').value,
+      steps: num('#steps'),
+      cfg: num('#guidance'),
+      seed: num('#seed'),
+    };
+  }
+
+  function watch(jobId, title) {
+    state.jobId = jobId;
+    $('#progress-title').textContent = title;
+    $('#log').replaceChildren();
+    setBusy(true);
+    if (state.es) state.es.close();
+    const es = new EventSource(`/api/jobs/${jobId}/events`);
+    state.es = es;
+    es.onmessage = async (ev) => {
+      const e = JSON.parse(ev.data);
+      if (e.phase === 'end') {
+        es.close();
+        setBusy(false);
+        const job = await api(`/api/jobs/${jobId}`);
+        if (job.state === 'done') {
+          toast('Design ready');
+          await refreshDesigns();
+          await select(job.result.slug);
+        } else {
+          toast(`Failed: ${job.error || 'unknown error'}`, 6000);
+        }
+        return;
+      }
+      logLine(e.phase, e.message);
+    };
+    es.onerror = () => { es.close(); setBusy(false); };
+  }
+
+  async function run(kind, slug) {
+    const payload = {
+      decider: state.decider,
+      copy: $('#copy-on').checked,
+      images: imagePayload(),
+    };
+    try {
+      if (kind === 'iterate') {
+        const instructions = $('#instructions').value.trim();
+        if (!instructions) return toast('Say what to change');
+        const { jobId } = await api(`/api/designs/${slug}/iterate`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, instructions }),
+        });
+        watch(jobId, 'Iterating…');
+      } else {
+        const brief = $('#brief').value.trim();
+        if (!brief) return toast('Write a brief first');
+        const { jobId } = await api('/api/design', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, brief }),
+        });
+        watch(jobId, 'Generating…');
+      }
+    } catch (err) {
+      toast(String(err.message || err), 6000);
+    }
+  }
+
+  /* ---------------- wiring ---------------- */
+  document.querySelectorAll('[role="tab"]').forEach((tab) => {
+    tab.onclick = () => {
+      document.querySelectorAll('[role="tab"]').forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+      for (const p of ['catalog', 'css', 'images']) $('#panel-' + p).hidden = p !== tab.dataset.tab;
+    };
+  });
+
+  document.querySelectorAll('[data-decider]').forEach((b) => {
+    b.onclick = () => {
+      state.decider = b.dataset.decider;
+      document.querySelectorAll('[data-decider]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    };
+  });
+
+  $('#images-on').onchange = (e) => {
+    state.imagesOn = e.target.checked;
+    $('#image-opts').hidden = !e.target.checked;
+  };
+
+  $('#go').onclick = () => {
+    if ($('#iterate-wrap').hidden === false && state.selected) run('iterate', state.selected);
+    else run('new');
+  };
+
+  $('#refresh').onclick = () => refreshDesigns();
+  $('#export-zip').onclick = () => { if (state.selected) location.href = `/api/designs/${state.selected}/export.zip`; };
+  $('#copy-one').onclick = async () => {
+    if (!state.selected) return;
+    try {
+      const html = await api(`/api/designs/${state.selected}/selfcontained`);
+      await navigator.clipboard.writeText(html);
+      toast(`Copied ${(html.length / 1024).toFixed(0)} KB of self-contained HTML`);
+    } catch (err) {
+      toast('Clipboard blocked — use Download .zip instead', 5000);
+    }
+  };
+
+  boot().catch((err) => toast(String(err.message || err), 8000));
+})();
+</script>
+</body>
+</html>

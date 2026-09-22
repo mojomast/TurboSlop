@@ -1,0 +1,28 @@
+{
+  "name": "turboslop",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "TurboSlop — machine-made, human-judged. Jev decides the design, an LLM writes it, a hosted model illustrates it, code composes and ships it.",
+  "keywords": ["design", "generative-ui", "jev", "typesafe", "decisions", "ssg"],
+  "license": "MIT",
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "serve": "tsx src/server.ts",
+    "decide": "tsx src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx test/forge.test.ts && tsx test/images.test.ts && tsx test/zip.test.ts",
+    "test:forge": "tsx test/forge.test.ts",
+    "test:images": "tsx test/images.test.ts",
+    "test:zip": "tsx test/zip.test.ts",
+    "curate": "tsx scripts/curate.ts"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3"
+  }
+}

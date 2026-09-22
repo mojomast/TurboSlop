@@ -1,0 +1,45 @@
+# TurboSlop — systemd unit
+#
+#   sudo cp deploy/turboslop.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now turboslop
+#
+# Secrets live in /etc/turboslop/env (chmod 600, root-owned). They are NOT in
+# this unit file, and NOT in the repository.
+
+[Unit]
+Description=TurboSlop control surface
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=turboslop
+Group=turboslop
+WorkingDirectory=/opt/turboslop
+
+EnvironmentFile=/etc/turboslop/env
+Environment=NODE_ENV=production
+Environment=FORGE_PORT=4400
+Environment=FORGE_OUT_DIR=/var/lib/turboslop/out
+
+ExecStart=/usr/bin/npx tsx src/server.ts
+
+Restart=on-failure
+RestartSec=3
+
+# Hardening: the service only ever reads its own tree and writes its out dir.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/turboslop
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+MemoryDenyWriteExecute=false
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+[
+  { "name": "wellness-spa",      "brief": "A calm, spa-like landing page for a wellness studio. Soft edges, lots of whitespace, slow gentle motion." },
+  { "name": "satellite-ops",     "brief": "A brutal technical control panel for satellite operators. Dense data, monospace type, no decoration, everything precise." },
+  { "name": "candy-kids",        "brief": "A joyful, playful storefront for a candy brand aimed at children. Bright, bouncy, rewarding to touch." },
+  { "name": "perfume-luxury",    "brief": "An opulent, old-world perfume maison. Dark, mysterious, scarce light, something withheld." },
+  { "name": "health-portal",     "brief": "A public sector health information portal. Must be accessible, legible, trustworthy and rigorously structured." },
+  { "name": "esports-tournament","brief": "An adrenaline-fuelled esports tournament site. Loud, fast, competitive, kinetic." },
+  { "name": "ceramics-studio",   "brief": "A small independent ceramics studio. Warm, handmade, personal, as if written to one reader." },
+  { "name": "climate-tech",      "brief": "A climate technology startup. Optimistic, bright, hopeful about the future, airy and light." },
+  { "name": "space-museum",      "brief": "A planetarium and space museum. Monumental, vast, cinematic, small in the face of something enormous." },
+  { "name": "letterpress-print", "brief": "A heritage letterpress print shop. Printed, warm, permanent, like a beautiful object from decades ago." }
+]
