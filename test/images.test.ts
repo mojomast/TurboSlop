@@ -418,8 +418,8 @@ await test('pages render identically in structure with or without generated art'
   const withArt: DesignSpec = {
     ...spec,
     assets: [
-      { kind: 'backdrop', slot: 'hero', source: 'generated', file: 'assets/x/00-backdrop-1.png', alt: 'Abstract backdrop', credit: '', license: '', nativeWidth: 256, nativeHeight: 256, prompt: 'a backdrop', seed: 1, steps: 20, cfg: 3, bytes: 1024, seconds: 2 },
-      { kind: 'motif', slot: 'gallery-1', source: 'generated', file: 'assets/x/01-motif-2.png', alt: 'Motif', credit: '', license: '', nativeWidth: 256, nativeHeight: 256, prompt: 'a motif', seed: 2, steps: 20, cfg: 3, bytes: 1024, seconds: 2 },
+      { kind: 'backdrop', slot: 'items-1', source: 'generated', file: 'assets/x/00-backdrop-1.png', alt: 'Abstract backdrop', credit: '', license: '', nativeWidth: 256, nativeHeight: 256, prompt: 'a backdrop', seed: 1, steps: 20, cfg: 3, bytes: 1024, seconds: 2 },
+      { kind: 'motif', slot: 'items-2', source: 'generated', file: 'assets/x/01-motif-2.png', alt: 'Motif', credit: '', license: '', nativeWidth: 256, nativeHeight: 256, prompt: 'a motif', seed: 2, steps: 20, cfg: 3, bytes: 1024, seconds: 2 },
     ],
   };
   const html = renderHtml(withArt);
