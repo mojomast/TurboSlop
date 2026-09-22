@@ -9,7 +9,7 @@ import assert from 'node:assert/strict';
 import { decideWithFallback } from '../src/decider.js';
 import { compose, ComposeError } from '../src/compose.js';
 import { Content, fallbackContent, emphasize, stripEmphasis, balanceEmphasis, repairContent } from '../src/content.js';
-import { COMPOSITION_IDS } from '../src/compositions.js';
+import { BLUEPRINTS } from '../src/blueprint.js';
 import { EFFECT_KIT_IDS } from '../src/styles.js';
 import { writeContent } from '../src/writer.js';
 import { resolveLlm, describeLlm, extractJson, salvageTruncatedJson, complete } from '../src/llm.js';
@@ -164,8 +164,8 @@ await test('emphasis convention converts to <em> and strips safely', () => {
 await test('the tagline accent renders as an <em>, not literal asterisks', async () => {
   const spec = await composed(BRIEFS[0]!);
   const html = renderHtml(spec);
-  assert.ok(html.includes('<h1 class="display">'), 'missing hero headline');
-  const h1 = /<h1 class="display">([\s\S]*?)<\/h1>/.exec(html)![1]!;
+  assert.ok(/<h1[^>]*>/.test(html), 'missing hero headline');
+  const h1 = /<h1[^>]*>([\s\S]*?)<\/h1>/.exec(html)![1]!;
   assert.ok(!h1.includes('*'), `asterisks leaked into the headline: ${h1}`);
   assert.ok(h1.includes('<em>'), 'expected an emphasised accent phrase in the headline');
   assert.ok(html.includes(stripEmphasis(spec.content!.tagline).slice(0, 20)), 'tagline not in output');
@@ -257,45 +257,57 @@ await test('reduced-motion is honoured', async () => {
 /* ================================================================== *
  * Variety — compositions and effect kits
  * ================================================================== */
-/** A composed spec with overridden tokens, for exercising every option. */
+/** A composed spec pinned to a blueprint (and optional token overrides). */
 async function specWith(overrides: Record<string, string>, brief = 'A general business site'): Promise<DesignSpec> {
   const spec = await composed(brief);
+  if (overrides.blueprint) spec.blueprint = overrides.blueprint;
   Object.assign(spec.tokens, overrides);
   return spec;
 }
 
-await test('every composition renders and all its nav anchors resolve', async () => {
-  for (const comp of COMPOSITION_IDS) {
-    const html = renderHtml(await specWith({ composition: comp }));
+await test('every blueprint renders and all its nav anchors resolve', async () => {
+  for (const bp of BLUEPRINTS) {
+    const html = renderHtml(await specWith({ blueprint: bp.id }));
     const anchors = [...html.matchAll(/<a[^>]+href="#([^"]+)"/g)].map((m) => m[1]!);
     const ids = new Set([...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]!));
     for (const a of anchors) {
       if (a === 'top') continue;
-      assert.ok(ids.has(a), `composition "${comp}": anchor #${a} has no target`);
+      assert.ok(ids.has(a), `blueprint "${bp.id}": anchor #${a} has no target`);
     }
-    assert.ok(ids.has('contact'), `composition "${comp}" must always emit a #contact target`);
-    assert.ok(html.includes(`data-composition="${comp}"`), `composition "${comp}" not marked`);
-    assert.ok(!html.includes('undefined'), `composition "${comp}" leaked undefined`);
+    assert.ok(ids.has('contact'), `blueprint "${bp.id}" must always emit a #contact target`);
+    assert.ok(html.includes(`data-blueprint="${bp.id}"`), `blueprint "${bp.id}" not marked`);
+    assert.ok(!html.includes('undefined'), `blueprint "${bp.id}" leaked undefined`);
   }
 });
 
-await test('compositions are structurally different, not one skeleton recoloured', async () => {
-  // Signature = the sorted set of structural class names used. Two compositions
-  // sharing a hallmark class are allowed; identical signatures are not.
-  const sig = (html: string) =>
-    [...new Set([...html.matchAll(/class="([a-z][\w-]*)"/g)].map((m) => m[1]!))].sort().join('|');
-  const signatures = new Map<string, string>();
-  for (const comp of COMPOSITION_IDS) {
-    signatures.set(comp, sig(renderHtml(await specWith({ composition: comp }))));
+await test('blueprints produce distinct section sequences and block variants', async () => {
+  // Fingerprint the RENDERED structure: the ordered blocks, the hero, the
+  // chrome. Deliberately not class names, copy or colours.
+  const sig = (html: string) => {
+    const blocks = [...html.matchAll(/data-block="([^"]+)"/g)].map((m) => m[1]!);
+    const lead = (html.match(/data-lead="([^"]+)"/) ?? [])[1] ?? '?';
+    const hero = (html.match(/hero hero--([a-z]+)/) ?? [])[1] ?? 'display';
+    const nav = (html.match(/site-head--([a-z-]+)/) ?? [])[1] ?? 'bar';
+    const foot = (html.match(/footer--([a-z-]+)/) ?? [])[1] ?? 'masthead';
+    return [lead, hero, nav, foot, blocks.join('>')].join('|');
+  };
+  const seen = new Map<string, string>();
+  let distinct = 0;
+  for (const bp of BLUEPRINTS) {
+    const key = sig(renderHtml(await specWith({ blueprint: bp.id })));
+    if (!seen.has(key)) distinct++;
+    seen.set(key, bp.id);
   }
-  const unique = new Set(signatures.values());
-  assert.equal(unique.size, COMPOSITION_IDS.length, `expected ${COMPOSITION_IDS.length} distinct structures, got ${unique.size}`);
+  assert.ok(distinct >= 12, `expected many distinct rendered structures, got ${distinct} of ${BLUEPRINTS.length}`);
+});
 
-  // And at least a few genuinely distinctive hallmarks must be present.
-  const all = [...signatures.entries()].map(([, v]) => v).join(' ');
-  for (const hallmark of ['split__panel', 'erow', 'bento', 'gallery', 'spectable', 'steps']) {
-    assert.ok(all.includes(hallmark), `no composition uses the "${hallmark}" element`);
-  }
+await test('two blueprints render visibly different block sequences', async () => {
+  const a = renderHtml(await specWith({ blueprint: 'data-metrics' }));
+  const b = renderHtml(await specWith({ blueprint: 'image-mosaic' }));
+  const blocksOf = (h: string) => [...h.matchAll(/data-block="([^"]+)"/g)].map((m) => m[1]!).join('>');
+  assert.notEqual(blocksOf(a), blocksOf(b));
+  assert.ok(a.includes('data-lead="data"'));
+  assert.ok(b.includes('data-lead="image"'));
 });
 
 await test('every effect kit emits its own scoped CSS', async () => {
@@ -311,12 +323,12 @@ await test('every effect kit emits its own scoped CSS', async () => {
   }
 });
 
-await test('the same brief with a different composition produces a different page', async () => {
-  const a = renderHtml(await specWith({ composition: 'classic-stack', effects: 'flat-plain' }));
-  const b = renderHtml(await specWith({ composition: 'bento-grid', effects: 'luminous-glass' }));
+await test('the same brief with a different blueprint produces a different page', async () => {
+  const a = renderHtml(await specWith({ blueprint: 'catalogue-gallery', effects: 'flat-plain' }));
+  const b = renderHtml(await specWith({ blueprint: 'data-calculator', effects: 'luminous-glass' }));
   assert.notEqual(a.length, b.length, 'pages are byte-identical in length');
-  assert.ok(a.includes('data-composition="classic-stack"'));
-  assert.ok(b.includes('data-composition="bento-grid"'));
+  assert.ok(a.includes('data-blueprint="catalogue-gallery"'));
+  assert.ok(b.includes('data-blueprint="data-calculator"'));
 });
 
 /* ---- tolerant repair ---- */
@@ -505,6 +517,119 @@ await test('cost is recomputed for specs that predate the field', async () => {
   assert.ok(d, 'record not listed');
   // 1000 * $0.15/M + 2000 * $0.60/M
   assert.ok(Math.abs(d.costWriter - (0.00015 + 0.0012)) < 1e-9, `expected recomputed cost, got ${d.costWriter}`);
+});
+
+await test('every local-decider affinity id exists in the catalog', async () => {
+  // The stand-in decider boosts candidates by affinity. Those ids once pointed
+  // at typefaces that were planned but never landed, so the typography boost
+  // silently did nothing — a whole axis of variety lost to a typo. This asserts
+  // the wiring, and is the check that would have caught it.
+  const { EMOTIONS, COMPOSITIONS, EFFECT_KITS, PALETTES, TYPEFACES, LAYOUTS, MOTIONS } = await import('../src/catalog.js');
+  const catalog = new Set<string>([
+    ...EMOTIONS.map((x) => x.id),
+    ...COMPOSITIONS.map((x) => x.id),
+    ...EFFECT_KITS.map((x) => x.id),
+    ...PALETTES.map((x) => x.id),
+    ...TYPEFACES.map((x) => x.id),
+    ...LAYOUTS.map((x) => x.id),
+    ...MOTIONS.map((x) => x.id),
+  ]);
+
+  const src = await (await import('node:fs/promises')).readFile(new URL('../src/decider.ts', import.meta.url), 'utf8');
+  const block = /const EMOTION_AFFINITY[\s\S]*?\n\};/.exec(src);
+  assert.ok(block, 'could not locate the AFFINITY table');
+
+  const axisKeys = new Set(['composition', 'effects', 'palette', 'typography', 'layout', 'motion', 'density']);
+  const emotionIds = new Set(EMOTIONS.map((e) => e.id));
+  const referenced = new Set<string>();
+  for (const m of block![0].matchAll(/'([a-z0-9-]+)'/g)) {
+    const id = m[1]!;
+    if (axisKeys.has(id) || emotionIds.has(id)) continue;
+    referenced.add(id);
+  }
+
+  assert.ok(referenced.size > 20, `expected many affinity ids, found ${referenced.size}`);
+  const dead = [...referenced].filter((id) => !catalog.has(id));
+  assert.deepEqual(dead, [], `affinity ids not present in the catalog: ${dead.join(', ')}`);
+});
+
+await test('the palette guardrail reads lightness from the palette, not a name list', async () => {
+  // A hardcoded list of "light" palette names drifted when a palette was
+  // renamed, so the dark-ground conflict check stopped firing for it.
+  const { PALETTES } = await import('../src/catalog.js');
+  const src = await (await import('node:fs/promises')).readFile(new URL('../src/compose.ts', import.meta.url), 'utf8');
+  assert.ok(/isLightGround\(/.test(src), 'the guardrail must derive lightness from the palette');
+  assert.ok(!/lightPalettes/.test(src), 'the hardcoded palette-name list must be gone');
+
+  // And the helper must actually classify a known light and a known dark palette.
+  const paper = PALETTES.find((p) => p.id === 'paper-ink')!;
+  const voidp = PALETTES.find((p) => p.id === 'void-violet')!;
+  const lum = (hex: string) => {
+    const n = parseInt(hex.replace('#', ''), 16);
+    return 0.2126 * ((n >> 16) & 255) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255);
+  };
+  assert.ok(lum(paper.bg) > 140, 'paper-ink should read as a light ground');
+  assert.ok(lum(voidp.bg) < 140, 'void-violet should read as a dark ground');
+});
+
+/* ================================================================== *
+ * Blueprints — the layout grammar
+ * ================================================================== */
+await test('every blueprint validates against its own compatibility rules', async () => {
+  const { validateAllBlueprints } = await import('../src/blueprint.js');
+  const issues = validateAllBlueprints();
+  const report = issues.map((i) => `${i.blueprint}: [${i.rule}] ${i.detail}`).join('\n        ');
+  assert.deepEqual(issues, [], `blueprint validation failed:\n        ${report}`);
+});
+
+await test('blueprints are structurally distinct from one another', async () => {
+  const { BLUEPRINTS, fingerprintKey } = await import('../src/blueprint.js');
+  const seen = new Map<string, string>();
+  const clashes: string[] = [];
+  for (const bp of BLUEPRINTS) {
+    const key = fingerprintKey(bp);
+    const prev = seen.get(key);
+    if (prev) clashes.push(`${prev} and ${bp.id} share a fingerprint`);
+    seen.set(key, bp.id);
+  }
+  assert.deepEqual(clashes, [], clashes.join('; '));
+});
+
+await test('the blueprint catalog covers every lead', async () => {
+  const { BLUEPRINTS, LEADS } = await import('../src/blueprint.js');
+  const covered = new Set(BLUEPRINTS.map((b) => b.lead));
+  const missing = LEADS.filter((l) => !covered.has(l));
+  assert.deepEqual(missing, [], `no blueprint leads with: ${missing.join(', ')}`);
+  assert.ok(BLUEPRINTS.length >= 15, `expected a deep catalog, got ${BLUEPRINTS.length}`);
+});
+
+await test('no blueprint always demands the same sections in the same order', async () => {
+  // The old model produced hero -> items -> features -> stats -> about -> contact
+  // for every page. Nothing may reintroduce that as a fixed spine.
+  const { BLUEPRINTS } = await import('../src/blueprint.js');
+  const spines = new Map<string, number>();
+  for (const bp of BLUEPRINTS) {
+    const spine = bp.sections.map((x) => x.module).join('>');
+    spines.set(spine, (spines.get(spine) ?? 0) + 1);
+  }
+  const worst = Math.max(...spines.values());
+  assert.ok(worst <= 2, `a single section order is used ${worst} times`);
+  assert.ok(spines.size >= 12, `expected many distinct orders, got ${spines.size}`);
+});
+
+await test('structural distance ignores copy, colour and class names', async () => {
+  const { BLUEPRINT_BY_ID, fingerprintDistance } = await import('../src/blueprint.js');
+  const a = BLUEPRINT_BY_ID['catalogue-gallery']!;
+  const b = BLUEPRINT_BY_ID['data-metrics']!;
+  const c = BLUEPRINT_BY_ID['catalogue-gallery']!;
+  assert.equal(fingerprintDistance(a, c), 0, 'a blueprint is identical to itself');
+  assert.ok(fingerprintDistance(a, b) > 0.6, 'unrelated blueprints should be far apart');
+
+  // Two blueprints differing only in lead/hero are still measurably apart.
+  const d = BLUEPRINT_BY_ID['product-demo']!;
+  const e = BLUEPRINT_BY_ID['product-spec']!;
+  const dist = fingerprintDistance(d, e);
+  assert.ok(dist > 0.2 && dist < 1, `same-family blueprints should differ: got ${dist}`);
 });
 
 /* ================================================================== *

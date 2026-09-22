@@ -24,7 +24,7 @@ import {
   THRESHOLDS,
   WEIGHTS,
 } from './questions.js';
-import { DENSITY_IDS } from './catalog.js';
+import { DENSITY_IDS, PALETTE_BY_ID } from './catalog.js';
 import { jevCost } from './pricing.js';
 import type { Axis, DesignSpec } from './types.js';
 import type { DecideResult } from './decider.js';
@@ -65,7 +65,28 @@ export interface ComposeResult {
   notes: string[];
 }
 
-export function compose(brief: string, result: DecideResult): ComposeResult {
+export interface ComposeOptions {
+  /**
+   * A direction chosen from the generated set. When present its picks override
+   * the per-axis argmax, which is what lets one decision call yield several
+   * genuinely different pages.
+   */
+  direction?: {
+    blueprint: string;
+    palette: string;
+    typography: string;
+    effects: string;
+    motion: string;
+    density: string;
+    fit?: number;
+    novelty?: number;
+    rationale?: string;
+    alternatives?: { blueprint: string; fit: number }[];
+  };
+  seed?: number;
+}
+
+export function compose(brief: string, result: DecideResult, opts: ComposeOptions = {}): ComposeResult {
   const { response, kind, latencyMs } = result;
   const notes: string[] = [];
   const decisions: DesignSpec['decisions'] = [];
@@ -152,9 +173,12 @@ export function compose(brief: string, result: DecideResult): ComposeResult {
     notes.push(`Accessibility-critical contrast requested (P=${needsContrast.noul.toFixed(2)}) — verify every text/background pair.`);
   }
 
-  /* Cross-check the palette against the brief's own stated ground preference. */
-  const lightPalettes = new Set(['paper-ink', 'sage-mist', 'aurora-glass', 'steel-signal', 'candy-pop', 'bone-clay']);
-  const chosenIsLight = lightPalettes.has(chosenPaletteId);
+  /* Cross-check the palette against the brief's own stated ground preference.
+     Lightness is derived from the palette's actual background colour rather
+     than from a hardcoded list of names — a list drifts the moment a palette is
+     renamed, and this one did. */
+  const chosenPalette = PALETTE_BY_ID[chosenPaletteId];
+  const chosenIsLight = chosenPalette ? isLightGround(chosenPalette.bg) : false;
   if (wantsDark && wantsDark.type === 'noul' && wantsDark.noul > GUARDRAIL_FLOOR && chosenIsLight) {
     if (!review.includes('palette')) review.push('palette');
     notes.push(
@@ -169,6 +193,17 @@ export function compose(brief: string, result: DecideResult): ComposeResult {
   const tokens: Record<string, string> = {};
   for (const d of decisions) tokens[d.axis] = d.picked;
 
+  // A direction overrides the argmax on the axes it owns. The decisions above
+  // still record what the model actually said.
+  if (opts.direction) {
+    const dir = opts.direction;
+    tokens.palette = dir.palette;
+    tokens.typography = dir.typography;
+    tokens.effects = dir.effects;
+    tokens.motion = dir.motion;
+    tokens.density = dir.density;
+  }
+
   const usage = response.usage ?? { input_tokens: 0, output_tokens: 0 };
   const estimatedUsd = jevCost(usage.input_tokens);
 
@@ -179,6 +214,18 @@ export function compose(brief: string, result: DecideResult): ComposeResult {
     composite: { score: weighted, normalized, weights: { ...WEIGHTS } },
     review: [...new Set(review)],
     assets: [],
+    blueprint: opts.direction?.blueprint ?? 'statement-display',
+    seed: opts.seed ?? 0,
+    ...(opts.direction
+      ? {
+          direction: {
+            fit: opts.direction.fit ?? 0,
+            novelty: opts.direction.novelty ?? 1,
+            rationale: opts.direction.rationale ?? '',
+            alternatives: opts.direction.alternatives ?? [],
+          },
+        }
+      : {}),
     meta: {
       decider: kind,
       model: response.model,

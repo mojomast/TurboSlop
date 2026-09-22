@@ -404,9 +404,9 @@ await test('guidance 1 is labelled as a non-equivalent shortcut', () => {
 await test('pages render identically in structure with or without generated art', async () => {
   const r = await decideWithFallback('A calm spa landing page', { offline: true });
   const { spec } = compose('A calm spa landing page', r);
-  // Pin a composition that actually uses image plates: others (data-first,
-  // manifesto) render the same items as text rows by design.
-  spec.tokens.composition = 'classic-stack';
+  // Pin a blueprint that actually uses image plates: others (data-*, manifesto)
+  // render the same items as text rows by design.
+  spec.blueprint = 'catalogue-rail';
   // Content is supplied by the writer (or the specimen), not by compose().
   const axes = spec.decisions.map((d) => ({ axis: d.axis, picked: d.picked, confidence: d.confidence }));
   spec.content = fallbackContent('A calm spa landing page', axes);

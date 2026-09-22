@@ -13,7 +13,9 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { decideWithFallback, type DeciderPreference } from './decider.js';
 import { compose } from './compose.js';
-import { fallbackContent } from './content.js';
+import { fallbackContent, validateContentForBlueprint } from './content.js';
+import { buildDirections, type Direction, type Distributions } from './directions.js';
+import { requiredModules } from './blueprint.js';
 import { writeContent } from './writer.js';
 import {
   IMAGE_PRESETS,
@@ -50,10 +52,23 @@ export interface RunOptions {
   /** When set, this is an iteration: the previous design is fed back in. */
   parent?: { spec: DesignSpec; instructions?: string } | null;
   decider: DeciderPreference;
+  /**
+   * Which direction to build. Omitted means "the best fit". Set by the control
+   * surface when a human picks from the contact sheet.
+   */
+  directionIndex?: number;
+  /** How many directions to generate before choosing. */
+  directionCount?: number;
+  /** Fit-first (0) <-> explore (1) dial. */
+  explore?: number;
+  /** Rendered direction set, when a caller wants the whole contact sheet. */
+  onDirections?: (dirs: Direction[]) => void;
   noCopy: boolean;
   images: ImageOptions;
   outDir: string;
   slug: string;
+  /** Direction-selection seed, so a batch is reproducible. */
+  seed?: number;
   onProgress?: (e: ProgressEvent) => void;
 }
 
@@ -122,7 +137,58 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
   const briefForDecider = briefForRun(opts);
   say('decide', 'Asking Jev for design decisions…');
   const decided = await decideWithFallback(briefForDecider, { preference: opts.decider });
-  const { spec, notes: composeNotes } = compose(briefForDecider, decided);
+  /* ---- 1b. turn the ranked alternatives into a set of directions ---------
+     One decision call already contains a full distribution per axis. Using only
+     the argmax is what made every page a member of one family. */
+  const distributions: Distributions = {};
+  for (const [id, ans] of Object.entries(decided.response.answers)) {
+    if (ans.type === 'choice') distributions[id as keyof Distributions] = ans.probabilities;
+  }
+  const wantsDark =
+    ((decided.response.answers.wants_dark_ground as { noul?: number } | undefined)?.noul ?? 0) > 0.6;
+
+  const seed = opts.seed ?? Date.now() % 1_000_000;
+  const dirs = buildDirections({
+    brief: briefForDecider,
+    distributions,
+    count: opts.directionCount ?? 6,
+    seed,
+    wantsDark,
+    explore: opts.explore ?? 0.45,
+  });
+  opts.onDirections?.(dirs);
+
+  const idx = Math.max(0, Math.min(dirs.length - 1, opts.directionIndex ?? 0));
+  const chosenDir = dirs[idx];
+  if (chosenDir) {
+    say(
+      'decide',
+      `Direction ${idx + 1}/${dirs.length}: ${chosenDir.blueprint.id} (${chosenDir.blueprint.lead}-led), fit ${chosenDir.fit.toFixed(3)}, novelty ${chosenDir.novelty.toFixed(2)}`,
+    );
+  }
+
+  const { spec, notes: composeNotes } = compose(briefForDecider, decided, {
+    seed,
+    ...(chosenDir
+      ? {
+          direction: {
+            blueprint: chosenDir.blueprint.id,
+            palette: chosenDir.palette,
+            typography: chosenDir.typography,
+            effects: chosenDir.effects,
+            motion: chosenDir.motion,
+            density: chosenDir.density,
+            fit: chosenDir.fit,
+            novelty: chosenDir.novelty,
+            rationale: chosenDir.rationale,
+            alternatives: dirs
+              .filter((_, i) => i !== idx)
+              .slice(0, 5)
+              .map((d) => ({ blueprint: d.blueprint.id, fit: d.fit })),
+          },
+        }
+      : {}),
+  });
   notes.push(...composeNotes);
   if (decided.fallbackReason) {
     notes.push(`Jev unavailable, used the local stand-in — ${decided.fallbackReason}`);
@@ -142,8 +208,26 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
   }));
   const fallback = fallbackContent(briefForDecider, axes);
 
-  say('content', opts.noCopy ? 'Skipping the writer — using specimen content' : 'Writing content…');
-  const written = await writeContent(briefForDecider, spec, { offline: opts.noCopy, fallback });
+  const required = chosenDir ? requiredModules(chosenDir.blueprint) : undefined;
+  say(
+    'content',
+    opts.noCopy
+      ? 'Skipping the writer — using specimen content'
+      : `Writing content for ${required?.length ?? 0} module(s)…`,
+  );
+  const written = await writeContent(briefForDecider, spec, {
+    offline: opts.noCopy,
+    fallback,
+    ...(required ? { required } : {}),
+  });
+
+  // A blueprint that cannot be filled honestly is rejected, not faked.
+  const usable = validateContentForBlueprint(written.content, required ?? []);
+  if (!usable.ok) {
+    notes.push(
+      `direction ${spec.blueprint} needed ${usable.missing.join(', ')} which the brief did not supply — rendered the available modules instead`,
+    );
+  }
   // Always present: either written or the honest specimen.
   spec.content = written.content;
   spec.meta.writer = written.source;

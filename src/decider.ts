@@ -77,21 +77,30 @@ function tokens(text: string): string[] {
     .filter((w) => w.length > 2 && !STOPWORDS.has(w));
 }
 
-/** Emotion -> supporting axis affinities. Keeps the stand-in internally coherent. */
-const AFFINITY: Record<
+/**
+ * Emotion -> supporting axis affinities. Keeps the stand-in internally coherent.
+ *
+ * Also exported so the direction selector can use the same coherence model when
+ * scoring candidate combinations.
+ *
+ * EVERY ID HERE MUST EXIST IN THE CATALOG. These once referenced a set of
+ * typeface ids that were planned but never landed, so the typography boost
+ * silently did nothing. `test/forge.test.ts` now asserts this.
+ */
+export const EMOTION_AFFINITY: Record<
   string,
   { composition: string[]; effects: string[]; palette: string[]; typography: string[]; layout: string[]; motion: string[]; density: number }
 > = {
-  awe:        { composition: ['manifesto', 'gallery-first'], effects: ['cinematic-depth', 'flat-plain'], palette: ['arctic-cyan', 'hazard-mono', 'noir-lime'], typography: ['grotesk-cold', 'barlow-velocity'], layout: ['full-bleed-cinematic'], motion: ['glacial'], density: 0 },
-  serenity:   { composition: ['split-hero', 'classic-stack'], effects: ['soft-material', 'flat-plain', 'organic-mesh'], palette: ['sage-mist', 'aurora-glass'], typography: ['fraunces-soft', 'outfit-aurora'], layout: ['centered-measure', 'editorial-asymmetric'], motion: ['breath'], density: 0 },
-  delight:    { composition: ['bento-grid', 'gallery-first'], effects: ['brutalist-block', 'soft-material', 'luminous-glass'], palette: ['candy-pop', 'aurora-glass'], typography: ['fredoka-round', 'outfit-aurora'], layout: ['modular-cards'], motion: ['springy-playful'], density: 1 },
-  tension:    { composition: ['data-first', 'classic-stack'], effects: ['technical-drawing', 'flat-plain', 'brutalist-block'], palette: ['hazard-mono', 'noir-lime'], typography: ['oswald-mono', 'barlow-velocity'], layout: ['rigid-grid', 'editorial-asymmetric'], motion: ['snap-mechanical'], density: 2 },
-  nostalgia:  { composition: ['editorial-lede', 'manifesto'], effects: ['tactile-paper', 'hairline-editorial'], palette: ['paper-ink', 'bone-terracotta'], typography: ['playfair-editorial'], layout: ['centered-measure', 'editorial-asymmetric'], motion: ['glacial'], density: 1 },
-  mystery:    { composition: ['manifesto', 'editorial-lede'], effects: ['cinematic-depth', 'flat-plain'], palette: ['void-violet', 'hazard-mono'], typography: ['instrument-contrast', 'playfair-editorial'], layout: ['editorial-asymmetric', 'full-bleed-cinematic'], motion: ['glacial', 'breath'], density: 1 },
-  trust:      { composition: ['data-first', 'classic-stack'], effects: ['hairline-editorial', 'flat-plain'], palette: ['steel-signal', 'sage-mist'], typography: ['inter-institutional', 'grotesk-cold'], layout: ['rigid-grid'], motion: ['snap-mechanical', 'buoyant'], density: 2 },
-  energy:     { composition: ['gallery-first', 'bento-grid'], effects: ['brutalist-block', 'luminous-glass'], palette: ['electric-acid', 'noir-lime'], typography: ['barlow-velocity', 'grotesk-cold'], layout: ['full-bleed-cinematic', 'modular-cards'], motion: ['kinetic'], density: 2 },
-  intimacy:   { composition: ['editorial-lede', 'manifesto'], effects: ['tactile-paper', 'soft-material'], palette: ['bone-terracotta', 'paper-ink'], typography: ['newsreader-letter', 'playfair-editorial'], layout: ['centered-measure'], motion: ['breath', 'buoyant'], density: 0 },
-  optimism:   { composition: ['bento-grid', 'split-hero'], effects: ['luminous-glass', 'soft-material', 'organic-mesh'], palette: ['aurora-glass', 'candy-pop'], typography: ['outfit-aurora', 'fredoka-round'], layout: ['modular-cards', 'editorial-asymmetric'], motion: ['buoyant'], density: 1 },
+  awe:        { composition: ['manifesto', 'gallery-first'], effects: ['cinematic-depth', 'flat-plain'], palette: ['arctic-cyan', 'hazard-mono', 'noir-lime'], typography: ['grotesk-tight', 'condensed-heavy'], layout: ['full-bleed-cinematic'], motion: ['glacial'], density: 0 },
+  serenity:   { composition: ['split-hero', 'classic-stack'], effects: ['soft-material', 'flat-plain', 'organic-mesh'], palette: ['sage-mist', 'aurora-glass'], typography: ['humanist-light', 'geometric-open'], layout: ['centered-measure', 'editorial-asymmetric'], motion: ['breath'], density: 0 },
+  delight:    { composition: ['bento-grid', 'gallery-first'], effects: ['brutalist-block', 'soft-material', 'luminous-glass'], palette: ['candy-pop', 'aurora-glass'], typography: ['rounded-friendly', 'geometric-open'], layout: ['modular-cards'], motion: ['springy-playful'], density: 1 },
+  tension:    { composition: ['data-first', 'classic-stack'], effects: ['technical-drawing', 'flat-plain', 'brutalist-block'], palette: ['hazard-mono', 'noir-lime'], typography: ['mono-technical', 'condensed-heavy'], layout: ['rigid-grid', 'editorial-asymmetric'], motion: ['snap-mechanical'], density: 2 },
+  nostalgia:  { composition: ['editorial-lede', 'manifesto'], effects: ['tactile-paper', 'hairline-editorial'], palette: ['paper-ink', 'bone-terracotta'], typography: ['editorial-serif'], layout: ['centered-measure', 'editorial-asymmetric'], motion: ['glacial'], density: 1 },
+  mystery:    { composition: ['manifesto', 'editorial-lede'], effects: ['cinematic-depth', 'flat-plain'], palette: ['void-violet', 'hazard-mono'], typography: ['editorial-serif', 'mono-technical'], layout: ['editorial-asymmetric', 'full-bleed-cinematic'], motion: ['glacial', 'breath'], density: 1 },
+  trust:      { composition: ['data-first', 'classic-stack'], effects: ['hairline-editorial', 'flat-plain'], palette: ['steel-signal', 'sage-mist'], typography: ['geometric-open', 'grotesk-tight'], layout: ['rigid-grid'], motion: ['snap-mechanical', 'buoyant'], density: 2 },
+  energy:     { composition: ['gallery-first', 'bento-grid'], effects: ['brutalist-block', 'luminous-glass'], palette: ['electric-acid', 'noir-lime'], typography: ['condensed-heavy', 'grotesk-tight'], layout: ['full-bleed-cinematic', 'modular-cards'], motion: ['kinetic'], density: 2 },
+  intimacy:   { composition: ['editorial-lede', 'manifesto'], effects: ['tactile-paper', 'soft-material'], palette: ['bone-terracotta', 'paper-ink'], typography: ['editorial-serif', 'humanist-light'], layout: ['centered-measure'], motion: ['breath', 'buoyant'], density: 0 },
+  optimism:   { composition: ['bento-grid', 'split-hero'], effects: ['luminous-glass', 'soft-material', 'organic-mesh'], palette: ['aurora-glass', 'candy-pop'], typography: ['geometric-open', 'rounded-friendly'], layout: ['modular-cards', 'editorial-asymmetric'], motion: ['buoyant'], density: 1 },
 };
 
 function scoreCandidate(id: string, label: string, description: string, briefTokens: string[], boost: string[]): number {
@@ -144,7 +153,7 @@ function localDecide(brief: string): JevResponse {
 
   // 2) supporting axes, boosted by the leading emotion's affinities.
   const answers: Record<string, unknown> = {};
-  const aff = AFFINITY[leadEmotion];
+  const aff = EMOTION_AFFINITY[leadEmotion];
 
   for (const { axis, candidates } of choiceAxes) {
     if (axis === 'emotion') {

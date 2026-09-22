@@ -1,0 +1,9 @@
+[
+  { "name": "shop",      "brief": "A shop selling hand-thrown ceramic tableware. Small batch, muted glazes, ships worldwide." },
+  { "name": "event",     "brief": "A three-day independent games festival in Rotterdam. Talks, a tournament, and a late-night arcade." },
+  { "name": "editorial", "brief": "An independent quarterly magazine about urban gardening. Long reads, photography, no ads." },
+  { "name": "software",  "brief": "A CLI tool that catches flaky tests before CI does. Fast, scriptable, one config file." },
+  { "name": "service",   "brief": "A mobile bike repair service that comes to your office. Same-day, fixed prices." },
+  { "name": "artist",    "brief": "A painter working in large-format oils about industrial estuaries. Exhibitions and commissions." },
+  { "name": "technical", "brief": "An API for satellite imagery pricing. Docs-first, high volume, enterprise SLAs." }
+]

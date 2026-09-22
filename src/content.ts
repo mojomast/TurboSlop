@@ -85,11 +85,15 @@ export const Content = z.object({
     contact: Section,
   }),
 
-  items: z.array(Item).min(3).max(8),
-  stats: z.array(Stat).min(2).max(4),
-  features: z.array(Feature).min(3).max(8),
-  aboutFacts: z.array(Fact).min(2).max(5),
-  aboutBody: z.array(z.string().min(40).max(700)).min(1).max(3),
+  /* ---- modules -----------------------------------------------------------
+     Each is optional. A blueprint declares which modules it needs, the writer is
+     asked only for those, and a page renders only what it has. This is what
+     stops every page being forced into work/features/stats/about/contact. */
+  items: z.array(Item).max(8).default([]),
+  stats: z.array(Stat).max(4).default([]),
+  features: z.array(Feature).max(8).default([]),
+  aboutFacts: z.array(Fact).max(5).default([]),
+  aboutBody: z.array(z.string().min(40).max(700)).max(3).default([]),
 
   contact: z.object({
     email: z.string().min(3).max(80),
@@ -259,18 +263,47 @@ export function repairContent(raw: unknown): Content | null {
     }),
   };
 
-  // Minimum content the page needs to be worth rendering at all.
+  // Guards: only what a page cannot be rendered without. Module arrays may be
+  // empty — a blueprint that does not use `stats` should not be blocked for
+  // lacking them.
   if (!candidate.brand || !candidate.tagline || !candidate.lede) return null;
-  if (candidate.items.length < 3 || candidate.features.length < 3 || candidate.stats.length < 2) return null;
   if (!candidate.contact.email || !candidate.contact.phone || !candidate.contact.address) return null;
   if (candidate.nav.length < 3) candidate.nav = ['Work', 'Features', 'About', 'Contact'];
-  if (candidate.aboutBody.length === 0) candidate.aboutBody = [candidate.lede];
 
   const parsed = Content.safeParse(candidate);
   if (!parsed.success && process.env.FORGE_DEBUG_REPAIR === '1') {
     console.error('[repairContent] rejected:', JSON.stringify(parsed.error.issues.slice(0, 8), null, 1));
   }
   return parsed.success ? parsed.data : null;
+}
+
+/**
+ * Does this content satisfy what a blueprint needs?
+ *
+ * A blueprint that declares `pricing` but receives no features cannot be
+ * rendered honestly, and we will not invent prices to fill it. The offending
+ * direction is rejected and another is used.
+ */
+export function validateContentForBlueprint(
+  content: Content,
+  required: readonly string[],
+): { ok: boolean; missing: string[] } {
+  const missing: string[] = [];
+  const has: Record<string, boolean> = {
+    items: content.items.length > 0,
+    features: content.features.length > 0,
+    stats: content.stats.length > 0,
+    about: content.aboutBody.length > 0,
+    process: content.process.length > 0,
+    quote: Boolean(content.pullQuote),
+    gallery: content.items.length > 0,
+    schedule: content.items.length > 0,
+    pricing: content.features.length > 0 && content.stats.length > 0,
+    faq: content.features.length > 0,
+    contact: true,
+  };
+  for (const m of required) if (!has[m]) missing.push(m);
+  return { ok: missing.length === 0, missing };
 }
 
 /* ================================================================== *

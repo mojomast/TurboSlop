@@ -294,7 +294,204 @@ export function elementCss(): string {
 
   /* ---------- structural containers need a container context ---------- */
   .sec { container-type: inline-size; }
-  .work-grid, .gallery, .bento { container-type: inline-size; }`;
+  .work-grid, .gallery, .bento { container-type: inline-size; }
+
+  /* ================================================================
+   * HERO VARIANTS — the first screen is the strongest signal that two
+   * pages are different, so each variant is a genuinely different shape.
+   * ================================================================ */
+  .hero-compact { display: grid; gap: var(--s-5); align-items: end; }
+  @container (min-width: 52rem) {
+    .hero-compact { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+  }
+  .hero-compact__title {
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    font-size: var(--fs-h1);
+    line-height: 1;
+    letter-spacing: var(--track);
+    text-wrap: balance;
+    overflow-wrap: break-word;
+  }
+  .hero-compact__side { display: grid; gap: var(--s-4); justify-items: start; }
+
+  .hero-panel {
+    display: grid;
+    gap: var(--s-6);
+    padding: clamp(var(--s-5), 4vw, var(--s-8));
+    border: 1px solid var(--hair-strong);
+    border-radius: var(--radius);
+    background: var(--bg-raised);
+  }
+  @container (min-width: 52rem) {
+    .hero-panel { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+  }
+  .hero-panel__body { display: grid; gap: var(--s-4); align-content: start; }
+
+  .hero-media { display: grid; gap: var(--s-5); }
+  .hero-media__plate { aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: clip; }
+  .hero-media__plate img { inline-size: 100%; block-size: 100%; object-fit: cover; }
+  .hero-media__caption { display: grid; gap: var(--s-3); }
+  .hero-media__title {
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    font-size: var(--fs-h2);
+    line-height: 1.02;
+    letter-spacing: var(--track-tight);
+    text-wrap: balance;
+  }
+
+  .hero-index__title {
+    font-family: var(--font-display);
+    font-weight: var(--display-weight);
+    font-size: var(--fs-h2);
+    line-height: 1.05;
+    letter-spacing: var(--track);
+    margin-block: var(--s-4) var(--s-6);
+    max-inline-size: 24ch;
+  }
+  .hero-index { display: grid; border-block-start: 1px solid var(--hair-strong); }
+  .hero-index li {
+    display: flex;
+    gap: var(--s-4);
+    align-items: baseline;
+    padding-block: var(--s-3);
+    border-block-end: 1px solid var(--hair);
+    font-size: var(--fs-h4);
+  }
+  .hero-index .mono { color: var(--fg-faint); }
+
+  .dateline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-6);
+    padding-block: var(--s-3);
+    border-block: 1px solid var(--hair-strong);
+    margin-block-end: var(--s-5);
+  }
+  .dateline li { display: flex; gap: var(--s-3); align-items: baseline; }
+  .dateline .mono { color: var(--fg-faint); text-transform: uppercase; }
+  .hero-dateline__title { margin-block-end: var(--s-4); }
+
+  /* ================================================================
+   * NAV VARIANTS
+   * ================================================================ */
+  .site-head--minimal nav { justify-content: flex-start; }
+  .site-head--inline .nav-list { margin-inline-start: auto; }
+  .site-head--stacked nav {
+    display: grid;
+    gap: var(--s-2);
+    justify-items: start;
+    padding-block: var(--s-4);
+  }
+
+  /* ================================================================
+   * FOOTER VARIANTS
+   * ================================================================ */
+  .footer--minimal { padding-block: var(--s-6); }
+  .footer--cta { padding-block: var(--sec-pad); text-align: start; }
+  .footer__cta {
+    font-family: var(--font-display);
+    font-size: var(--fs-h2);
+    line-height: 1.05;
+    letter-spacing: var(--track-tight);
+    margin-block-end: var(--s-5);
+    text-wrap: balance;
+  }
+  .colophon {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: var(--fs-lede);
+    max-inline-size: 58ch;
+    margin-block: var(--s-5) var(--s-3);
+  }
+  .footer--ledger .spec, .footer--columns .spec { margin-block-start: 0; }
+
+  /* ================================================================
+   * ADDITIONAL BLOCK VARIANTS
+   * ================================================================ */
+  .plainlist { display: grid; border-block-start: 1px solid var(--hair-strong); }
+  .plainlist li {
+    display: flex;
+    gap: var(--s-4);
+    justify-content: space-between;
+    align-items: baseline;
+    padding-block: var(--s-3);
+    border-block-end: 1px solid var(--hair);
+  }
+
+  .stat-inline { display: inline-flex; gap: var(--s-2); align-items: baseline; }
+  .stat-inline b {
+    font-family: var(--font-display);
+    font-size: var(--fs-h3);
+    letter-spacing: var(--track);
+    font-variant-numeric: tabular-nums;
+  }
+  .stats--tiles { grid-auto-rows: 1fr; }
+  .stats--tiles .stat {
+    display: grid;
+    align-content: end;
+    padding: var(--s-5);
+    border: 1px solid var(--hair);
+    border-radius: var(--radius);
+    background: var(--bg-raised);
+  }
+
+  .steps--timeline { border-inline-start: 1px solid var(--hair-strong); margin-inline-start: var(--s-3); }
+  .steps--timeline li { border-block-end: 0; padding-inline-start: var(--s-5); position: relative; }
+  .steps--timeline li::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: -5px;
+    inset-block-start: calc(var(--s-5) + 0.35em);
+    inline-size: 9px;
+    block-size: 9px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .quote--band {
+    max-inline-size: none;
+    padding-block: var(--s-8);
+    border-block: 1px solid var(--hair-strong);
+  }
+  .quote--band blockquote { font-size: clamp(1.75rem, 5vw, 3.5rem); max-inline-size: 28ch; }
+  .quote--inline blockquote { font-size: clamp(1.15rem, 2vw, 1.6rem); }
+
+  .gallery--strip { grid-auto-flow: column; grid-auto-columns: 24%; overflow-x: auto; padding-block-end: var(--s-3); }
+  .gallery--strip .tile { grid-column: auto; }
+  @media (max-width: 48rem) { .gallery--strip { grid-auto-columns: 70%; } }
+
+  .agenda { display: grid; gap: var(--s-4); }
+  .agenda li {
+    display: grid;
+    gap: var(--s-1);
+    padding-block: var(--s-4);
+    border-block-start: 1px solid var(--hair-strong);
+  }
+  .agenda .mono { color: var(--accent); text-transform: uppercase; }
+
+  .tiers { align-items: stretch; }
+  .tier { display: grid; gap: var(--s-3); align-content: start; grid-column: span 12; }
+  @container (min-width: 46rem) { .tier { grid-column: span 4; } }
+  .tier--featured { border-color: var(--accent); background: color-mix(in oklab, var(--accent) 8%, var(--bg-raised)); }
+  .tier__price { font-size: var(--fs-h3); color: var(--accent); }
+
+  .faq { display: grid; border-block-start: 1px solid var(--hair-strong); }
+  .faq li { border-block-end: 1px solid var(--hair); }
+  .faq summary {
+    cursor: pointer;
+    padding-block: var(--s-4);
+    font-family: var(--font-display);
+    font-size: var(--fs-h4);
+    list-style: none;
+  }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: " +"; color: var(--accent); }
+  .faq details[open] summary::after { content: " −"; }
+  .faq p { padding-block-end: var(--s-4); color: var(--fg-muted); max-inline-size: 62ch; }
+
+  .spec--stack { grid-template-columns: minmax(0, 1fr); gap: var(--s-2); }`;
 }
 
 /* ================================================================== *
@@ -402,12 +599,15 @@ const KITS: Record<string, string> = {
   'organic-mesh': `
   [data-effects='organic-mesh'] .sec--raised,
   [data-effects='organic-mesh'] .sec--sunk { background: var(--bg); }
+  /* The wash is positioned INSIDE the section's inline box. An earlier version
+     used inset-inline-end:-10%, which pushed the page 1568px wide at a 1440px
+     viewport and 413px wide at 390 — the baseline caught it. */
   [data-effects='organic-mesh'] .sec::before {
     content: "";
     position: absolute;
     inset-block-start: -15%;
-    inset-inline-start: -10%;
-    inline-size: 60%;
+    inset-inline-start: 0;
+    inline-size: 52%;
     block-size: 60%;
     pointer-events: none;
     background: radial-gradient(closest-side, color-mix(in oklab, var(--accent) 22%, transparent), transparent 78%);
@@ -417,9 +617,10 @@ const KITS: Record<string, string> = {
   }
   [data-effects='organic-mesh'] .sec:nth-of-type(even)::before {
     inset-inline-start: auto;
-    inset-inline-end: -10%;
+    inset-inline-end: 0;
     background: radial-gradient(closest-side, color-mix(in oklab, var(--secondary) 20%, transparent), transparent 78%);
   }
+  [data-effects='organic-mesh'] .sec { overflow-x: clip; }
   [data-effects='organic-mesh'] .plate,
   [data-effects='organic-mesh'] .tile__plate { border-radius: 30% 12% 26% 10% / 16% 24% 12% 28%; }
   [data-effects='organic-mesh'] .split__panel,

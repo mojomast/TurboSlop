@@ -34,12 +34,6 @@ export interface TypeCandidate extends Candidate {
   display: string;
   body: string;
   mono: string;
-  /**
-   * Italic face for the single accented phrase in a headline. Every variation
-   * used one (Instrument Serif, Playfair italic, Fraunces italic, Caveat), and
-   * it is one of the most recognisable moves in the whole set.
-   */
-  accent?: string;
   displayWeight: number;
   tracking: string;
   scale: number;

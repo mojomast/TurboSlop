@@ -40,14 +40,7 @@ Return ONE JSON object and nothing else, with exactly these keys:
     "contact":  { "eyebrow": string, "title": string, "note": string }
   },
 
-  "items":    [ { "name": string, "meta": string, "tags": string[] } ],   // 5-6 entries
-  "stats":    [ { "value": string, "label": string, "note": string } ],   // 3-4 entries
-  "features": [ { "name": string, "detail": string } ],                   // 4-6 entries
-  "aboutFacts": [ { "label": string, "value": string } ],                 // 3-4 entries
-  "aboutBody":  [ string ],                                               // 2 paragraphs, 220-420 chars each
-
-  "contact": { "email": string, "phone": string, "address": string },
-  "footerNote": string,   // one short line for the footer
+__MODULES__  "footerNote": string,   // one short line for the footer
 
 __OPTIONAL__
 }
@@ -121,6 +114,41 @@ export interface WriteContentResult {
   fallbackReason?: string;
 }
 
+/** The contract line for each optional module, keyed by blueprint module id. */
+const MODULE_CONTRACT: Record<string, string> = {
+  items: `  "items":    [ { "name": string, "meta": string, "tags": string[] } ],   // 5-6 entries\n`,
+  features: `  "features": [ { "name": string, "detail": string } ],                   // 4-6 entries\n`,
+  stats: `  "stats":    [ { "value": string, "label": string, "note": string } ],   // 3-4 entries\n`,
+  about: `  "aboutFacts": [ { "label": string, "value": string } ],                 // 3-4 entries\n  "aboutBody":  [ string ],  // 2 paragraphs, 220-420 chars each\n`,
+  process: `  "process":  [ { "name": string, "detail": string } ],                   // 3-5 steps\n`,
+  quote: `  "pullQuote": { "text": string, "attribution": string },                 // ONE memorable sentence\n`,
+  gallery: `  "items":    [ { "name": string, "meta": string, "tags": string[] } ],   // 5-6 entries; names caption the images\n`,
+  schedule: `  "items":    [ { "name": string, "meta": string, "tags": string[] } ],   // 4-5 programme entries\n`,
+  pricing: `  "features": [ { "name": string, "detail": string } ],                   // 3-4 tiers\n  "stats": [ { "value": string, "label": string, "note": string } ],  // one price per tier\n`,
+  faq: `  "features": [ { "name": string, "detail": string } ],                   // 4 question/answer pairs\n`,
+  contact: `  "contact": { "email": string, "phone": string, "address": string },\n`,
+};
+
+/**
+ * Build the contract from the modules the blueprint actually renders.
+ *
+ * Asking for every module regardless is what forced every page into the same
+ * shape, and it bills the model for content the layout discards.
+ */
+function contractForBlueprint(composition: string, required?: readonly string[]): string {
+  const keys = required ?? ['items', 'features', 'stats', 'about', 'process', 'quote', 'contact'];
+  const seen = new Set<string>();
+  const lines: string[] = [];
+  for (const k of keys) {
+    if (seen.has(k)) continue;
+    const line = MODULE_CONTRACT[k];
+    if (line) { lines.push(line); seen.add(k); }
+  }
+  const base = BASE_CONTRACT.replace('__MODULES__', lines.join(''));
+  const optional = USES[composition] ?? [];
+  return base.replace('__OPTIONAL__', optional.map((k) => OPTIONAL_FIELDS[k] ?? '').join('').trimEnd());
+}
+
 export interface WriteContentOptions {
   signal?: AbortSignal;
   config?: LlmConfig | null;
@@ -128,6 +156,8 @@ export interface WriteContentOptions {
   offline?: boolean;
   /** Used only when falling back. */
   fallback: ContentModel;
+  /** Modules the blueprint needs. Only these are requested. */
+  required?: readonly string[];
 }
 
 /** Describe the chosen design so the prose matches the register. */
@@ -172,7 +202,7 @@ export async function writeContent(
     '',
     RULES,
     '',
-    contractFor(composition),
+    contractForBlueprint(composition, opts.required),
   ].join('\n');
 
   const user = [

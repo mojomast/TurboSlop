@@ -1,31 +1,28 @@
 /**
  * TurboSlop — renderer.
  *
- * Pure function of the spec:
- *   - structure comes from the chosen COMPOSITION
- *   - surface comes from the chosen EFFECT KIT
- *   - every visual value comes from the catalog entry Jev selected
- *   - every word comes from `spec.content`
+ * Assembles a page from its BLUEPRINT: the nav, hero, footer treatments and the
+ * ordered subset of section modules the blueprint declares. There is no fixed
+ * spine here — the page's structure is data.
  *
- * Nothing about any particular brand is baked in, and no two axes collapse into
- * each other: two designs can share a palette and a typeface and still differ in
- * structure AND surface.
+ * Every visual value comes from the catalog entries the direction selected, and
+ * every word comes from `spec.content`.
  */
+import { BLUEPRINT_BY_ID, type Blueprint } from './blueprint.js';
+import { renderFooter, renderHero, renderModule, renderNav, sectionHead, type BlockCtx } from './blocks.js';
 import { atmosphereFor, EFFECTS_BY_ID, LAYOUT_BY_ID, MOTION_BY_ID, PALETTE_BY_ID, TYPE_BY_ID } from './catalog.js';
 import type { DensityId } from './catalog.js';
-import { renderComposition, escapeHtml as esc } from './compositions.js';
 import { stripEmphasis } from './content.js';
 import { buildStylesheet } from './layout.js';
 import type { DesignSpec } from './types.js';
 
-/** Fallback nav labels when the writer supplies fewer than the anchors need. */
-const ANCHOR_LABEL: Record<string, string> = {
-  items: 'Work',
-  features: 'Capabilities',
-  stats: 'Numbers',
-  about: 'About',
-  contact: 'Contact',
-};
+function esc(s: string): string {
+  return s.replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
+  );
+}
+
+const FALLBACK_BLUEPRINT: Blueprint = BLUEPRINT_BY_ID['statement-display']!;
 
 export function renderHtml(spec: DesignSpec): string {
   const palette = PALETTE_BY_ID[spec.tokens.palette ?? ''];
@@ -35,7 +32,7 @@ export function renderHtml(spec: DesignSpec): string {
   const emotion = spec.tokens.emotion ?? 'other';
   const density = (spec.tokens.density ?? 'balanced') as DensityId;
   const effects = spec.tokens.effects ?? 'flat-plain';
-  const composition = spec.tokens.composition ?? 'classic-stack';
+  const blueprint = BLUEPRINT_BY_ID[spec.blueprint] ?? FALLBACK_BLUEPRINT;
 
   if (!palette || !type || !layout || !motion) {
     throw new Error(
@@ -51,22 +48,35 @@ export function renderHtml(spec: DesignSpec): string {
   const atm = atmosphereFor(emotion);
 
   const assets = spec.assets ?? [];
-  const backdrops = assets.filter((a) => a.kind === 'backdrop');
-  const plateAssets = assets.filter((a) => a.kind !== 'backdrop');
-
-  const { html: mainHtml, anchors } = renderComposition(composition, {
+  const ctx: BlockCtx = {
     content: c,
     emotion,
     paletteId: palette.id,
     typeId: type.id,
-    plateAssets,
-    backdrops,
-  });
+    plateAssets: assets.filter((a) => a.kind !== 'backdrop'),
+    backdrops: assets.filter((a) => a.kind === 'backdrop'),
+    blueprint,
+  };
 
-  const nav = anchors.map((anchor, i) => ({
-    anchor,
-    label: c.nav[i] ?? ANCHOR_LABEL[anchor] ?? anchor,
-  }));
+  /* Sections, in the blueprint's order. Only modules it declares are rendered,
+     which is what stops every page being work/features/stats/about/contact. */
+  const sections = blueprint.sections
+    .map((sec) => {
+      const head = sectionHead(
+        (c.sections as Record<string, { title: string; eyebrow: string; note: string }>)[sec.module]?.title ??
+          sec.module,
+        (c.sections as Record<string, { eyebrow: string }>)[sec.module]?.eyebrow ?? sec.module,
+        (c.sections as Record<string, { note: string }>)[sec.module]?.note ?? '',
+        sec.module,
+      );
+      return `  <section class="sec" id="${sec.module}" data-block="${sec.module}:${sec.variant}" aria-labelledby="${sec.module}-title">
+    <div class="wrap">
+${head}
+${renderModule(sec.module, sec.variant, ctx)}
+    </div>
+  </section>`;
+    })
+    .join('\n\n');
 
   const fontHref =
     'https://fonts.googleapis.com/css2?' +
@@ -85,8 +95,8 @@ export function renderHtml(spec: DesignSpec): string {
   const effectsLabel = EFFECTS_BY_ID[effects]?.label ?? effects;
 
   return `<!DOCTYPE html>
-<html lang="en" data-emotion="${esc(emotion)}" data-composition="${esc(
-    composition,
+<html lang="en" data-emotion="${esc(emotion)}" data-blueprint="${esc(blueprint.id)}" data-lead="${esc(
+    blueprint.lead,
   )}" data-effects="${esc(effects)}" data-palette="${esc(palette.id)}">
 <head>
 <meta charset="utf-8">
@@ -98,8 +108,10 @@ export function renderHtml(spec: DesignSpec): string {
   )}; writer: ${esc(spec.meta.writer)}/${esc(spec.meta.writerModel)})">
 <meta name="theme-color" content="${esc(palette.bg)}">
 <meta name="forge-emotion" content="${esc(emotion)}">
-<meta name="forge-composition" content="${esc(composition)}">
+<meta name="forge-blueprint" content="${esc(blueprint.id)}">
+<meta name="forge-lead" content="${esc(blueprint.lead)}">
 <meta name="forge-effects" content="${esc(effects)}">
+<meta name="forge-seed" content="${spec.seed}">
 <meta name="forge-composite" content="${spec.composite.normalized.toFixed(3)}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -114,53 +126,37 @@ ${css}
 <div class="atmosphere" aria-hidden="true"></div>
 ${atm.grain > 0 ? '<div class="grain" aria-hidden="true"></div>' : ''}
 
-<header class="site-head">
-  <div class="wrap">
-    <nav aria-label="Primary">
-      <a href="#top" class="brand">${esc(c.brand)}</a>
-      <ul class="nav-list">
-${nav.map((n) => `        <li><a href="#${n.anchor}">${esc(n.label)}</a></li>`).join('\n')}
-      </ul>
-      <button class="btn btn--ghost anchor-host" popovertarget="brief-pop">How this was built</button>
-    </nav>
-  </div>
-</header>
+${renderNav(blueprint.nav, blueprint, ctx)}
 
-<div id="brief-pop" class="pop" popover>
+<!-- Provenance lives here, not in the page's own chrome: the header and footer
+     belong to the brief's brand, not to the tool that generated it. -->
+<div id="provenance" class="pop" popover>
   <h2>How this page was built</h2>
   <p>A brief was answered by <strong>${esc(
     spec.meta.decider === 'live' ? 'Jev' : 'the local stand-in decider',
   )}</strong>
-  (${esc(spec.meta.model)}) in ${spec.meta.latencyMs} ms, producing typed decisions with calibrated
-  probabilities. ${
+  (${esc(spec.meta.model)}) in ${spec.meta.latencyMs} ms. ${
     spec.meta.writer === 'llm'
-      ? `The content was written by <strong>${esc(spec.meta.writerModel)}</strong>.`
+      ? `The content was written by <strong>${esc(spec.meta.writerModel)}</strong> in ${spec.meta.writerLatencyMs} ms.`
       : 'No writer was configured, so this is specimen content.'
   }
-  Code composed this page from those decisions — the model never wrote markup.</p>
+  Code assembled the page from the decisions below — the model never wrote markup.</p>
   <dl class="spec">
         ${decisionList}
-      <dt>composition</dt><dd>${esc(composition)}</dd>
+      <dt>blueprint</dt><dd>${esc(blueprint.id)} <small>(${esc(blueprint.lead)}-led)</small></dd>
       <dt>effects</dt><dd>${esc(effectsLabel)}</dd>
+      <dt>seed</dt><dd>${spec.seed}</dd>
   </dl>
 </div>
 
 <main id="top">
-${mainHtml}
+${renderHero(blueprint.hero, ctx)}
+
+${sections}
+
 </main>
 
-<footer class="sec">
-  <div class="wrap">
-    <p class="eyebrow">${esc(c.brand)} — ${esc(c.contact.address)}</p>
-    <p><a class="link-u" href="tel:${esc(c.contact.phone.replace(/[^\d+]/g, ''))}">${esc(
-      c.contact.phone,
-    )}</a></p>
-    <p class="masthead" aria-hidden="true">${esc(c.brand)}</p>
-    <p class="eyebrow">${esc(c.footerNote)} · generated by TurboSlop · decisions by ${esc(
-      spec.meta.decider === 'live' ? 'Jev' : 'local',
-    )} · composite ${spec.composite.normalized.toFixed(2)}</p>
-  </div>
-</footer>
+${renderFooter(blueprint.footer, ctx)}
 
 </body>
 </html>`;
