@@ -31,7 +31,9 @@ The model never writes markup, never picks a colour that doesn't exist, and neve
 number about your business. Its freedom is bounded to *pick a card from the deck* — which is
 exactly why the output is always renderable, always on-brand, and always typed.
 
-> Ten fully-designed, written and illustrated directions cost about **$0.001** and finish in
+> Six candidate directions for one brief cost **$0.0017 and 11.6 s — two model calls**, because
+> previewing does not pay a writer call per direction. Finalizing one adds a single writer call.
+> A fully-designed, written and illustrated page costs about **$0.001** and finishes in
 > roughly the time it takes to read this paragraph.
 
 ---
@@ -44,6 +46,21 @@ Everything in one place: the catalog the machine may speak, the CSS the engine e
 artwork it generated, and every design you've ever made.
 
 ![TurboSlop control surface](docs/screenshots/control-surface.png)
+
+### Compare directions before committing to one
+
+One brief, one decision call, one shared content inventory — then **six directions rendered
+locally in milliseconds**, each with its own preview at desktop and mobile width, its block
+sequence, its fit and novelty. Lock the aspects you like, regenerate the rest for free, then
+finalize the one you keep. That is where the structural variety lives: not in re-running the same
+brief and hoping.
+
+![Contact sheet](docs/screenshots/contact-sheet.png)
+
+A single direction from that set, at poster scale, in a bundled OFL face with no remote font
+request:
+
+![Direction preview](docs/screenshots/direction-poster.png)
 
 ### Iterating on a finished design
 
@@ -387,6 +404,7 @@ Everything above is documented inline in [`.env.example`](.env.example).
 | `FORGE_IMAGE_ALLOW_ANY_HOST` | — | `1` disables the allowlist (trusted networks only) |
 | `FORGE_IMAGE_TOKEN` / `FORGE_IMAGE_TOKEN_HEADER` | — | auth, if the service needs it |
 | `FORGE_IMAGE_ORIGIN` | base URL | only if the service checks `Origin` |
+| `FORGE_USER_IMAGE_DIR` | `cwd` | where supplied brand images are read from (never the repo) |
 | `FORGE_IMAGE_TIMEOUT_MS` / `FORGE_IMAGE_POLL_TIMEOUT_MS` | `20000` / `180000` | request and job timeouts |
 | `FORGE_HOST` / `FORGE_PORT` / `FORGE_OUT_DIR` | `0.0.0.0` / `4400` / `./out` | server bind and storage |
 
@@ -412,7 +430,7 @@ platform's secret store. `.gitignore` covers `.env*`, `*.key`, `*.pem`.
 ## Testing
 
 ```bash
-npm test         # 47 checks, fully offline — no keys, no network, no GPU
+npm test         # 281 checks across 8 suites, fully offline — no keys, no network, no GPU
 npm run typecheck
 ```
 
@@ -433,14 +451,21 @@ implementation — confirming valid CRCs and correct per-entry compression choic
 src/
   types.ts        zod schemas + inferred types — the contract
   catalog.ts      every value the machine may emit (the "deck")
-  blueprint.ts    the layout grammar: leads, variants, validation, fingerprints
+  blueprint.ts    the layout grammar: leads, variants, image slots, validation
+  visual.ts       the visual blueprint: hero + typographic + section recipes, art direction
   blocks.ts       one renderer per module, per variant
   directions.ts   ranked alternatives -> scored, diverse direction sets
+  sessions.ts     direction sessions: the contact sheet, locks, finalize, revise
+  motifs.ts       deterministic seeded SVG motifs, five families
+  frames.ts       presentation frames rendered in code (browser, device, ticket, cover…)
+  icons.ts        one consistent, original 24x24 line-icon family
+  fonts.ts        the bundled OFL variable-font pack
+  userassets.ts   supplied brand images: copy, credit, licence, real pixel size
   questions.ts    ALL Jev questions, criteria, thresholds, weights  ← review this
   jev.ts          typed transport for POST /v1/systemone
   decider.ts      live (Jev) + deterministic local decider, one interface
   compose.ts      composite scoring + confidence gates → DesignSpec
-  copy.ts         the writer: prompt, schema, fixed-fact enforcement
+  writer.ts       the writer: prompt, schema, fixed-fact enforcement
   llm.ts          provider-agnostic chat-completions transport
   images.ts       Supra2 client: allowlist, PNG validation, own-jobs-only filtering
   layout.ts       the layout engine → stylesheet
@@ -453,7 +478,9 @@ public/
   index.html      the control surface (no build step)
 deploy/           systemd unit, nginx config
 docs/             research, CSS reference, layout-diversity findings, screenshots
-baseline/         the measured before-state: 33 screenshots, specs, structure, timings
+scripts/          measurement, matrix rendering, contact-sheet capture, font fetch
+baseline/         the measured BEFORE-state: 33 screenshots, specs, structure, timings
+after/            the measured AFTER-state, plus the matched comparison in FINDINGS.md
 ```
 
 ### Why so few dependencies?

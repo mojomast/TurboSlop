@@ -1,0 +1,649 @@
+{
+ "version": 1,
+ "id": "ses_72808f8d88844cb68b66d82e",
+ "createdAt": "2026-09-22T21:13:49.266Z",
+ "brief": "A three-day independent games festival in Rotterdam. Talks, a tournament, and a late-night arcade.",
+ "seed": 4242,
+ "explore": 0.5,
+ "directionCount": 6,
+ "decider": "live",
+ "decision": {
+  "kind": "live",
+  "model": "jev-1.13.0",
+  "latencyMs": 457,
+  "inputTokens": 3371,
+  "outputTokens": 704,
+  "estimatedUsd": 0.00014158200000000001,
+  "response": {
+   "model": "jev-1.13.0",
+   "answers": {
+    "emotion": {
+     "type": "choice",
+     "choice": "energy",
+     "confidence": 0.96,
+     "probabilities": {
+      "optimism": 0,
+      "trust": 0,
+      "serenity": 0,
+      "tension": 0,
+      "mystery": 0,
+      "delight": 0.04,
+      "nostalgia": 0,
+      "intimacy": 0,
+      "awe": 0,
+      "energy": 0.96,
+      "other": 0
+     }
+    },
+    "composition": {
+     "type": "choice",
+     "choice": "classic-stack",
+     "confidence": 0.52,
+     "probabilities": {
+      "classic-stack": 0.58,
+      "editorial-lede": 0.01,
+      "split-hero": 0.02,
+      "data-first": 0.05,
+      "manifesto": 0,
+      "gallery-first": 0.02,
+      "bento-grid": 0.32
+     }
+    },
+    "effects": {
+     "type": "choice",
+     "choice": "brutalist-block",
+     "confidence": 0.48,
+     "probabilities": {
+      "organic-mesh": 0.03,
+      "flat-plain": 0.28,
+      "tactile-paper": 0.03,
+      "brutalist-block": 0.54,
+      "technical-drawing": 0,
+      "luminous-glass": 0.09,
+      "soft-material": 0.01,
+      "cinematic-depth": 0.01,
+      "hairline-editorial": 0.01
+     }
+    },
+    "palette": {
+     "type": "choice",
+     "choice": "electric-acid",
+     "confidence": 0.67,
+     "probabilities": {
+      "void-violet": 0.04,
+      "paper-ink": 0.01,
+      "candy-pop": 0.09,
+      "sage-mist": 0,
+      "bone-terracotta": 0.01,
+      "arctic-cyan": 0,
+      "electric-acid": 0.7,
+      "noir-lime": 0.15,
+      "hazard-mono": 0,
+      "aurora-glass": 0,
+      "steel-signal": 0
+     }
+    },
+    "typography": {
+     "type": "choice",
+     "choice": "rounded-friendly",
+     "confidence": 0.58,
+     "probabilities": {
+      "condensed-heavy": 0.15,
+      "geometric-open": 0.12,
+      "editorial-serif": 0,
+      "mono-technical": 0.02,
+      "rounded-friendly": 0.65,
+      "humanist-light": 0,
+      "grotesk-tight": 0.06
+     }
+    },
+    "layout": {
+     "type": "choice",
+     "choice": "editorial-asymmetric",
+     "confidence": 0.65,
+     "probabilities": {
+      "editorial-asymmetric": 0.71,
+      "full-bleed-cinematic": 0.01,
+      "modular-cards": 0.27,
+      "rigid-grid": 0,
+      "centered-measure": 0.01
+     }
+    },
+    "motion": {
+     "type": "choice",
+     "choice": "springy-playful",
+     "confidence": 0.58,
+     "probabilities": {
+      "snap-mechanical": 0,
+      "springy-playful": 0.65,
+      "kinetic": 0.33,
+      "buoyant": 0.02,
+      "breath": 0,
+      "glacial": 0
+     }
+    },
+    "density": {
+     "type": "score",
+     "score": 1.18,
+     "confidence": 0.64,
+     "legend": {
+      "0": "Very quiet: large type, few elements per screen, lots of empty space, low contrast between regions",
+      "1": "Balanced: comfortable density, clear hierarchy, moderate type sizes, some breathing room",
+      "2": "Dense: many elements per screen, smaller type, tight spacing, information-rich, high contrast between regions"
+     },
+     "probabilities": {
+      "0": 0.03,
+      "1": 0.76,
+      "2": 0.21
+     }
+    },
+    "wants_dark_ground": {
+     "type": "noul",
+     "noul": 0.29
+    },
+    "needs_high_contrast": {
+     "type": "noul",
+     "noul": 0.03
+    }
+   },
+   "usage": {
+    "input_tokens": 3371,
+    "output_tokens": 704
+   }
+  }
+ },
+ "inventory": {
+  "brand": "Sidequest",
+  "title": "Sidequest — Three Days of Games in Rotterdam",
+  "description": "An independent games festival in Rotterdam: talks, a 64-player tournament, and a late-night arcade. 14–16 March, three venues, no press passes.",
+  "eyebrow": "Independent games festival — Rotterdam, 14–16 March",
+  "tagline": "Three days of *games you haven't heard of yet*",
+  "lede": "Fifty-one playable builds, eleven talks, one 64-player tournament, and an arcade that stays open until the trams stop. Three venues along the Maas, one wristband, no press passes.",
+  "cta": "Get a wristband",
+  "nav": [
+   "Programme",
+   "Arcade",
+   "Venues",
+   "Tickets",
+   "Contact"
+  ],
+  "sections": {
+   "items": {
+    "eyebrow": "Playable floor",
+    "title": "Fifty-one builds, *most of them unfinished*",
+    "note": "Every machine on the floor is attended by someone who made it. They will hand you the controller and watch your face. Ask them anything."
+   },
+   "features": {
+    "eyebrow": "What's on",
+    "title": "Talks, a tournament, *and a floor that never closes early*",
+    "note": "Panels run 11:00–17:00 in the old grain silo. From 21:00 the arcade takes over two rooms on Schiekade and runs until 02:00."
+   },
+   "about": {
+    "eyebrow": "Who runs this",
+    "title": "Four people, *one very long spreadsheet*",
+    "note": "Sidequest started in 2021 as a zine about Dutch game jams. The festival is what happened when we ran out of pages."
+   },
+   "contact": {
+    "eyebrow": "Find us",
+    "title": "Questions, *access needs, or a build to submit*",
+    "note": "We answer everything within two working days. For lost-property during the festival, use the phone number — we are not at the desk."
+   }
+  },
+  "items": [
+   {
+    "name": "Tidepool",
+    "meta": "Solo, 40 min — a rock-pool ecology sim",
+    "tags": [
+     "Sim",
+     "Quiet",
+     "WASD"
+    ]
+   },
+   {
+    "name": "Nine Laps of the Kralingen Ring",
+    "meta": "Four players, 15 min — split-screen racing",
+    "tags": [
+     "Racing",
+     "Couch",
+     "Loud"
+    ]
+   },
+   {
+    "name": "Bakkerij",
+    "meta": "Two players, 25 min — co-op bakery roguelike",
+    "tags": [
+     "Co-op",
+     "Roguelike",
+     "Warm"
+    ]
+   },
+   {
+    "name": "De Trap",
+    "meta": "Solo, 12 min — a stairwell that rearranges itself",
+    "tags": [
+     "Puzzle",
+     "First-person",
+     "Eerie"
+    ]
+   },
+   {
+    "name": "Harbour Traffic Control",
+    "meta": "Solo, 90 min — you are one tired dispatcher",
+    "tags": [
+     "Management",
+     "Stress",
+     "Maas"
+    ]
+   },
+   {
+    "name": "Snelweg Snelweg Snelweg",
+    "meta": "Up to eight, 20 min — a motorway where everyone is polite",
+    "tags": [
+     "Party",
+     "Chaos",
+     "Anti-racing"
+    ]
+   }
+  ],
+  "stats": [
+   {
+    "value": "51",
+    "label": "Playable builds",
+    "note": "38 of them never shown publicly before"
+   },
+   {
+    "value": "11",
+    "label": "Talks",
+    "note": "Recorded, captioned, online a week later"
+   },
+   {
+    "value": "02:00",
+    "label": "Arcade closes",
+    "note": "Friday and Saturday, Schiekade 189"
+   },
+   {
+    "value": "€65",
+    "label": "Three-day wristband",
+    "note": "€28 for a single day, students €16"
+   }
+  ],
+  "features": [
+   {
+    "name": "Talks in the silo",
+    "detail": "Eleven talks across two days, 25 minutes each, no slides longer than nine words. All recorded and posted free within a week."
+   },
+   {
+    "name": "The 64-player tournament",
+    "detail": "One game, single elimination, Saturday from 13:00. Bring your own stick or use ours. Sign-up closes when the bracket fills, usually by Friday evening."
+   },
+   {
+    "name": "Late arcade",
+    "detail": "Two rooms on Schiekade, 21:00–02:00 Friday and Saturday. Thirty-one cabinets and a wall of CRTs, all on free play with your wristband."
+   },
+   {
+    "name": "Quiet room",
+    "detail": "A dimmed room on the second floor with beanbags, water, and no sound above 45 decibels. Open whenever the building is. No booking, no queue."
+   },
+   {
+    "name": "Build clinic",
+    "detail": "Sunday 10:00–13:00: bring a project, sit with two working developers for 40 minutes, leave with a list. Free, twelve slots, sign up at the door."
+   }
+  ],
+  "aboutFacts": [
+   {
+    "label": "Founded",
+    "value": "2021, as a zine"
+   },
+   {
+    "label": "Team",
+    "value": "Four, part-time"
+   },
+   {
+    "label": "Venues",
+    "value": "Three, all within 900 m"
+   },
+   {
+    "label": "Visitors, 2024",
+    "value": "1,940"
+   }
+  ],
+  "aboutBody": [
+   "Sidequest began as a photocopied zine about Dutch game jams — 60 copies, stapled at a kitchen table in Kralingen. We kept a running list of every unfinished build we liked, and by 2023 the list was longer than the zine. The festival is that list, with chairs.",
+   "We are four people with day jobs. We do not take sponsorship from publishers, we do not run a business track, and we do not have a press lounge. What we have is three venues, a borrowed PA, and a rule that anyone showing work gets a free wristband and a meal. Everything else is on the page above."
+  ],
+  "contact": {
+   "email": "hallo@sidequest.rotterdam",
+   "phone": "+31 10 555 0184",
+   "address": "Schiekade 189, 3013 BR Rotterdam"
+  },
+  "footerNote": "Sidequest is run by four people and a spreadsheet. Wristbands are non-refundable but freely transferable.",
+  "ticker": [
+   "Three days",
+   "51 builds",
+   "Doors 10:30",
+   "Arcade till 02:00",
+   "No press passes",
+   "Bring a stick"
+  ],
+  "pullQuote": {
+   "text": "Nobody here is going to ask you what your studio's funding model is. They are going to ask what happens when you press the second button.",
+   "attribution": "Ines Bakhuizen, programmer, at the 2024 build clinic"
+  },
+  "process": [
+   {
+    "name": "Pick a day",
+    "detail": "Friday is talks and the first arcade night. Saturday is the tournament. Sunday is quiet, with the build clinic and the last playable hours."
+   },
+   {
+    "name": "Buy a wristband",
+    "detail": "One wristband covers all three venues and both arcade nights. Single-day tickets exist; they do not include the tournament."
+   },
+   {
+    "name": "Show up",
+    "detail": "Doors open 10:30. Bring ID if you want to drink. Bring a controller if you are fussy about controllers."
+   },
+   {
+    "name": "Stay late",
+    "detail": "The arcade runs to 02:00. Night buses from Schiekade every 20 minutes; the last one is at 02:40."
+   }
+  ]
+ },
+ "inventorySource": "llm",
+ "inventoryMeta": {
+  "model": "deepseek-flash",
+  "latencyMs": 11177,
+  "inputTokens": 1105,
+  "outputTokens": 2331,
+  "estimatedUsd": 0.0015643500000000002
+ },
+ "previewLabel": "shared content inventory — not final copy",
+ "directions": [
+  {
+   "index": 0,
+   "id": "event-programme-electric-acid-brutalist-block-4242-0",
+   "blueprint": "event-programme",
+   "blueprintLabel": "Event programme",
+   "family": "date",
+   "lead": "date",
+   "fit": 0.7736,
+   "novelty": 1,
+   "rationale": "Best fit: Event programme with electric-acid/brutalist-block.",
+   "palette": "electric-acid",
+   "typography": "rounded-friendly",
+   "effects": "brutalist-block",
+   "motion": "kinetic",
+   "density": "balanced",
+   "structure": {
+    "hero": "dateline",
+    "nav": "bar-cta",
+    "footer": "cta-band",
+    "columns": 12,
+    "rhythm": "tight",
+    "lead": "date",
+    "sectionOrder": [
+     "schedule",
+     "items",
+     "features",
+     "pricing",
+     "contact"
+    ],
+    "blocks": [
+     "schedule:agenda",
+     "items:list",
+     "features:rows",
+     "pricing:table",
+     "contact:form"
+    ],
+    "navAnchors": [
+     "schedule",
+     "items",
+     "features",
+     "pricing",
+     "contact"
+    ]
+   },
+   "preview": "previews/ses_72808f8d88844cb68b66d82e/0.html"
+  },
+  {
+   "index": 1,
+   "id": "image-strip-electric-acid-brutalist-block-4242-1",
+   "blueprint": "image-strip",
+   "blueprintLabel": "Image strip, then text",
+   "family": "image",
+   "lead": "image",
+   "fit": 0.6521,
+   "novelty": 0.94,
+   "rationale": "Image strip, then text — 94% structurally apart from the others, fit 0.652.",
+   "palette": "electric-acid",
+   "typography": "condensed-heavy",
+   "effects": "brutalist-block",
+   "motion": "springy-playful",
+   "density": "quiet",
+   "structure": {
+    "hero": "media",
+    "nav": "stacked",
+    "footer": "columns",
+    "columns": 12,
+    "rhythm": "even",
+    "lead": "image",
+    "sectionOrder": [
+     "gallery",
+     "items",
+     "features",
+     "contact"
+    ],
+    "blocks": [
+     "gallery:strip",
+     "items:list",
+     "features:deflist",
+     "contact:split"
+    ],
+    "navAnchors": [
+     "gallery",
+     "items",
+     "features",
+     "contact"
+    ]
+   },
+   "preview": "previews/ses_72808f8d88844cb68b66d82e/1.html"
+  },
+  {
+   "index": 2,
+   "id": "statement-letter-electric-acid-brutalist-block-4242-2",
+   "blueprint": "statement-letter",
+   "blueprintLabel": "Letter to a reader",
+   "family": "statement",
+   "lead": "statement",
+   "fit": 0.5519,
+   "novelty": 1,
+   "rationale": "Letter to a reader — 100% structurally apart from the others, fit 0.552.",
+   "palette": "electric-acid",
+   "typography": "rounded-friendly",
+   "effects": "brutalist-block",
+   "motion": "springy-playful",
+   "density": "dense",
+   "structure": {
+    "hero": "display",
+    "nav": "none",
+    "footer": "colophon",
+    "columns": 1,
+    "rhythm": "generous",
+    "lead": "statement",
+    "sectionOrder": [
+     "about",
+     "quote",
+     "items",
+     "contact"
+    ],
+    "blocks": [
+     "about:letter",
+     "quote:inline",
+     "items:list",
+     "contact:email"
+    ],
+    "navAnchors": [
+     "about",
+     "quote",
+     "items",
+     "contact"
+    ]
+   },
+   "preview": "previews/ses_72808f8d88844cb68b66d82e/2.html"
+  },
+  {
+   "index": 3,
+   "id": "story-profile-electric-acid-brutalist-block-4242-3",
+   "blueprint": "story-profile",
+   "blueprintLabel": "Profile of a person",
+   "family": "story",
+   "lead": "story",
+   "fit": 0.5351,
+   "novelty": 0.94,
+   "rationale": "Profile of a person — 94% structurally apart from the others, fit 0.535.",
+   "palette": "electric-acid",
+   "typography": "condensed-heavy",
+   "effects": "brutalist-block",
+   "motion": "kinetic",
+   "density": "quiet",
+   "structure": {
+    "hero": "split",
+    "nav": "minimal",
+    "footer": "minimal",
+    "columns": 12,
+    "rhythm": "generous",
+    "lead": "story",
+    "sectionOrder": [
+     "about",
+     "gallery",
+     "quote",
+     "process",
+     "contact"
+    ],
+    "blocks": [
+     "about:rail-text",
+     "gallery:strip",
+     "quote:large",
+     "process:timeline",
+     "contact:email"
+    ],
+    "navAnchors": [
+     "about",
+     "gallery",
+     "quote",
+     "process",
+     "contact"
+    ]
+   },
+   "preview": "previews/ses_72808f8d88844cb68b66d82e/3.html"
+  },
+  {
+   "index": 4,
+   "id": "data-metrics-electric-acid-brutalist-block-4242-4",
+   "blueprint": "data-metrics",
+   "blueprintLabel": "Numbers first",
+   "family": "data",
+   "lead": "data",
+   "fit": 0.5519,
+   "novelty": 0.9,
+   "rationale": "Numbers first — 90% structurally apart from the others, fit 0.552.",
+   "palette": "electric-acid",
+   "typography": "rounded-friendly",
+   "effects": "brutalist-block",
+   "motion": "springy-playful",
+   "density": "dense",
+   "structure": {
+    "hero": "compact",
+    "nav": "inline-links",
+    "footer": "ledger",
+    "columns": 12,
+    "rhythm": "tight",
+    "lead": "data",
+    "sectionOrder": [
+     "stats",
+     "items",
+     "features",
+     "about",
+     "contact"
+    ],
+    "blocks": [
+     "stats:tiles",
+     "items:table",
+     "features:deflist",
+     "about:columns",
+     "contact:split"
+    ],
+    "navAnchors": [
+     "stats",
+     "items",
+     "features",
+     "about",
+     "contact"
+    ]
+   },
+   "preview": "previews/ses_72808f8d88844cb68b66d82e/4.html"
+  },
+  {
+   "index": 5,
+   "id": "product-pricing-electric-acid-brutalist-block-4242-5",
+   "blueprint": "product-pricing",
+   "blueprintLabel": "Offer and price",
+   "family": "product",
+   "lead": "offer",
+   "fit": 0.5942,
+   "novelty": 0.72,
+   "rationale": "Offer and price — 72% structurally apart from the others, fit 0.594.",
+   "palette": "electric-acid",
+   "typography": "rounded-friendly",
+   "effects": "brutalist-block",
+   "motion": "springy-playful",
+   "density": "balanced",
+   "structure": {
+    "hero": "split",
+    "nav": "bar-cta",
+    "footer": "cta-band",
+    "columns": 12,
+    "rhythm": "even",
+    "lead": "offer",
+    "sectionOrder": [
+     "pricing",
+     "features",
+     "faq",
+     "stats",
+     "contact"
+    ],
+    "blocks": [
+     "pricing:tiers",
+     "features:cards",
+     "faq:accordion",
+     "stats:inline",
+     "contact:form"
+    ],
+    "navAnchors": [
+     "pricing",
+     "features",
+     "faq",
+     "stats",
+     "contact"
+    ]
+   },
+   "preview": "previews/ses_72808f8d88844cb68b66d82e/5.html"
+  }
+ ],
+ "locks": [],
+ "selectedIndex": null,
+ "metrics": {
+  "decideMs": 457,
+  "inventoryMs": 11179,
+  "renderMs": 6,
+  "totalMs": 11705,
+  "modelCalls": 2,
+  "estimateUsd": 0.0017059320000000003
+ },
+ "history": [
+  {
+   "at": "2026-09-22T21:13:49.266Z",
+   "event": "created",
+   "detail": "6 directions"
+  }
+ ]
+}

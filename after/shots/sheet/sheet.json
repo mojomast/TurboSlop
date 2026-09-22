@@ -1,0 +1,113 @@
+{
+ "label": "6 directions · seed 4242 · explore 0.5 · shared content inventory — not final copy",
+ "metrics": [
+  {
+   "k": "Model calls",
+   "v": "2",
+   "sub": "entire set"
+  },
+  {
+   "k": "Decide",
+   "v": "457 ms",
+   "sub": "Jev"
+  },
+  {
+   "k": "Inventory",
+   "v": "11.18 s",
+   "sub": "one shared write"
+  },
+  {
+   "k": "Render",
+   "v": "6 ms",
+   "sub": "6 local renders"
+  },
+  {
+   "k": "Preview cost",
+   "v": "$0.0017",
+   "sub": "estimated"
+  },
+  {
+   "k": "Seed",
+   "v": "4242",
+   "sub": "reproducible"
+  }
+ ],
+ "cards": [
+  {
+   "head": "#1 · date-led · date",
+   "title": "Event programme",
+   "hint": "fit 0.774 · novelty 1.00 · electric-acid · brutalist-block",
+   "blocks": [
+    "schedule:agenda",
+    "items:list",
+    "features:rows",
+    "pricing:table",
+    "contact:form"
+   ],
+   "iframe": "/preview/ses_72808f8d88844cb68b66d82e/0"
+  },
+  {
+   "head": "#2 · image-led · image",
+   "title": "Image strip, then text",
+   "hint": "fit 0.652 · novelty 0.94 · electric-acid · brutalist-block",
+   "blocks": [
+    "gallery:strip",
+    "items:list",
+    "features:deflist",
+    "contact:split"
+   ],
+   "iframe": "/preview/ses_72808f8d88844cb68b66d82e/1"
+  },
+  {
+   "head": "#3 · statement-led · statement",
+   "title": "Letter to a reader",
+   "hint": "fit 0.552 · novelty 1.00 · electric-acid · brutalist-block",
+   "blocks": [
+    "about:letter",
+    "quote:inline",
+    "items:list",
+    "contact:email"
+   ],
+   "iframe": "/preview/ses_72808f8d88844cb68b66d82e/2"
+  },
+  {
+   "head": "#4 · story-led · story",
+   "title": "Profile of a person",
+   "hint": "fit 0.535 · novelty 0.94 · electric-acid · brutalist-block",
+   "blocks": [
+    "about:rail-text",
+    "gallery:strip",
+    "quote:large",
+    "process:timeline",
+    "contact:email"
+   ],
+   "iframe": "/preview/ses_72808f8d88844cb68b66d82e/3"
+  },
+  {
+   "head": "#5 · data-led · data",
+   "title": "Numbers first",
+   "hint": "fit 0.552 · novelty 0.90 · electric-acid · brutalist-block",
+   "blocks": [
+    "stats:tiles",
+    "items:table",
+    "features:deflist",
+    "about:columns",
+    "contact:split"
+   ],
+   "iframe": "/preview/ses_72808f8d88844cb68b66d82e/4"
+  },
+  {
+   "head": "#6 · offer-led · product",
+   "title": "Offer and price",
+   "hint": "fit 0.594 · novelty 0.72 · electric-acid · brutalist-block",
+   "blocks": [
+    "pricing:tiers",
+    "features:cards",
+    "faq:accordion",
+    "stats:inline",
+    "contact:form"
+   ],
+   "iframe": "/preview/ses_72808f8d88844cb68b66d82e/5"
+  }
+ ]
+}

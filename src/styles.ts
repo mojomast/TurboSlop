@@ -256,7 +256,16 @@ export function elementCss(): string {
   .data-open .stats { margin-block-start: var(--s-6); }
 
   /* ---------- spec table (data-first) ---------- */
-  .table-wrap { overflow-x: auto; border: 1px solid var(--hair-strong); border-radius: var(--radius); }
+  .table-wrap {
+    overflow-x: auto;
+    /* A table with four columns cannot be allowed to set the document's width.
+       A max inline size plus letting the cells wrap at narrow widths is what
+       stops a spec table pushing the whole page sideways. */
+    max-inline-size: 100%;
+    min-inline-size: 0;
+    border: 1px solid var(--hair-strong);
+    border-radius: var(--radius);
+  }
   .spectable { inline-size: 100%; border-collapse: collapse; font-size: var(--fs-small); }
   .spectable th, .spectable td { text-align: start; padding: var(--s-3) var(--s-4); border-block-end: 1px solid var(--hair); }
   .spectable thead th {
@@ -270,6 +279,12 @@ export function elementCss(): string {
   }
   .spectable tbody tr:hover { background: var(--bg-raised); }
   .spectable tbody th { font-weight: 500; white-space: nowrap; }
+  @media (max-width: 44rem) {
+    /* Let the cells wrap and tighten the gutter rather than overflow. */
+    .spectable th, .spectable td { padding: var(--s-2) var(--s-2); }
+    .spectable tbody th { white-space: normal; }
+    .spectable thead th { letter-spacing: 0.06em; }
+  }
   .spectable td.mono { font-family: var(--font-mono); font-size: var(--fs-label); color: var(--fg-muted); }
 
   /* ---------- definition list ---------- */
@@ -292,8 +307,39 @@ export function elementCss(): string {
   .span-full { grid-column: 1 / -1; }
   @container (min-width: 40rem) { .span-6 { grid-column: span 6; } }
 
+  /* ---------- preview label ----------
+     A tool label, not part of the design, so it uses fixed colours rather than
+     palette tokens. Pinned to the BOTTOM of the viewport so it never covers the
+     brief's own header — the first version sat in flow and overlapped the hero. */
+  .preview-flag {
+    position: fixed;
+    inset-block-end: 0;
+    inset-inline: 0;
+    z-index: 99;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.5rem;
+    align-items: center;
+    padding: 0.3rem 0.7rem;
+    background: #08080ae6;
+    color: #f2f2f2;
+    font-family: ui-monospace, monospace;
+    font-size: 0.625rem;
+    letter-spacing: 0.02em;
+    border-block-start: 1px solid #ffffff2e;
+    backdrop-filter: blur(4px);
+  }
+  .preview-flag b { color: #ffd83e; }
+  .preview-flag code { color: #9fd7ff; }
+
   /* ---------- structural containers need a container context ---------- */
   .sec { container-type: inline-size; }
+
+  /* Belt and braces against horizontal overflow: a grid or flex child defaults
+     to min-content and will happily widen the document. */
+  main, .sec, .sec > .wrap, .footer > .wrap, .site-head > .wrap { min-inline-size: 0; max-inline-size: 100%; }
+  .grid, .gallery, .bento, .stats, .work-grid, .steps, .agenda, .tiers, .frows { min-inline-size: 0; }
+  .grid > *, .gallery > *, .bento > *, .stats > * { min-inline-size: 0; }
   .work-grid, .gallery, .bento { container-type: inline-size; }
 
   /* ================================================================
@@ -388,11 +434,15 @@ export function elementCss(): string {
   .hero-poster__title {
     font-family: var(--font-display);
     font-weight: var(--head-weight);
-    font-size: clamp(3rem, 15vw, 13rem);
+    /* Capped so a long tagline wraps to a first SCREEN, not a wall. At 15vw a
+       60-character headline wrapped to 16 lines and made the hero 3617px tall;
+       measured, not guessed. */
+    font-size: clamp(2.5rem, 8.5vw, 7rem);
     line-height: var(--head-gap);
     letter-spacing: var(--head-tracking);
     text-wrap: balance;
     overflow-wrap: anywhere;
+    max-inline-size: 100%;
     margin-block: var(--s-2) var(--s-6);
   }
   .hero-poster__foot { display: grid; gap: var(--s-4); align-items: end; }

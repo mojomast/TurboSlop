@@ -22,6 +22,7 @@
     "test:slots": "tsx test/slots.test.ts",
     "measure": "tsx scripts/measure.ts",
     "matrix": "tsx scripts/render-matrix.ts",
+    "sheet-shot": "tsx scripts/sheet-shot.ts",
     "fonts": "tsx scripts/fetch-fonts.ts",
     "curate": "tsx scripts/curate.ts"
   },

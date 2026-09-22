@@ -1,0 +1,2083 @@
+{
+ "generatedAt": "2026-09-22T21:07:36.279Z",
+ "viewports": {
+  "DESKTOP": {
+   "width": 1440,
+   "height": 900
+  },
+  "MOBILE": {
+   "width": 390,
+   "height": 844
+  }
+ },
+ "pages": [
+  {
+   "slug": "artist",
+   "file": "/home/mojo/mimotest/turboslop/after/out/artist.html",
+   "desktop": {
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "scrollWidth": 1425,
+    "clientWidth": 1440,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 9,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button"
+    ],
+    "h1FontSizePx": 163.2,
+    "h1Lines": 5,
+    "h1TextLength": 76,
+    "heroHeight": 911,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 0,
+      "height": 911
+     },
+     {
+      "id": "about",
+      "block": "about:letter",
+      "top": 911,
+      "height": 354
+     },
+     {
+      "id": "quote",
+      "block": "quote:inline",
+      "top": 1265,
+      "height": 351
+     },
+     {
+      "id": "items",
+      "block": "items:list",
+      "top": 1616,
+      "height": 442
+     },
+     {
+      "id": "contact",
+      "block": "contact:email",
+      "top": 2058,
+      "height": 828
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "about",
+     "quote",
+     "items",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "about:letter",
+     "quote:inline",
+     "items:list",
+     "contact:email"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "none",
+     "sticky": false,
+     "linkCount": 0,
+     "links": []
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   },
+   "mobile": {
+    "viewport": {
+     "width": 390,
+     "height": 844
+    },
+    "scrollWidth": 375,
+    "clientWidth": 390,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 9,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button",
+     "h2"
+    ],
+    "h1FontSizePx": 57.6,
+    "h1Lines": 7,
+    "h1TextLength": 76,
+    "heroHeight": 654,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 0,
+      "height": 654
+     },
+     {
+      "id": "about",
+      "block": "about:letter",
+      "top": 654,
+      "height": 757
+     },
+     {
+      "id": "quote",
+      "block": "quote:inline",
+      "top": 1410,
+      "height": 254
+     },
+     {
+      "id": "items",
+      "block": "items:list",
+      "top": 1664,
+      "height": 617
+     },
+     {
+      "id": "contact",
+      "block": "contact:email",
+      "top": 2281,
+      "height": 778
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "about",
+     "quote",
+     "items",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "about:letter",
+     "quote:inline",
+     "items:list",
+     "contact:email"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "none",
+     "sticky": false,
+     "linkCount": 0,
+     "links": []
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   }
+  },
+  {
+   "slug": "editorial",
+   "file": "/home/mojo/mimotest/turboslop/after/out/editorial.html",
+   "desktop": {
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "scrollWidth": 1425,
+    "clientWidth": 1440,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 9,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button",
+     "h2",
+     "stat"
+    ],
+    "h1FontSizePx": 77.52,
+    "h1Lines": 3,
+    "h1TextLength": 58,
+    "heroHeight": 531,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 67,
+      "height": 531
+     },
+     {
+      "id": "stats",
+      "block": "stats:inline",
+      "top": 598,
+      "height": 290
+     },
+     {
+      "id": "about",
+      "block": "about:letter",
+      "top": 888,
+      "height": 421
+     },
+     {
+      "id": "process",
+      "block": "process:steps",
+      "top": 1310,
+      "height": 1719
+     },
+     {
+      "id": "contact",
+      "block": "contact:split",
+      "top": 3028,
+      "height": 726
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "stats",
+     "about",
+     "process",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "stats:inline",
+     "about:letter",
+     "process:steps",
+     "contact:split"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 1,
+     "links": [
+      "Loam"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h2"
+    ]
+   },
+   "mobile": {
+    "viewport": {
+     "width": 390,
+     "height": 844
+    },
+    "scrollWidth": 382,
+    "clientWidth": 390,
+    "overflowsHorizontally": false,
+    "maxScrollX": 7,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 9,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button",
+     "h2"
+    ],
+    "h1FontSizePx": 27.36,
+    "h1Lines": 3,
+    "h1TextLength": 58,
+    "heroHeight": 691,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 54,
+      "height": 691
+     },
+     {
+      "id": "stats",
+      "block": "stats:inline",
+      "top": 745,
+      "height": 254
+     },
+     {
+      "id": "about",
+      "block": "about:letter",
+      "top": 999,
+      "height": 684
+     },
+     {
+      "id": "process",
+      "block": "process:steps",
+      "top": 1683,
+      "height": 579
+     },
+     {
+      "id": "contact",
+      "block": "contact:split",
+      "top": 2262,
+      "height": 866
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "stats",
+     "about",
+     "process",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "stats:inline",
+     "about:letter",
+     "process:steps",
+     "contact:split"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 1,
+     "links": [
+      "Loam"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h2"
+    ]
+   }
+  },
+  {
+   "slug": "event",
+   "file": "/home/mojo/mimotest/turboslop/after/out/event.html",
+   "desktop": {
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "scrollWidth": 1425,
+    "clientWidth": 1440,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 11,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "list",
+     "button",
+     "main",
+     "dateline",
+     "h1",
+     "lede"
+    ],
+    "h1FontSizePx": 142.8,
+    "h1Lines": 5,
+    "h1TextLength": 62,
+    "heroHeight": 910,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 71,
+      "height": 910
+     },
+     {
+      "id": "schedule",
+      "block": "schedule:agenda",
+      "top": 981,
+      "height": 842
+     },
+     {
+      "id": "items",
+      "block": "items:list",
+      "top": 1823,
+      "height": 572
+     },
+     {
+      "id": "features",
+      "block": "features:rows",
+      "top": 2395,
+      "height": 638
+     },
+     {
+      "id": "pricing",
+      "block": "pricing:table",
+      "top": 3033,
+      "height": 428
+     },
+     {
+      "id": "contact",
+      "block": "contact:form",
+      "top": 3460,
+      "height": 967
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "schedule",
+     "items",
+     "features",
+     "pricing",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "schedule:agenda",
+     "items:list",
+     "features:rows",
+     "pricing:table",
+     "contact:form"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 6,
+     "links": [
+      "Bytemare",
+      "Programme",
+      "Tournament",
+      "Arcade",
+      "Venue",
+      "Get a pass"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h2",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   },
+   "mobile": {
+    "viewport": {
+     "width": 390,
+     "height": 844
+    },
+    "scrollWidth": 375,
+    "clientWidth": 390,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 11,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "list",
+     "button",
+     "main",
+     "dateline",
+     "h1",
+     "lede",
+     "section"
+    ],
+    "h1FontSizePx": 50.4,
+    "h1Lines": 7,
+    "h1TextLength": 62,
+    "heroHeight": 713,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 128,
+      "height": 713
+     },
+     {
+      "id": "schedule",
+      "block": "schedule:agenda",
+      "top": 841,
+      "height": 794
+     },
+     {
+      "id": "items",
+      "block": "items:list",
+      "top": 1636,
+      "height": 852
+     },
+     {
+      "id": "features",
+      "block": "features:rows",
+      "top": 2488,
+      "height": 1029
+     },
+     {
+      "id": "pricing",
+      "block": "pricing:table",
+      "top": 3517,
+      "height": 810
+     },
+     {
+      "id": "contact",
+      "block": "contact:form",
+      "top": 4327,
+      "height": 956
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "schedule",
+     "items",
+     "features",
+     "pricing",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "schedule:agenda",
+     "items:list",
+     "features:rows",
+     "pricing:table",
+     "contact:form"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 6,
+     "links": [
+      "Bytemare",
+      "Programme",
+      "Tournament",
+      "Arcade",
+      "Venue",
+      "Get a pass"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h2",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   }
+  },
+  {
+   "slug": "service",
+   "file": "/home/mojo/mimotest/turboslop/after/out/service.html",
+   "desktop": {
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "scrollWidth": 1425,
+    "clientWidth": 1440,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 11,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "list",
+     "button",
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "h2",
+     "stat"
+    ],
+    "h1FontSizePx": 80,
+    "h1Lines": 7,
+    "h1TextLength": 46,
+    "heroHeight": 705,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 53,
+      "height": 705
+     },
+     {
+      "id": "stats",
+      "block": "stats:tiles",
+      "top": 759,
+      "height": 266
+     },
+     {
+      "id": "items",
+      "block": "items:table",
+      "top": 1024,
+      "height": 472
+     },
+     {
+      "id": "features",
+      "block": "features:deflist",
+      "top": 1496,
+      "height": 392
+     },
+     {
+      "id": "about",
+      "block": "about:columns",
+      "top": 1889,
+      "height": 368
+     },
+     {
+      "id": "contact",
+      "block": "contact:split",
+      "top": 2257,
+      "height": 600
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "stats",
+     "items",
+     "features",
+     "about",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "stats:tiles",
+     "items:table",
+     "features:deflist",
+     "about:columns",
+     "contact:split"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 5,
+     "links": [
+      "How it works",
+      "Prices",
+      "Coverage",
+      "For offices",
+      "Book a mechanic"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   },
+   "mobile": {
+    "viewport": {
+     "width": 390,
+     "height": 844
+    },
+    "scrollWidth": 375,
+    "clientWidth": 390,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 11,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "list",
+     "button",
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "h2",
+     "stat"
+    ],
+    "h1FontSizePx": 36,
+    "h1Lines": 4,
+    "h1TextLength": 46,
+    "heroHeight": 455,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 77,
+      "height": 455
+     },
+     {
+      "id": "stats",
+      "block": "stats:tiles",
+      "top": 533,
+      "height": 495
+     },
+     {
+      "id": "items",
+      "block": "items:table",
+      "top": 1027,
+      "height": 581
+     },
+     {
+      "id": "features",
+      "block": "features:deflist",
+      "top": 1609,
+      "height": 998
+     },
+     {
+      "id": "about",
+      "block": "about:columns",
+      "top": 2607,
+      "height": 722
+     },
+     {
+      "id": "contact",
+      "block": "contact:split",
+      "top": 3328,
+      "height": 757
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "stats",
+     "items",
+     "features",
+     "about",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "stats:tiles",
+     "items:table",
+     "features:deflist",
+     "about:columns",
+     "contact:split"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 5,
+     "links": [
+      "How it works",
+      "Prices",
+      "Coverage",
+      "For offices",
+      "Book a mechanic"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   }
+  },
+  {
+   "slug": "shop-run2",
+   "file": "/home/mojo/mimotest/turboslop/after/out/shop-run2.html",
+   "desktop": {
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "scrollWidth": 1425,
+    "clientWidth": 1440,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 11,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "list",
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button",
+     "h2"
+    ],
+    "h1FontSizePx": 112,
+    "h1Lines": 3,
+    "h1TextLength": 57,
+    "heroHeight": 456,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 64,
+      "height": 456
+     },
+     {
+      "id": "about",
+      "block": "about:columns",
+      "top": 520,
+      "height": 655
+     },
+     {
+      "id": "features",
+      "block": "features:rows",
+      "top": 1175,
+      "height": 553
+     },
+     {
+      "id": "quote",
+      "block": "quote:large",
+      "top": 1729,
+      "height": 631
+     },
+     {
+      "id": "items",
+      "block": "items:editorial-index",
+      "top": 2359,
+      "height": 428
+     },
+     {
+      "id": "contact",
+      "block": "contact:email",
+      "top": 2788,
+      "height": 837
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "about",
+     "features",
+     "quote",
+     "items",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "about:columns",
+     "features:rows",
+     "quote:large",
+     "items:editorial-index",
+     "contact:email"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 6,
+     "links": [
+      "Vessel & Vane",
+      "Tableware",
+      "Glazes",
+      "Studio",
+      "Care",
+      "Visit & Order"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   },
+   "mobile": {
+    "viewport": {
+     "width": 390,
+     "height": 844
+    },
+    "scrollWidth": 375,
+    "clientWidth": 390,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 11,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "list",
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button",
+     "h2"
+    ],
+    "h1FontSizePx": 40,
+    "h1Lines": 4,
+    "h1TextLength": 57,
+    "heroHeight": 408,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 77,
+      "height": 408
+     },
+     {
+      "id": "about",
+      "block": "about:columns",
+      "top": 484,
+      "height": 792
+     },
+     {
+      "id": "features",
+      "block": "features:rows",
+      "top": 1276,
+      "height": 825
+     },
+     {
+      "id": "quote",
+      "block": "quote:large",
+      "top": 2101,
+      "height": 324
+     },
+     {
+      "id": "items",
+      "block": "items:editorial-index",
+      "top": 2425,
+      "height": 770
+     },
+     {
+      "id": "contact",
+      "block": "contact:email",
+      "top": 3195,
+      "height": 790
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "about",
+     "features",
+     "quote",
+     "items",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "about:columns",
+     "features:rows",
+     "quote:large",
+     "items:editorial-index",
+     "contact:email"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 6,
+     "links": [
+      "Vessel & Vane",
+      "Tableware",
+      "Glazes",
+      "Studio",
+      "Care",
+      "Visit & Order"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   }
+  },
+  {
+   "slug": "shop-run3",
+   "file": "/home/mojo/mimotest/turboslop/after/out/shop-run3.html",
+   "desktop": {
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "scrollWidth": 1425,
+    "clientWidth": 1440,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 9,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button",
+     "h2"
+    ],
+    "h1FontSizePx": 73.44,
+    "h1Lines": 3,
+    "h1TextLength": 76,
+    "heroHeight": 609,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 0,
+      "height": 609
+     },
+     {
+      "id": "about",
+      "block": "about:letter",
+      "top": 609,
+      "height": 489
+     },
+     {
+      "id": "quote",
+      "block": "quote:inline",
+      "top": 1098,
+      "height": 432
+     },
+     {
+      "id": "items",
+      "block": "items:list",
+      "top": 1530,
+      "height": 745
+     },
+     {
+      "id": "contact",
+      "block": "contact:email",
+      "top": 2274,
+      "height": 1069
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "about",
+     "quote",
+     "items",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "about:letter",
+     "quote:inline",
+     "items:list",
+     "contact:email"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "none",
+     "sticky": false,
+     "linkCount": 0,
+     "links": []
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   },
+   "mobile": {
+    "viewport": {
+     "width": 390,
+     "height": 844
+    },
+    "scrollWidth": 375,
+    "clientWidth": 390,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 9,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button",
+     "h2"
+    ],
+    "h1FontSizePx": 25.92,
+    "h1Lines": 4,
+    "h1TextLength": 76,
+    "heroHeight": 607,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 0,
+      "height": 607
+     },
+     {
+      "id": "about",
+      "block": "about:letter",
+      "top": 607,
+      "height": 747
+     },
+     {
+      "id": "quote",
+      "block": "quote:inline",
+      "top": 1354,
+      "height": 365
+     },
+     {
+      "id": "items",
+      "block": "items:list",
+      "top": 1720,
+      "height": 888
+     },
+     {
+      "id": "contact",
+      "block": "contact:email",
+      "top": 2608,
+      "height": 1044
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "about",
+     "quote",
+     "items",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "about:letter",
+     "quote:inline",
+     "items:list",
+     "contact:email"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "none",
+     "sticky": false,
+     "linkCount": 0,
+     "links": []
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   }
+  },
+  {
+   "slug": "shop-run4",
+   "file": "/home/mojo/mimotest/turboslop/after/out/shop-run4.html",
+   "desktop": {
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "scrollWidth": 1425,
+    "clientWidth": 1440,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 9,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button",
+     "h2",
+     "stat"
+    ],
+    "h1FontSizePx": 73.44,
+    "h1Lines": 3,
+    "h1TextLength": 65,
+    "heroHeight": 527,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 64,
+      "height": 527
+     },
+     {
+      "id": "stats",
+      "block": "stats:inline",
+      "top": 591,
+      "height": 280
+     },
+     {
+      "id": "about",
+      "block": "about:letter",
+      "top": 870,
+      "height": 389
+     },
+     {
+      "id": "process",
+      "block": "process:steps",
+      "top": 1260,
+      "height": 1875
+     },
+     {
+      "id": "contact",
+      "block": "contact:split",
+      "top": 3134,
+      "height": 707
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "stats",
+     "about",
+     "process",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "stats:inline",
+     "about:letter",
+     "process:steps",
+     "contact:split"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 1,
+     "links": [
+      "Kilnfold"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h2"
+    ]
+   },
+   "mobile": {
+    "viewport": {
+     "width": 390,
+     "height": 844
+    },
+    "scrollWidth": 375,
+    "clientWidth": 390,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 9,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button",
+     "h2"
+    ],
+    "h1FontSizePx": 25.92,
+    "h1Lines": 3,
+    "h1TextLength": 65,
+    "heroHeight": 691,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 53,
+      "height": 691
+     },
+     {
+      "id": "stats",
+      "block": "stats:inline",
+      "top": 744,
+      "height": 326
+     },
+     {
+      "id": "about",
+      "block": "about:letter",
+      "top": 1070,
+      "height": 684
+     },
+     {
+      "id": "process",
+      "block": "process:steps",
+      "top": 1754,
+      "height": 647
+     },
+     {
+      "id": "contact",
+      "block": "contact:split",
+      "top": 2401,
+      "height": 800
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "stats",
+     "about",
+     "process",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "stats:inline",
+     "about:letter",
+     "process:steps",
+     "contact:split"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 1,
+     "links": [
+      "Kilnfold"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h2"
+    ]
+   }
+  },
+  {
+   "slug": "shop",
+   "file": "/home/mojo/mimotest/turboslop/after/out/shop.html",
+   "desktop": {
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "scrollWidth": 1425,
+    "clientWidth": 1440,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 9,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button",
+     "h2"
+    ],
+    "h1FontSizePx": 73.44,
+    "h1Lines": 2,
+    "h1TextLength": 44,
+    "heroHeight": 532,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 0,
+      "height": 532
+     },
+     {
+      "id": "about",
+      "block": "about:letter",
+      "top": 532,
+      "height": 489
+     },
+     {
+      "id": "quote",
+      "block": "quote:inline",
+      "top": 1021,
+      "height": 491
+     },
+     {
+      "id": "items",
+      "block": "items:list",
+      "top": 1512,
+      "height": 727
+     },
+     {
+      "id": "contact",
+      "block": "contact:email",
+      "top": 2239,
+      "height": 1118
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "about",
+     "quote",
+     "items",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "about:letter",
+     "quote:inline",
+     "items:list",
+     "contact:email"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "none",
+     "sticky": false,
+     "linkCount": 0,
+     "links": []
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   },
+   "mobile": {
+    "viewport": {
+     "width": 390,
+     "height": 844
+    },
+    "scrollWidth": 375,
+    "clientWidth": 390,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 9,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button",
+     "h2"
+    ],
+    "h1FontSizePx": 25.92,
+    "h1Lines": 2,
+    "h1TextLength": 44,
+    "heroHeight": 508,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 0,
+      "height": 508
+     },
+     {
+      "id": "about",
+      "block": "about:letter",
+      "top": 508,
+      "height": 773
+     },
+     {
+      "id": "quote",
+      "block": "quote:inline",
+      "top": 1281,
+      "height": 387
+     },
+     {
+      "id": "items",
+      "block": "items:list",
+      "top": 1668,
+      "height": 922
+     },
+     {
+      "id": "contact",
+      "block": "contact:email",
+      "top": 2590,
+      "height": 1041
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "about",
+     "quote",
+     "items",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "about:letter",
+     "quote:inline",
+     "items:list",
+     "contact:email"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "none",
+     "sticky": false,
+     "linkCount": 0,
+     "links": []
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   }
+  },
+  {
+   "slug": "software",
+   "file": "/home/mojo/mimotest/turboslop/after/out/software.html",
+   "desktop": {
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "scrollWidth": 1425,
+    "clientWidth": 1440,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 11,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "list",
+     "button",
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "h2",
+     "stat"
+    ],
+    "h1FontSizePx": 84,
+    "h1Lines": 6,
+    "h1TextLength": 51,
+    "heroHeight": 678,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 53,
+      "height": 678
+     },
+     {
+      "id": "stats",
+      "block": "stats:row",
+      "top": 731,
+      "height": 293
+     },
+     {
+      "id": "items",
+      "block": "items:table",
+      "top": 1024,
+      "height": 481
+     },
+     {
+      "id": "features",
+      "block": "features:deflist",
+      "top": 1505,
+      "height": 481
+     },
+     {
+      "id": "faq",
+      "block": "faq:accordion",
+      "top": 1986,
+      "height": 425
+     },
+     {
+      "id": "contact",
+      "block": "contact:split",
+      "top": 2411,
+      "height": 597
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "stats",
+     "items",
+     "features",
+     "faq",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "stats:row",
+     "items:table",
+     "features:deflist",
+     "faq:accordion",
+     "contact:split"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 5,
+     "links": [
+      "How it works",
+      "Config",
+      "Benchmarks",
+      "Changelog",
+      "Install Flakepoint"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   },
+   "mobile": {
+    "viewport": {
+     "width": 390,
+     "height": 844
+    },
+    "scrollWidth": 375,
+    "clientWidth": 390,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 11,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "list",
+     "button",
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "h2",
+     "stat"
+    ],
+    "h1FontSizePx": 37.8,
+    "h1Lines": 4,
+    "h1TextLength": 51,
+    "heroHeight": 497,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 78,
+      "height": 497
+     },
+     {
+      "id": "stats",
+      "block": "stats:row",
+      "top": 575,
+      "height": 595
+     },
+     {
+      "id": "items",
+      "block": "items:table",
+      "top": 1171,
+      "height": 584
+     },
+     {
+      "id": "features",
+      "block": "features:deflist",
+      "top": 1755,
+      "height": 1451
+     },
+     {
+      "id": "faq",
+      "block": "faq:accordion",
+      "top": 3206,
+      "height": 458
+     },
+     {
+      "id": "contact",
+      "block": "contact:split",
+      "top": 3664,
+      "height": 765
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "stats",
+     "items",
+     "features",
+     "faq",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "stats:row",
+     "items:table",
+     "features:deflist",
+     "faq:accordion",
+     "contact:split"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 5,
+     "links": [
+      "How it works",
+      "Config",
+      "Benchmarks",
+      "Changelog",
+      "Install Flakepoint"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h2",
+     "h2"
+    ]
+   }
+  },
+  {
+   "slug": "technical",
+   "file": "/home/mojo/mimotest/turboslop/after/out/technical.html",
+   "desktop": {
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "scrollWidth": 1425,
+    "clientWidth": 1440,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 11,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "list",
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button"
+    ],
+    "h1FontSizePx": 121.38,
+    "h1Lines": 6,
+    "h1TextLength": 55,
+    "heroHeight": 922,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 59,
+      "height": 922
+     },
+     {
+      "id": "pricing",
+      "block": "pricing:table",
+      "top": 981,
+      "height": 337
+     },
+     {
+      "id": "stats",
+      "block": "stats:row",
+      "top": 1318,
+      "height": 293
+     },
+     {
+      "id": "features",
+      "block": "features:rows",
+      "top": 1611,
+      "height": 469
+     },
+     {
+      "id": "faq",
+      "block": "faq:accordion",
+      "top": 2080,
+      "height": 401
+     },
+     {
+      "id": "contact",
+      "block": "contact:form",
+      "top": 2481,
+      "height": 797
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "pricing",
+     "stats",
+     "features",
+     "faq",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "pricing:table",
+     "stats:row",
+     "features:rows",
+     "faq:accordion",
+     "contact:form"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 6,
+     "links": [
+      "Orbitalis",
+      "Pricing",
+      "Sensors",
+      "SLA",
+      "Changelog",
+      "Contact"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h2",
+     "h2"
+    ]
+   },
+   "mobile": {
+    "viewport": {
+     "width": 390,
+     "height": 844
+    },
+    "scrollWidth": 375,
+    "clientWidth": 390,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 11,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "list",
+     "main",
+     "section",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button",
+     "h2",
+     "table"
+    ],
+    "h1FontSizePx": 42.84,
+    "h1Lines": 6,
+    "h1TextLength": 55,
+    "heroHeight": 674,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 69,
+      "height": 674
+     },
+     {
+      "id": "pricing",
+      "block": "pricing:table",
+      "top": 744,
+      "height": 604
+     },
+     {
+      "id": "stats",
+      "block": "stats:row",
+      "top": 1347,
+      "height": 595
+     },
+     {
+      "id": "features",
+      "block": "features:rows",
+      "top": 1943,
+      "height": 748
+     },
+     {
+      "id": "faq",
+      "block": "faq:accordion",
+      "top": 2690,
+      "height": 410
+     },
+     {
+      "id": "contact",
+      "block": "contact:form",
+      "top": 3101,
+      "height": 807
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "pricing",
+     "stats",
+     "features",
+     "faq",
+     "contact"
+    ],
+    "sectionBlocks": [
+     "",
+     "pricing:table",
+     "stats:row",
+     "features:rows",
+     "faq:accordion",
+     "contact:form"
+    ],
+    "images": [],
+    "imageCount": 0,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 6,
+     "links": [
+      "Orbitalis",
+      "Pricing",
+      "Sensors",
+      "SLA",
+      "Changelog",
+      "Contact"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h3",
+     "h2",
+     "h2"
+    ]
+   }
+  }
+ ]
+}
