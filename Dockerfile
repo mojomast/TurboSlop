@@ -15,6 +15,7 @@ FROM node:22-alpine AS runtime
 WORKDIR /app
 ENV NODE_ENV=production \
     FORGE_PORT=4400 \
+    FORGE_HOST=0.0.0.0 \
     FORGE_OUT_DIR=/data/out
 
 # Run unprivileged.

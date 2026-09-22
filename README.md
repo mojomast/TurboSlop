@@ -385,9 +385,15 @@ Everything above is documented inline in [`.env.example`](.env.example).
 | `FORGE_IMAGE_TOKEN` / `FORGE_IMAGE_TOKEN_HEADER` | — | auth, if the service needs it |
 | `FORGE_IMAGE_ORIGIN` | base URL | only if the service checks `Origin` |
 | `FORGE_IMAGE_TIMEOUT_MS` / `FORGE_IMAGE_POLL_TIMEOUT_MS` | `20000` / `180000` | request and job timeouts |
-| `FORGE_PORT` / `FORGE_OUT_DIR` | `4400` / `./out` | server bind and storage |
+| `FORGE_HOST` / `FORGE_PORT` / `FORGE_OUT_DIR` | `0.0.0.0` / `4400` / `./out` | server bind and storage |
 
 See [`.env.example`](.env.example) for a fully commented template.
+
+> **⚠️ The control surface has no authentication.** It is a local studio tool, not a
+> multi-tenant service. Anyone who can reach the port can spend your API credits and generate
+> images. Keep `FORGE_HOST=0.0.0.0` on a private network (tailnet, VPN, LAN) or behind an
+> authenticating proxy, and prefer `FORGE_HOST=127.0.0.1` when in doubt. The reverse-proxy
+> config in [`deploy/nginx.conf`](deploy/nginx.conf) is a good place to add auth.
 
 **Swapping the writer is configuration, not code.** Every provider above speaks the same
 `/chat/completions` shape; set three variables and restart.

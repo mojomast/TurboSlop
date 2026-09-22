@@ -20,6 +20,7 @@ WorkingDirectory=/opt/turboslop
 
 EnvironmentFile=/etc/turboslop/env
 Environment=NODE_ENV=production
+Environment=FORGE_HOST=127.0.0.1
 Environment=FORGE_PORT=4400
 Environment=FORGE_OUT_DIR=/var/lib/turboslop/out
 

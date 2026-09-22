@@ -29,6 +29,14 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.resolve(HERE, '..', 'public');
 const OUT_DIR = path.resolve(process.env.FORGE_OUT_DIR ?? path.resolve(HERE, '..', 'out'));
 const PORT = Number(process.env.FORGE_PORT ?? 4400);
+/**
+ * Interface to bind. `0.0.0.0` is the practical default for containers and
+ * private networks; set `FORGE_HOST=127.0.0.1` to keep it strictly local.
+ *
+ * This surface has NO authentication. Binding it anywhere reachable means
+ * anyone who can reach the port can spend your API credits and generate images.
+ */
+const HOST = process.env.FORGE_HOST ?? '0.0.0.0';
 const MAX_BODY = 256 * 1024;
 
 const SLUG_RE = /^[a-z0-9][a-z0-9-]*$/;
@@ -557,14 +565,22 @@ const server = http.createServer((req, res) => {
   })();
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
   const service = resolveImageService();
-  console.log(`\n  turboslop control surface`);
-  console.log(`  http://127.0.0.1:${PORT}\n`);
+  const loopback = HOST === '127.0.0.1' || HOST === 'localhost' || HOST === '::1';
+  console.log(`\n  TurboSlop control surface`);
+  console.log(`  http://${loopback ? HOST : 'localhost'}:${PORT}${loopback ? '' : `   (bound to ${HOST})`}\n`);
   console.log(`  out dir      ${OUT_DIR}`);
   console.log(`  Jev          ${hasApiKey() ? 'live (TYPESAFE_API_KEY set)' : 'local stand-in (no key)'}`);
   console.log(`  copywriter   ${describeLlm(resolveLlm())}`);
   console.log(`  images       ${describeImageService(service)}`);
+  if (!loopback) {
+    console.log('');
+    console.log(`  note         Bound to ${HOST}, and this surface has NO authentication.`);
+    console.log(`               Anyone who can reach port ${PORT} can spend your API credits.`);
+    console.log(`               Keep it on a private network (tailnet/VPN), or front it with`);
+    console.log(`               an authenticating proxy. Set FORGE_HOST=127.0.0.1 to go local.`);
+  }
   console.log('');
 });
 
