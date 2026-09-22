@@ -32,3 +32,12 @@ tailscale-*
 .vscode/
 .DS_Store
 Thumbs.db
+
+# Evidence: committed raw tables only — the working corpus regenerates with
+#   npx tsx scripts/evidence.ts --out evidence
+evidence/work/
+evidence/pages/
+evidence/pages-images/
+evidence/fixture-uploads/
+evidence/fixture-export.zip
+evidence/*.zip

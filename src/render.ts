@@ -16,7 +16,7 @@
  * `<main>` carried `id="top"`, and a repeated module emitted the same id twice,
  * so duplicates were both invalid and ambiguous as link targets.
  */
-import { BLUEPRINT_BY_ID, imageSlotsFor, type Blueprint, type ModuleId } from './blueprint.js';
+import { BLUEPRINT_BY_ID, imageSlotsFor, resolveBlueprint, type Blueprint, type ModuleId } from './blueprint.js';
 import {
   MODULE_LABELS,
   renderFooter,
@@ -59,7 +59,10 @@ const MOTIF_DENSITY: Record<string, number> = { quiet: 0.22, balanced: 0.5, dens
  */
 export function visualForSpec(spec: DesignSpec): VisualBlueprint {
   const palette = PALETTE_BY_ID[spec.tokens.palette ?? ''];
-  const blueprint = BLUEPRINT_BY_ID[spec.blueprint] ?? FALLBACK_BLUEPRINT;
+  /* Resolve through the variant-aware lookup: a spec's blueprint may be a
+     bounded variant (`base~seedbucket`), and rebuilding it from the id is what
+     makes an export or an old preview reproduce the exact layout that made it. */
+  const blueprint = resolveBlueprint(spec.blueprint) ?? FALLBACK_BLUEPRINT;
   if (!palette) throw new Error(`cannot derive a visual blueprint: unknown palette "${spec.tokens.palette}"`);
   return visualBlueprintFor({
     blueprint,
@@ -151,7 +154,7 @@ export function renderHtml(spec: DesignSpec, opts: RenderOptions = {}): string {
   const emotion = spec.tokens.emotion ?? 'other';
   const density = (spec.tokens.density ?? 'balanced') as DensityId;
   const effects = spec.tokens.effects ?? 'flat-plain';
-  const blueprint = BLUEPRINT_BY_ID[spec.blueprint] ?? FALLBACK_BLUEPRINT;
+  const blueprint = resolveBlueprint(spec.blueprint) ?? FALLBACK_BLUEPRINT;
 
   if (!palette || !type || !layout || !motion) {
     throw new Error(

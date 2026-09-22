@@ -22,6 +22,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { inflateRawSync } from 'node:zlib';
 import { createZip, crc32 } from '../src/zip.js';
+import { contentDisposition } from '../src/export.js';
 
 let passed = 0;
 let failed = 0;
@@ -221,6 +222,20 @@ await test('unicode filename survives a real unzip round trip', () => {
   execFileSync('unzip', ['-t', zipPath], { stdio: 'pipe' });
   const extracted = unzipTo(dir, zipPath);
   assertSame(extracted, new Map([[name, Buffer.from('résumé')]]));
+});
+
+await test('download filenames are header-safe: ASCII passthrough, RFC 6266 for the rest', () => {
+  // The one reproducible "unicode filename failure" is Node throwing
+  // ERR_INVALID_CHAR for a non-latin1 character in an HTTP header. Export
+  // slugs are ASCII by construction, but the header builder must be safe
+  // even if that ever changes.
+  assert.equal(contentDisposition('shop.zip'), 'attachment; filename="shop.zip"');
+  const encoded = contentDisposition('设计图纸.zip');
+  const quoted = /filename="([^"]*)"/.exec(encoded)?.[1] ?? '';
+  assert.match(quoted, /^[\x20-\x7e]+$/, 'the quoted part must be header-safe (ISO-8859-1)');
+  assert.match(encoded, /filename\*=UTF-8''%E8%AE%BE%E8%AE%A1%E5%9B%BE%E7%BA%B8\.zip/, 'the UTF-8 form carries the real name');
+  // Latin-1 survives quoted as-is; anything beyond it must never appear raw.
+  assert.ok(!/[^\x20-\x7e]/.test(encoded.replace(/filename\*=UTF-8''[^;]+/, '')), 'no raw non-ASCII outside the encoded form');
 });
 
 await test('empty archive is valid and extractable', () => {

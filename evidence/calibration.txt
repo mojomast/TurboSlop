@@ -1,0 +1,15 @@
+## Fingerprint distance vs rendered geometry
+
+Pairs: **465** within-brief (fixed inventory). Spearman ρ(fingerprint, geometry) = **0.228**, ρ(grayscale, geometry) = **0.238**.
+
+| band | pairs | median geometry distance |
+|---|---|---|
+| ≥ 0.40 | 411 | 0.4117 |
+| 0.2–0.40 | 41 | 0.3476 |
+| 0.06–0.2 (below separation) | 13 | 0.2101 |
+
+| group | pairs | median fingerprint | median geometry |
+|---|---|---|---|
+| identical section sequence | 3 | 0.1716 | 0.0421 |
+| different section sequence | 462 | 0.5895 | 0.4035 |
+

@@ -1,0 +1,291 @@
+{
+ "generatedAt": "2026-09-22T23:23:40.719Z",
+ "viewports": {
+  "DESKTOP": {
+   "width": 1440,
+   "height": 900
+  },
+  "MOBILE": {
+   "width": 390,
+   "height": 844
+  }
+ },
+ "pages": [
+  {
+   "slug": "fixture-final",
+   "file": "/home/mojo/mimotest/turboslop/evidence/pages-images/fixture-final.html",
+   "desktop": {
+    "viewport": {
+     "width": 1440,
+     "height": 900
+    },
+    "scrollWidth": 1425,
+    "clientWidth": 1440,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 11,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "main",
+     "section",
+     "image",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button"
+    ],
+    "h1FontSizePx": 187.68,
+    "h1Lines": 3,
+    "h1TextLength": 36,
+    "heroHeight": 846,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 94,
+      "height": 846
+     },
+     {
+      "id": "schedule",
+      "block": "schedule:table",
+      "top": 940,
+      "height": 662
+     },
+     {
+      "id": "gallery",
+      "block": "gallery:mosaic",
+      "top": 1602,
+      "height": 1336
+     },
+     {
+      "id": "quote",
+      "block": "quote:band",
+      "top": 2938,
+      "height": 629
+     },
+     {
+      "id": "contact",
+      "block": "contact:email",
+      "top": 3568,
+      "height": 467
+     },
+     {
+      "id": "pricing",
+      "block": "pricing:tiers",
+      "top": 4035,
+      "height": 432
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "schedule",
+     "gallery",
+     "quote",
+     "contact",
+     "pricing"
+    ],
+    "sectionBlocks": [
+     "",
+     "schedule:table",
+     "gallery:mosaic",
+     "quote:band",
+     "contact:email",
+     "pricing:tiers"
+    ],
+    "images": [
+     {
+      "src": "assets/fixture-final/00-gallery-2-231250486.png",
+      "alt": "",
+      "naturalWidth": 1,
+      "naturalHeight": 1,
+      "renderedWidth": 1425,
+      "renderedHeight": 846,
+      "upscaleFactor": 1425,
+      "inFirstScreen": true
+     },
+     {
+      "src": "assets/fixture-final/00-user-gallery-1.png",
+      "alt": "Supplied fixture photo",
+      "naturalWidth": 1,
+      "naturalHeight": 1,
+      "renderedWidth": 620,
+      "renderedHeight": 464,
+      "upscaleFactor": 620,
+      "inFirstScreen": false
+     },
+     {
+      "src": "assets/fixture-final/01-gallery-3-339112502.png",
+      "alt": "Surface study in a awe register",
+      "naturalWidth": 1,
+      "naturalHeight": 1,
+      "renderedWidth": 320,
+      "renderedHeight": 239,
+      "upscaleFactor": 320,
+      "inFirstScreen": false
+     }
+    ],
+    "imageCount": 3,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 1,
+     "links": [
+      "SPECIMEN"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h2",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h2"
+    ]
+   },
+   "mobile": {
+    "viewport": {
+     "width": 390,
+     "height": 844
+    },
+    "scrollWidth": 375,
+    "clientWidth": 390,
+    "overflowsHorizontally": false,
+    "maxScrollX": 0,
+    "bodyOverflowX": "visible",
+    "htmlOverflowX": "clip",
+    "idCount": 11,
+    "duplicateIds": [],
+    "brokenAnchors": [],
+    "firstScreenBlocks": [
+     "masthead",
+     "main",
+     "section",
+     "image",
+     "eyebrow",
+     "h1",
+     "lede",
+     "button"
+    ],
+    "h1FontSizePx": 66.24,
+    "h1Lines": 4,
+    "h1TextLength": 36,
+    "heroHeight": 659,
+    "sections": [
+     {
+      "id": "top",
+      "block": "",
+      "top": 77,
+      "height": 659
+     },
+     {
+      "id": "schedule",
+      "block": "schedule:table",
+      "top": 737,
+      "height": 682
+     },
+     {
+      "id": "gallery",
+      "block": "gallery:mosaic",
+      "top": 1419,
+      "height": 1835
+     },
+     {
+      "id": "quote",
+      "block": "quote:band",
+      "top": 3254,
+      "height": 580
+     },
+     {
+      "id": "contact",
+      "block": "contact:email",
+      "top": 3834,
+      "height": 593
+     },
+     {
+      "id": "pricing",
+      "block": "pricing:tiers",
+      "top": 4427,
+      "height": 669
+     }
+    ],
+    "sectionOrder": [
+     "top",
+     "schedule",
+     "gallery",
+     "quote",
+     "contact",
+     "pricing"
+    ],
+    "sectionBlocks": [
+     "",
+     "schedule:table",
+     "gallery:mosaic",
+     "quote:band",
+     "contact:email",
+     "pricing:tiers"
+    ],
+    "images": [
+     {
+      "src": "assets/fixture-final/00-gallery-2-231250486.png",
+      "alt": "",
+      "naturalWidth": 1,
+      "naturalHeight": 1,
+      "renderedWidth": 375,
+      "renderedHeight": 659,
+      "upscaleFactor": 375,
+      "inFirstScreen": true
+     },
+     {
+      "src": "assets/fixture-final/00-user-gallery-1.png",
+      "alt": "Supplied fixture photo",
+      "naturalWidth": 1,
+      "naturalHeight": 1,
+      "renderedWidth": 307,
+      "renderedHeight": 230,
+      "upscaleFactor": 307,
+      "inFirstScreen": false
+     },
+     {
+      "src": "assets/fixture-final/01-gallery-3-339112502.png",
+      "alt": "Surface study in a awe register",
+      "naturalWidth": 0,
+      "naturalHeight": 0,
+      "renderedWidth": 330,
+      "renderedHeight": 247,
+      "upscaleFactor": 0,
+      "inFirstScreen": false
+     }
+    ],
+    "imageCount": 3,
+    "nav": {
+     "position": "sticky",
+     "sticky": true,
+     "linkCount": 1,
+     "links": [
+      "SPECIMEN"
+     ]
+    },
+    "headingOrder": [
+     "h1",
+     "h2",
+     "h2",
+     "h2",
+     "h2",
+     "h2",
+     "h3",
+     "h3",
+     "h3",
+     "h2"
+    ]
+   }
+  }
+ ]
+}

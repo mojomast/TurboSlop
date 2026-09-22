@@ -79,6 +79,10 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, '')}`;
  * no asset the CSS gradient plate stands in, so a page never breaks and never
  * shows a picture that belongs somewhere else.
  *
+ * `data-slot` marks the place: `verifyAssetPlacement` uses it to prove each
+ * asset landed in ITS slot — finding a URL somewhere in the HTML is not
+ * evidence that it is in the right position.
+ *
  * `width`/`height` are the asset's real pixel size, so an enlargement is visible
  * in the markup rather than hidden, and `data-texture` marks the slots where a
  * 256px asset is deliberately scaled and must be drawn as atmosphere.
@@ -92,11 +96,34 @@ function plate(ctx: BlockCtx, i: number, cls = 'plate', slotId?: string): string
   const a =
     bySlot ??
     (hasSlots ? undefined : ctx.plateAssets.length ? ctx.plateAssets[i % ctx.plateAssets.length] : undefined);
-  if (!a) return `<div class="${cls}" aria-hidden="true"></div>`;
+  const slotAttr = slotId ? ` data-slot="${esc(slotId)}"` : '';
+  if (!a) return `<div class="${cls}"${slotAttr} aria-hidden="true"></div>`;
   const texture = a.slot && ctx.textureSlots?.has(a.slot) ? ' data-texture="1"' : '';
-  return `<div class="${cls}"${texture}><img class="plate-img" src="${esc(a.file)}" alt="${esc(
+  return `<div class="${cls}"${slotAttr}${texture}><img class="plate-img" src="${esc(a.file)}" alt="${esc(
     a.alt,
   )}" width="${a.nativeWidth}" height="${a.nativeHeight}" loading="lazy" decoding="async"></div>`;
+}
+
+/**
+ * A framed plate for a gallery figure.
+ *
+ * The frame is chosen by the direction's own visual blueprint (lead → object:
+ * packaging for a catalogue, a ticket for an event, a cover for a publication),
+ * capped to the first few tiles so a grid does not become a shop of boxes.
+ * Nothing is framed when the recipe says `plain`.
+ */
+function framedPlate(ctx: BlockCtx, slotId: string, ratio: string, nth: number): string {
+  const inner = plate(ctx, nth, 'tile__plate', slotId);
+  const kind = ctx.visual?.frames?.[0];
+  if (!kind || kind === 'plain' || nth > 2 || ctx.textureSlots?.has(slotId)) return inner;
+  const framed = renderFrame({
+    kind,
+    inner,
+    label: stripEmphasis(ctx.content.brand).slice(0, 24),
+    seed: (ctx.visual?.seed ?? 0) + nth,
+    ratio,
+  });
+  return `<span class="tile__frame" data-frame-for="${esc(slotId)}">${framed.html}</span>`;
 }
 
 /* ================================================================== *
@@ -316,21 +343,28 @@ ${steps
   .join('\n')}
         </ol>`;
 
-const galleryBlock = (c: Content, ctx: BlockCtx, variant: string) =>
-  `        <div class="gallery gallery--${variant}">
+const galleryBlock = (c: Content, ctx: BlockCtx, variant: string) => {
+  /* An empty gallery is not a gallery: say so rather than rendering a row of
+     empty gradient boxes to fill a slot. */
+  if (!c.items.length) return empty('gallery entries');
+  return `        <div class="gallery gallery--${variant}">
 ${c.items
   .slice(0, ctx.blueprint.imageSlots || 4)
   .map(
     (it, i) => `          <figure class="tile" style="--span:${variant === 'strip' ? 3 : i % 4 === 0 ? 6 : 3}">
-            ${plate(ctx, i, 'tile__plate', `gallery-${i + 1}`)}
+            ${framedPlate(ctx, `gallery-${i + 1}`, variant === 'strip' ? '4 / 3' : i % 5 === 0 ? '4 / 3' : '1 / 1', i)}
             <figcaption class="mono">${esc(it.name)}</figcaption>
           </figure>`,
   )
   .join('\n')}
         </div>`;
+};
 
-const scheduleBlock = (c: Content, variant: string) =>
-  variant === 'agenda'
+const scheduleBlock = (c: Content, variant: string): string => {
+  /* No programme in the content: say so instead of drawing empty rows. */
+  if (!c.items.length) return empty('programme entries');
+  return (
+    variant === 'agenda'
     ? `        <ol class="agenda">
 ${c.items
   .slice(0, 5)
@@ -349,9 +383,13 @@ ${c.items
             .slice(0, 5)
             .map((it, i) => `<tr><td class="mono">Day ${i + 1}</td><th scope="row">${esc(it.name)}</th><td>${esc(it.meta)}</td></tr>`)
             .join('')}</tbody>
-        </table></div>`;
+        </table></div>`
+  );
+};
 
 const pricingBlock = (c: Content, variant: string) => {
+  /* A price the brief did not supply is a price this page does not print. */
+  if (!c.features.length || !c.stats.length) return empty('pricing');
   if (variant === 'tiers') {
     return `        <div class="grid tiers">
 ${c.features
@@ -375,7 +413,9 @@ ${c.features
         </table></div>`;
 };
 
-const faqBlock = (c: Content) => `        <ul class="faq">
+const faqBlock = (c: Content): string => {
+  if (!c.features.length) return empty('questions');
+  return `        <ul class="faq">
 ${c.features
   .slice(0, 4)
   .map(
@@ -383,6 +423,7 @@ ${c.features
   )
   .join('\n')}
         </ul>`;
+};
 
 function contactBlock(c: Content, variant: string, ctx: BlockCtx): string {
   const k = contactOf(c);
@@ -483,12 +524,24 @@ export function renderHero(variant: HeroVariant, ctx: BlockCtx): string {
   const c = ctx.content;
   const backdrop = ctx.backdrops[0];
   const art = backdrop
-    ? `<figure class="hero-art" aria-hidden="true"><img src="${esc(backdrop.file)}" alt="" width="256" height="256" loading="eager" decoding="async"></figure>`
+    ? `<figure class="hero-art"${backdrop.slot ? ` data-slot="${esc(backdrop.slot)}"` : ''} aria-hidden="true"><img src="${esc(
+        backdrop.file,
+      )}" alt="" width="256" height="256" loading="eager" decoding="async"></figure>`
     : '';
-  const ctas = `          <p class="cluster">
-            <a class="btn" href="#${ctx.blueprint.sections[0]?.module ?? 'contact'}">See the work</a>
-            <a class="btn btn--ghost" href="#contact">${esc(c.cta)}</a>
-          </p>`;
+  const hasContact = ctx.blueprint.sections.some((s) => s.module === 'contact');
+  const first = ctx.blueprint.sections[0]?.module;
+  /* CTAs point at anchors that EXIST. A page with no contact section gets no
+     dead `#contact` button, and "See the work" only appears when there is
+     somewhere to see. */
+  const ctaLines = [
+    first && first !== 'contact'
+      ? `            <a class="btn" href="#${esc(first)}">See the work</a>`
+      : '',
+    hasContact ? `            <a class="btn btn--ghost" href="#contact">${esc(c.cta)}</a>` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+  const ctas = ctaLines ? `          <p class="cluster">\n${ctaLines}\n          </p>` : '';
 
   const head = (extraClass = '') =>
     `          <p class="eyebrow">${esc(c.eyebrow)}</p>
@@ -514,7 +567,9 @@ export function renderHero(variant: HeroVariant, ctx: BlockCtx): string {
     <div class="wrap"><div class="hero-compact">
       <p class="eyebrow">${esc(c.eyebrow)}</p>
       <h1 class="hero-compact__title">${emphasize(c.tagline)}</h1>
-      <div class="hero-compact__side"><p class="lede">${esc(c.lede)}</p><a class="btn" href="#contact">${esc(c.cta)}</a></div>
+      <div class="hero-compact__side"><p class="lede">${esc(c.lede)}</p>${
+        hasContact ? `<a class="btn" href="#contact">${esc(c.cta)}</a>` : ''
+      }</div>
     </div></div>
   </section>`;
 

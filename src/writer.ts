@@ -114,6 +114,72 @@ export interface WriteContentResult {
   fallbackReason?: string;
 }
 
+/**
+ * Revise the COPY of an already-resolved spec.
+ *
+ * Scope is the caller's: this only ever returns new content. The prompt
+ * carries the existing copy and the change request, and the same repair pass
+ * clamps the result, so a wording edit cannot smuggle in new facts, colours or
+ * layouts — those live in the spec and are not the writer's to touch.
+ */
+export async function reviseContent(
+  spec: DesignSpec,
+  instructions: string,
+  opts: { fallback: ContentModel; required?: readonly string[]; signal?: AbortSignal },
+): Promise<WriteContentResult> {
+  const base: WriteContentResult = {
+    content: opts.fallback,
+    source: 'fallback',
+    model: 'none',
+    latencyMs: 0,
+    inputTokens: 0,
+    outputTokens: 0,
+    reasoningTokens: 0,
+  };
+  const cfg = resolveLlm();
+  if (!cfg) return base;
+
+  const existing = opts.fallback;
+  const system = [
+    'You revise the copy of ONE page that already exists. Keep the facts, the brand and the structure.',
+    'Apply exactly the change the request asks for; everything you are not asked to change stays as it is.',
+    'Return ONE JSON object and nothing else, in the same schema as the original content.',
+    '',
+    RULES,
+  ].join('\n');
+
+  const user = [
+    `BRIEF:\n${spec.brief}`,
+    '',
+    'CURRENT CONTENT:',
+    JSON.stringify(existing, null, 1).slice(0, 12000),
+    '',
+    `REQUESTED CHANGE: ${instructions.trim()}`,
+    '',
+    'Return only the revised JSON object.',
+  ].join('\n');
+
+  try {
+    const res = await completeWithRetry(
+      { system, user, json: true, maxTokens: 8000, temperature: 0.7, ...(opts.signal ? { signal: opts.signal } : {}), config: cfg },
+      3,
+    );
+    const content = repairContent(extractJson(res.text));
+    if (!content) return { ...base, fallbackReason: 'the rewrite could not be repaired into a complete page' };
+    return {
+      content,
+      source: 'llm',
+      model: res.model,
+      latencyMs: res.latencyMs,
+      inputTokens: res.inputTokens,
+      outputTokens: res.outputTokens,
+      reasoningTokens: res.reasoningTokens,
+    };
+  } catch (err) {
+    return { ...base, fallbackReason: err instanceof LlmError ? err.message : String(err) };
+  }
+}
+
 /** The contract line for each optional module, keyed by blueprint module id. */
 const MODULE_CONTRACT: Record<string, string> = {
   items: `  "items":    [ { "name": string, "meta": string, "tags": string[] } ],   // 5-6 entries\n`,

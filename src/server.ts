@@ -11,11 +11,10 @@
  */
 import http from 'node:http';
 import { randomUUID } from 'node:crypto';
-import { readFile, readdir, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CANDIDATES, ATMOSPHERE, PALETTE_VISUAL } from './catalog.js';
-import { stripEmphasis } from './content.js';
 import { describeFontPack, FONT_PACK } from './fonts.js';
 import { FRAME_KINDS, frameForLead } from './frames.js';
 import { ICON_NAMES } from './icons.js';
@@ -28,15 +27,22 @@ import { jevCost, writerCost } from './pricing.js';
 import { runPipeline, slugify } from './pipeline.js';
 import { getDesign, listDesigns, nextIterationSlug, recordDesign, uniqueSlug } from './registry.js';
 import {
+  LockError,
+  SELECTION_VERSION,
+  assertLocksAreCompatible,
   createSession,
   finalizeSession,
   listSessions,
   loadSession,
+  normalizeLocks,
   regenerateSession,
+  reviseSession,
   saveSession,
   type DirectionSession,
 } from './sessions.js';
-import { createZip, type ZipEntry } from './zip.js';
+import { buildZip, contentDisposition, inlineAssets } from './export.js';
+import { projectId, listHistoryProjects } from './history.js';
+import { imageSize } from './userassets.js';
 import type { DeciderPreference } from './decider.js';
 import type { DesignSpec } from './types.js';
 
@@ -103,12 +109,19 @@ function emit(job: Job, event: JobEvent | { phase: 'end' }): void {
 /* ================================================================== *
  * Helpers
  * ================================================================== */
-async function readBody(req: http.IncomingMessage): Promise<unknown> {
+/**
+ * Read a JSON body.
+ *
+ * `maxBytes` is per-route: uploads of real photographs need more than the
+ * default API limit, and giving EVERY route a large limit would be the wrong
+ * trade.
+ */
+async function readBody(req: http.IncomingMessage, maxBytes = MAX_BODY): Promise<unknown> {
   const chunks: Buffer[] = [];
   let size = 0;
   for await (const chunk of req) {
     size += (chunk as Buffer).length;
-    if (size > MAX_BODY) throw new Error('request body too large');
+    if (size > maxBytes) throw new Error(`request body too large (limit ${maxBytes} bytes)`);
     chunks.push(chunk as Buffer);
   }
   if (!size) return {};
@@ -161,156 +174,6 @@ async function serveFile(res: http.ServerResponse, filePath: string): Promise<bo
   }
 }
 
-/**
- * Inline every relative asset as a data URI, producing ONE portable file.
- * This is the "copy it in one shot" export: paste into an email, a gist, a
- * CMS field, anything.
- */
-async function inlineAssets(html: string, slug: string): Promise<string> {
-  // Both artwork and the bundled fonts, so a single-file export renders exactly
-  // as intended with no request of any kind — remote or local.
-  const refs = [...html.matchAll(/(?:src|href|url\()["']?(assets\/[^"')]+|fonts\/[^"')]+)/g)].map(
-    (m) => m[1] ?? m[2]!,
-  );
-  let out = html;
-  for (const ref of new Set(refs)) {
-    const isAsset = ref.startsWith('assets/');
-    const rel = ref.replace(/^(assets|fonts)\//, '');
-    if (isAsset && !ASSET_RE.test(rel)) continue;
-    if (!isAsset && !/^[A-Za-z0-9._-]+\.(woff2|md)$/.test(rel)) continue;
-    try {
-      const buf = await readFile(path.join(OUT_DIR, isAsset ? 'assets' : 'fonts', rel));
-      const mime = MIME[path.extname(rel).toLowerCase()] ?? 'application/octet-stream';
-      out = out.split(ref).join(`data:${mime};base64,${buf.toString('base64')}`);
-    } catch {
-      /* a missing file leaves the reference intact rather than breaking the page */
-    }
-  }
-  return out;
-}
-
-/** A short human brief describing how a design was produced, for the export. */
-function designReadme(spec: DesignSpec, slug: string): string {
-  const dec = spec.decisions
-    .map((d) => `| ${d.axis} | \`${d.picked}\` | ${d.confidence.toFixed(2)} | ${d.review ? '**review**' : ''} |`)
-    .join('\n');
-  const assets = spec.assets.length
-    ? spec.assets
-        .map((a) => {
-          const base = `### ${a.slot || a.kind} — \`${path.basename(a.file)}\``;
-          if (a.source === 'user') {
-            return (
-              `${base}\n\n- **supplied by the brief's owner** (${a.nativeWidth}x${a.nativeHeight}px)\n` +
-              `- credit: ${a.credit || '_not stated_'}\n- licence: ${a.license || '_not stated_'}\n- alt: ${a.alt}\n`
-            );
-          }
-          return (
-            `${base}\n\n` +
-            `- seed \`${a.seed}\`, steps ${a.steps}, guidance ${a.cfg}, ${(a.bytes / 1024).toFixed(0)} KB\n` +
-            `- native resolution ${a.nativeWidth}x${a.nativeHeight} (generated)\n` +
-            `- alt: ${a.alt}\n\n> ${a.prompt}\n`
-          );
-        })
-        .join('\n')
-    : '_No generated artwork — the layout uses its CSS gradient fallbacks._\n';
-
-  const c = spec.content;
-  return `# ${c?.brand ?? slug}${c ? ` — ${stripEmphasis(c.title)}` : ''}
-
-${c?.description ?? ''}
-
-Generated by **TurboSlop**. This file documents how, so the result can be
-reproduced or audited.
-
-## Brief
-
-> ${spec.brief.split('\n').join('\n> ')}
-
-## Decisions
-
-Jev decided these; each carries a calibrated confidence.
-
-| axis | choice | confidence | |
-|---|---|---|---|
-${dec}
-
-Composite: **${spec.composite.normalized.toFixed(3)} / 1.000**
-${spec.review.length ? `\nFlagged for review: ${spec.review.join(', ')}\n` : ''}
-## Provenance
-
-| | |
-|---|---|
-| decider | \`${spec.meta.decider}\` / \`${spec.meta.model}\` (${spec.meta.latencyMs} ms) |
-| copy | \`${spec.meta.writer}\`${spec.meta.writer === 'llm' ? ` / \`${spec.meta.writerModel}\` (${spec.meta.writerLatencyMs} ms)` : ' (specimen content)'} |
-| images | ${spec.meta.imageCount} at steps ${spec.meta.imageSteps} / guidance ${spec.meta.imageCfg} (${spec.meta.imageMs} ms) |
-| decision cost | ~$${spec.meta.estimatedUsd.toFixed(6)} (Jev: input only) |
-| writing cost | ~$${spec.meta.writerEstimatedUsd.toFixed(6)} (the writing half usually dominates) |
-| **estimated total** | **~$${(spec.meta.estimatedUsd + spec.meta.writerEstimatedUsd).toFixed(6)}** |
-
-## Files
-
-- \`index.html\` — the page
-- \`design.spec.json\` — the full decision record, including every probability
-- \`assets/\` — generated artwork
-
-## Generated artwork
-
-${assets}
-## Content
-
-**${c ? stripEmphasis(c.tagline) : ''}**
-
-${c?.lede ?? ''}
-
-${(c?.aboutBody ?? []).join('\n\n')}
-`;
-}
-
-/* ================================================================== *
- * Export builders
- * ================================================================== */
-async function buildZip(slug: string): Promise<Buffer> {
-  const loaded = await getDesign(OUT_DIR, slug);
-  if (!loaded) throw new Error('design not found');
-  const { spec } = loaded;
-
-  const html = await readFile(path.join(OUT_DIR, `${slug}.html`), 'utf8');
-  const entries: ZipEntry[] = [
-    { path: 'index.html', data: html },
-    { path: 'design.spec.json', data: await readFile(path.join(OUT_DIR, `${slug}.spec.json`)) },
-    { path: 'README.md', data: designReadme(spec, slug) },
-  ];
-
-  for (const a of spec.assets) {
-    const rel = a.file.replace(/^assets\//, '');
-    if (!ASSET_RE.test(rel)) continue;
-    try {
-      entries.push({ path: a.file, data: await readFile(path.join(OUT_DIR, 'assets', rel)) });
-    } catch {
-      /* skip a missing asset rather than failing the whole export */
-    }
-  }
-
-  /* The page references fonts/ relatively, so the export must carry them — and
-     the licences must travel with the files, as OFL requires. */
-  try {
-    for (const f of await readdir(path.join(OUT_DIR, 'fonts'))) {
-      if (!f.endsWith('.woff2') && f !== 'LICENSES.md') continue;
-      entries.push({ path: `fonts/${f}`, data: await readFile(path.join(OUT_DIR, 'fonts', f)) });
-    }
-  } catch {
-    /* no bundled fonts on disk: the page still falls back to system faces */
-  }
-
-  // A self-contained page too, so the archive works with no assets folder.
-  try {
-    entries.push({ path: 'index.selfcontained.html', data: await inlineAssets(html, slug) });
-  } catch {
-    /* optional */
-  }
-
-  return createZip(entries);
-}
 
 /**
  * Cost for a design, in one place.
@@ -470,6 +333,19 @@ async function startDirectionsJob(opts: DirectionsRequest): Promise<Job> {
   };
   jobs.set(job.id, job);
 
+  /* Heartbeat while the shared inventory is being written — that is the slow
+     step (~10 s with a real writer) and the surface must not look frozen. */
+  const heartbeat = setInterval(() => {
+    if (job.state !== 'running') return;
+    const secs = Math.round((Date.now() - job.startedAt) / 1000);
+    emit(job, {
+      phase: 'content',
+      message: `still writing the shared inventory… (${secs}s so far — one writer call covers all six previews)`,
+      at: Date.now(),
+    });
+  }, 3000);
+  heartbeat.unref?.();
+
   void (async () => {
     try {
       emit(job, { phase: 'decide', message: 'One decision call for the whole direction set…', at: Date.now() });
@@ -480,28 +356,43 @@ async function startDirectionsJob(opts: DirectionsRequest): Promise<Job> {
         ...(opts.explore !== undefined ? { explore: opts.explore } : {}),
         ...(opts.count !== undefined ? { count: opts.count } : {}),
         noWriter: opts.copy === false,
+        /* Progress while the shared inventory is being written — the slowest
+           step. Without this the surface looks frozen for ~10 s. */
+        onProgress: (e) => emit(job, { phase: e.phase, message: e.message, at: Date.now() }),
       });
       emit(
         job,
         { phase: 'content', message: `Inventory: ${session.inventorySource} (${session.metrics.modelCalls} model calls total)`, at: Date.now() },
       );
       emit(job, { phase: 'render', message: `${session.directions.length} directions rendered locally`, at: Date.now() });
+      const div = session.diversity;
       job.result = {
         sessionId: session.id,
-        notes: [session.previewLabel, ...session.directions.map((d) => d.blueprint)],
+        notes: [
+          session.previewLabel,
+          `compositions ${div.achieved.compositions}/${div.targets.compositions} · ` +
+            `headline constructions ${div.achieved.constructions}/${div.targets.constructions} · ` +
+            `treatments ${div.achieved.treatments}/${div.targets.treatments} · ` +
+            `grayscale-distinct ${div.achieved.grayscaleDistinct}/${div.targets.grayscaleDistinct}` +
+            (div.met ? ' — all targets met' : ` — missed: ${div.shortfall.map((s) => s.target).join(', ')}`),
+          ...session.directions.map((d) => d.blueprint),
+        ],
         timings: {
           decideMs: session.metrics.decideMs,
           inventoryMs: session.metrics.inventoryMs,
           renderMs: session.metrics.renderMs,
+          assetsMs: session.metrics.assetsMs,
           totalMs: session.metrics.totalMs,
           modelCalls: session.metrics.modelCalls,
           estimateUsd: session.metrics.estimateUsd,
         },
       };
       job.state = 'done';
+      clearInterval(heartbeat);
       emit(job, { phase: 'end' });
     } catch (err) {
       job.state = 'error';
+      clearInterval(heartbeat);
       job.error = err instanceof Error ? err.message : String(err);
       emit(job, { phase: 'error', message: job.error, at: Date.now() });
       emit(job, { phase: 'end' });
@@ -522,6 +413,7 @@ async function startFinalizeJob(
   index: number,
   opts: {
     finalCopy: boolean;
+    images?: { enabled: boolean; count: number; preset: string; steps?: number; cfg?: number; seed?: number };
     userImages?: { slot: string; path: string; alt?: string; credit?: string; license?: string }[];
     userImageRoot?: string;
   },
@@ -546,9 +438,13 @@ async function startFinalizeJob(
         job,
         { phase: 'content', message: opts.finalCopy ? `Writing final copy for ${chosen.blueprint}…` : 'Reusing the shared inventory as final copy', at: Date.now() },
       );
-      const { spec, write } = await finalizeSession(OUT_DIR, session, slug, {
+      if (opts.images?.enabled) {
+        emit(job, { phase: 'images', message: `Asset plan for ${chosen.blueprint} (${chosen.imageSlots.length} renderable slot(s))`, at: Date.now() });
+      }
+      const { spec, write, notes, placement, assetMs } = await finalizeSession(OUT_DIR, session, slug, {
         index,
         finalCopy: opts.finalCopy,
+        ...(opts.images ? { images: opts.images } : {}),
         ...(opts.userImages?.length ? { userImages: opts.userImages, userImageRoot: opts.userImageRoot } : {}),
       });
 
@@ -559,15 +455,6 @@ async function startFinalizeJob(
         source: 'surface',
       });
 
-      session.selectedIndex = index;
-      session.finalSlug = slug;
-      session.history.push({
-        at: new Date().toISOString(),
-        event: 'finalized',
-        detail: `${chosen.blueprint} → ${slug}`,
-      });
-      await saveSession(OUT_DIR, session);
-
       emit(job, { phase: 'write', message: `Wrote ${slug}.html`, at: Date.now() });
       job.result = {
         slug,
@@ -576,10 +463,77 @@ async function startFinalizeJob(
         notes: [
           write.source === 'llm'
             ? `final copy: ${write.model} in ${write.latencyMs}ms`
-            : 'final copy: specimen (no writer configured)',
-          `blueprint ${chosen.blueprint}`,
+            : 'final copy: shared inventory (no extra writer call)',
+          `direction ${chosen.id} — blueprint ${chosen.blueprint}, seed ${chosen.seed}`,
+          `assets: ${spec.assets.length} on the page (${placement.checked} slot-checked${placement.ok ? '' : `, ${placement.issues.length} issue(s)`})`,
+          ...notes,
+          ...(chosen.diagnostics.length ? chosen.diagnostics : []),
         ],
-        timings: { writerMs: write.latencyMs, totalMs: Date.now() - job.startedAt },
+        timings: {
+          writerMs: write.latencyMs,
+          assetMs,
+          totalMs: Date.now() - job.startedAt,
+        },
+      };
+      job.state = 'done';
+      emit(job, { phase: 'end' });
+    } catch (err) {
+      job.state = 'error';
+      job.error = err instanceof Error ? err.message : String(err);
+      emit(job, { phase: 'error', message: job.error, at: Date.now() });
+      emit(job, { phase: 'end' });
+    }
+  })();
+
+  return job;
+}
+
+/**
+ * Revise the chosen design — a SCOPED change, not a regeneration.
+ *
+ * Zero or one writer call, never a Jev call, never a re-selection: the stored
+ * resolved spec is the input and only what the request names may move.
+ */
+async function startReviseJob(session: DirectionSession, instructions: string, finalCopy: boolean): Promise<Job> {
+  const parentSlug = session.finalSlug!;
+  const slug = await nextIterationSlug(OUT_DIR, parentSlug);
+  const job: Job = {
+    id: randomUUID(),
+    slug,
+    brief: session.brief,
+    state: 'running',
+    events: [],
+    subscribers: new Set(),
+    startedAt: Date.now(),
+  };
+  jobs.set(job.id, job);
+
+  void (async () => {
+    try {
+      emit(job, { phase: 'content', message: `Applying a scoped revision to ${parentSlug}…`, at: Date.now() });
+      const result = await reviseSession(OUT_DIR, session, {
+        instructions,
+        finalCopy,
+      });
+      const parent = await getDesign(OUT_DIR, parentSlug);
+      await recordDesign(OUT_DIR, {
+        slug: result.slug,
+        brief: session.brief,
+        parent: parentSlug,
+        revision: (parent?.record.revision ?? 1) + 1,
+        ...(result.spec.content?.brand ? { title: result.spec.content.brand } : {}),
+        source: 'surface',
+      });
+      emit(job, { phase: 'write', message: `Wrote ${result.slug}.html (${result.scope} revision)`, at: Date.now() });
+      job.result = {
+        slug: result.slug,
+        sessionId: session.id,
+        notes: [`scope: ${result.scope}`, ...result.notes],
+        timings: {
+          writerMs: result.writerMs,
+          modelCalls: result.modelCalls,
+          totalMs: Date.now() - job.startedAt,
+        },
       };
       job.state = 'done';
       emit(job, { phase: 'end' });
@@ -648,6 +602,11 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
         ),
       },
       outDir: OUT_DIR,
+      /** Project scoping for recent-design history (novelty across runs). */
+      project: projectId(),
+      historyProjects: await listHistoryProjects(OUT_DIR),
+      /** Which selection algorithm is running — recorded for reproducibility. */
+      selectionVersion: SELECTION_VERSION,
     });
     return true;
   }
@@ -671,10 +630,10 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
   if (zipRoute && method === 'GET') {
     const slug = zipRoute[1]!;
     try {
-      const buf = await buildZip(slug);
+      const buf = await buildZip(OUT_DIR, slug);
       res.writeHead(200, {
         'Content-Type': 'application/zip',
-        'Content-Disposition': `attachment; filename="${slug}.zip"`,
+        'Content-Disposition': contentDisposition(`${slug}.zip`),
         'Content-Length': buf.byteLength,
         'Cache-Control': 'no-store',
       });
@@ -690,7 +649,7 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
     const slug = selfRoute[1]!;
     try {
       const html = await readFile(path.join(OUT_DIR, `${slug}.html`), 'utf8');
-      text(res, 200, await inlineAssets(html, slug), 'text/html; charset=utf-8');
+      text(res, 200, await inlineAssets(html, OUT_DIR), 'text/html; charset=utf-8');
     } catch {
       text(res, 404, 'not found');
     }
@@ -734,6 +693,15 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
         totalMs: s.metrics.totalMs,
         previewLabel: s.previewLabel,
         finalSlug: s.finalSlug ?? null,
+        batch: s.batch ?? 0,
+        versions: s.versions?.length ?? 0,
+        locks: s.locks?.length ?? 0,
+        selectedDirectionId: s.selectedDirectionId ?? null,
+        selectionVersion: s.selectionVersion ?? 'unknown',
+        /** Diversity of the CURRENT batch — targets and whether they were met. */
+        diversity: s.diversity
+          ? { met: s.diversity.met, achieved: s.diversity.achieved, targets: s.diversity.targets }
+          : null,
       })),
     });
     return true;
@@ -747,22 +715,47 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
     return true;
   }
 
-  /** Record the human's choice and locks. Deliberately model-free. */
+  /**
+   * Record the human's choice and locks. Deliberately model-free.
+   *
+   * Locks arrive as `{name, value?, fromIndex}` (or a bare axis name, resolved
+   * against the card they came from). Each is bound to an EXPLICIT value and
+   * an explicit source direction, then validated for unknown names and
+   * incompatible combinations — with an explanation, never silently dropped.
+   */
   const selectRoute = /^\/api\/sessions\/(ses_[a-z0-9]+)\/select$/.exec(p);
   if (selectRoute && method === 'POST') {
     const s = await loadSession(OUT_DIR, selectRoute[1]!);
     if (!s) return json(res, 404, { error: 'session not found' }), true;
     try {
-      const body = (await readBody(req)) as { index?: number; locks?: string[] };
+      const body = (await readBody(req)) as {
+        index?: number;
+        locks?: (string | { name: string; value?: string; fromIndex?: number })[];
+      };
       const index = typeof body.index === 'number' ? body.index : null;
-      const locks = Array.isArray(body.locks) ? body.locks.filter((x) => typeof x === 'string') : s.locks;
       if (index !== null && !s.directions[index]) return json(res, 400, { error: 'no such direction' }), true;
+      let locks = s.locks;
+      if (Array.isArray(body.locks)) {
+        const inputs = body.locks.filter(
+          (x): x is string | { name: string; value?: string; fromIndex?: number } =>
+            typeof x === 'string' || (typeof x === 'object' && x !== null && typeof x.name === 'string'),
+        );
+        locks = normalizeLocks(s, inputs, index ?? s.selectedIndex);
+        // Compatibility (composition vs blueprint, etc.) is checked here, not
+        // discovered later at regeneration time.
+        assertLocksAreCompatible(locks);
+      }
       s.selectedIndex = index;
+      if (index !== null) s.selectedDirectionId = s.directions[index]?.id ?? null;
       s.locks = locks;
       s.history.push({
         at: new Date().toISOString(),
         event: 'selected',
-        detail: `direction ${index}${locks.length ? `, locked ${locks.join('+')}` : ''}`,
+        detail:
+          `direction ${index}` +
+          (locks.length
+            ? `, locked ${locks.map((l) => `${l.name}=${l.value} (from #${l.fromIndex + 1})`).join('; ')}`
+            : ''),
       });
       await saveSession(OUT_DIR, s);
       json(res, 200, { session: s });
@@ -782,16 +775,23 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
     const s = await loadSession(OUT_DIR, regenRoute[1]!);
     if (!s) return json(res, 404, { error: 'session not found' }), true;
     try {
-      const body = (await readBody(req)) as { locks?: string[]; fromIndex?: number; count?: number; seed?: number };
+      const body = (await readBody(req)) as {
+        locks?: (string | { name: string; value?: string; fromIndex?: number })[];
+        fromIndex?: number;
+        count?: number;
+        seed?: number;
+      };
       const updated = await regenerateSession(OUT_DIR, s, {
-        ...(Array.isArray(body.locks) ? { locks: body.locks.filter((x) => typeof x === 'string') } : {}),
+        ...(Array.isArray(body.locks) ? { locks: body.locks } : {}),
         ...(typeof body.fromIndex === 'number' ? { fromIndex: body.fromIndex } : {}),
         ...(typeof body.count === 'number' ? { count: body.count } : {}),
         ...(typeof body.seed === 'number' ? { seed: body.seed } : {}),
       });
       json(res, 200, { session: updated });
     } catch (err) {
-      json(res, 400, { error: err instanceof Error ? err.message : 'bad request' });
+      const message = err instanceof Error ? err.message : 'bad request';
+      // Lock problems are a 400 with the explanation the human can act on.
+      json(res, 400, { error: message, lockError: err instanceof LockError });
     }
     return true;
   }
@@ -802,13 +802,23 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
     const s = await loadSession(OUT_DIR, finRoute[1]!);
     if (!s) return json(res, 404, { error: 'session not found' }), true;
     try {
-      const body = (await readBody(req)) as { index?: number; finalCopy?: boolean; userImages?: DesignRequest['userImages'] };
+      const body = (await readBody(req)) as {
+        index?: number;
+        finalCopy?: boolean;
+        images?: { enabled?: boolean; count?: number; preset?: string; steps?: number; cfg?: number; seed?: number };
+        userImages?: DesignRequest['userImages'];
+      };
       const index = typeof body.index === 'number' ? body.index : (s.selectedIndex ?? 0);
       if (!s.directions[index]) return json(res, 400, { error: 'no such direction' }), true;
+      const userImages = readUserImages(body.userImages);
+      /* UI uploads live under the output directory (uploads/…); paths coming
+         from the composer resolve inside FORGE_USER_IMAGE_DIR as before. */
+      const uploadsOnly = userImages.length > 0 && userImages.every((u) => u.path.startsWith('uploads/'));
       const job = await startFinalizeJob(s, index, {
         finalCopy: body.finalCopy !== false,
-        userImages: readUserImages(body.userImages),
-        userImageRoot: USER_IMAGE_ROOT,
+        images: readImageOptions(body.images),
+        userImages,
+        userImageRoot: uploadsOnly ? OUT_DIR : USER_IMAGE_ROOT,
       });
       json(res, 202, { jobId: job.id, slug: job.slug });
     } catch (err) {
@@ -819,8 +829,10 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
 
   /**
    * "A revision of this design" — deliberately a separate endpoint from
-   * regenerating directions. This keeps the chosen design's identity and asks
-   * for a change to it.
+   * regenerating directions, and separate from "explore new directions".
+   * A scoped change to the chosen resolved spec: copy-only edits preserve
+   * layout, styling, seed and assets; visual edits preserve everything the
+   * request does not name. It never re-runs the decision or the selection.
    */
   const reviseRoute = /^\/api\/sessions\/(ses_[a-z0-9]+)\/revise$/.exec(p);
   if (reviseRoute && method === 'POST') {
@@ -828,23 +840,61 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
     if (!s) return json(res, 404, { error: 'session not found' }), true;
     if (!s.finalSlug) return json(res, 400, { error: 'finalize the direction first, then revise it' }), true;
     try {
-      const body = (await readBody(req)) as DesignRequest & { instructions?: string };
-      const parentSlug = s.finalSlug;
-      const parent = await getDesign(OUT_DIR, parentSlug);
-      if (!parent) return json(res, 404, { error: 'parent design not found' }), true;
+      const body = (await readBody(req)) as { instructions?: string; finalCopy?: boolean };
       const instructions = typeof body.instructions === 'string' ? body.instructions.trim() : '';
       if (!instructions) return json(res, 400, { error: 'instructions are required' }), true;
-      const job = await startJob({
-        brief: parent.spec.brief,
-        instructions,
-        parentSlug,
-        decider: body.decider ?? 'auto',
-        noCopy: body.copy === false,
-        images: readImageOptions(body.images),
-      });
+      const job = await startReviseJob(s, instructions, body.finalCopy !== false);
       json(res, 202, { jobId: job.id, slug: job.slug });
     } catch (err) {
       json(res, 400, { error: err instanceof Error ? err.message : 'bad request' });
+    }
+    return true;
+  }
+
+  /**
+   * Image import: upload a real photograph, then assign it to a slot when
+   * finalizing. Local files only (no URL fetching), magic-byte validated,
+   * written under the output directory so exports can carry it.
+   */
+  if (p === '/api/uploads' && method === 'POST') {
+    try {
+      const body = (await readBody(req, 16 * 1024 * 1024)) as {
+        name?: string;
+        dataUrl?: string;
+        alt?: string;
+        credit?: string;
+        license?: string;
+      };
+      if (typeof body.dataUrl !== 'string' || !/^data:image\/(png|jpeg|webp|gif);base64,/.test(body.dataUrl)) {
+        return json(res, 400, { error: 'dataUrl must be a base64 PNG, JPEG, WebP or GIF data URL' }), true;
+      }
+      const match = /^data:image\/(png|jpeg|webp|gif);base64,(.*)$/.exec(body.dataUrl)!;
+      const bytes = Buffer.from(match[2]!, 'base64');
+      if (!bytes.length) return json(res, 400, { error: 'the decoded image is empty' }), true;
+      const size = imageSize(bytes);
+      if (size.format === 'unknown') {
+        return json(res, 400, { error: 'that file is not a PNG, JPEG, WebP or GIF (checked the header bytes)' }), true;
+      }
+      const ext = { png: 'png', jpeg: 'jpg', webp: 'webp', gif: 'gif', unknown: 'bin' }[size.format];
+      const base = slugify((body.name ?? 'upload').replace(/\.[a-z0-9]+$/i, '')) || 'upload';
+      const dir = path.join(OUT_DIR, 'uploads');
+      await mkdir(dir, { recursive: true });
+      const name = `${base}-${randomUUID().slice(0, 8)}.${ext}`;
+      await writeFile(path.join(dir, name), bytes);
+      json(res, 201, {
+        path: `uploads/${name}`,
+        root: OUT_DIR,
+        bytes: bytes.length,
+        width: size.width,
+        height: size.height,
+        format: size.format,
+        alt: typeof body.alt === 'string' ? body.alt : '',
+        credit: typeof body.credit === 'string' ? body.credit : '',
+        license: typeof body.license === 'string' ? body.license : '',
+        note: 'assign this path to a slot when finalizing — slots this layout renders are listed on each direction card',
+      });
+    } catch (err) {
+      json(res, 400, { error: err instanceof Error ? err.message : 'upload failed' });
     }
     return true;
   }
@@ -962,7 +1012,10 @@ const server = http.createServer((req, res) => {
 
       /* Live preview. The path is structured so a page's RELATIVE references
          (fonts/, assets/) resolve without rewriting the HTML: a page served at
-         /preview/<id>/ finds its fonts at /preview/<id>/fonts/. */
+         /preview/<id>/ finds its fonts at /preview/<id>/fonts/.
+         Batch paths are explicit — `/preview/<sid>/b2/1` is the SECOND batch's
+         second direction and keeps resolving after later regenerations, so a
+         saved preview link never breaks. */
       const preview = /^\/preview\/([a-z0-9_-]+)\/(.*)$/.exec(p);
       if (preview) {
         const id = preview[1]!;
@@ -983,13 +1036,30 @@ const server = http.createServer((req, res) => {
         }
         if (rest === '' || rest === 'index.html') {
           if (await serveFile(res, path.join(OUT_DIR, `${id}.html`))) return;
-          // A session's directions are numbered files under previews/<id>/.
+          const s = await loadSession(OUT_DIR, id);
+          if (s && (await serveFile(res, path.join(OUT_DIR, s.previewDir, '0.html')))) return;
+          // Legacy sessions predate batch directories.
           if (await serveFile(res, path.join(OUT_DIR, 'previews', id, '0.html'))) return;
           text(res, 404, 'not found');
           return;
         }
-        // A specific direction in a session: /preview/<sessionId>/<n>
-        if (/^\d+$/.test(rest) && (await serveFile(res, path.join(OUT_DIR, 'previews', id, `${rest}.html`)))) return;
+        // An explicit batch: /preview/<sessionId>/b<n>/<k>
+        const batched = /^b(\d+)\/(\d+)$/.exec(rest);
+        if (batched) {
+          const file = path.join(OUT_DIR, 'previews', id, `b${batched[1]}`, `${batched[2]}.html`);
+          if (await serveFile(res, file)) return;
+          text(res, 404, 'not found');
+          return;
+        }
+        // The current batch: /preview/<sessionId>/<k>
+        if (/^\d+$/.test(rest)) {
+          const s = await loadSession(OUT_DIR, id);
+          const dir = s?.previewDir ?? path.posix.join('previews', id);
+          if (await serveFile(res, path.join(OUT_DIR, dir, `${rest}.html`))) return;
+          if (await serveFile(res, path.join(OUT_DIR, 'previews', id, `${rest}.html`))) return;
+          text(res, 404, 'not found');
+          return;
+        }
         text(res, 404, 'not found');
         return;
       }

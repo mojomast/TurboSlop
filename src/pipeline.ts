@@ -15,18 +15,12 @@ import { decideWithFallback, type DeciderPreference } from './decider.js';
 import { compose } from './compose.js';
 import { fallbackContent, validateContentForBlueprint } from './content.js';
 import { buildDirections, type Direction, type Distributions } from './directions.js';
-import { imageSlotsFor, requiredModules } from './blueprint.js';
+import { requiredModules, resolveBlueprint } from './blueprint.js';
+import { availableModulesOf, assetAlt, contentDiagnostics, finalizeAssets, verifyAssetPlacement, type AssetSettings } from './assetplan.js';
+import { historyFeatures, projectId, recordHistory } from './history.js';
 import { writeContent } from './writer.js';
-import {
-  IMAGE_PRESETS,
-  generateAssets,
-  resolveImageService,
-  resolveImageSettings,
-  promptBudgetWarning,
-  type ImagePreset,
-} from './images.js';
+import { IMAGE_PRESETS, resolveImageSettings, type ImagePreset } from './images.js';
 import { renderHtml } from './render.js';
-import { ingestUserImages, type UserImageRequest } from './userassets.js';
 import { jevCost, writerCost } from './pricing.js';
 import type { DesignSpec } from './types.js';
 export type ProgressPhase = 'decide' | 'content' | 'images' | 'render' | 'write' | 'done' | 'error';
@@ -66,7 +60,7 @@ export interface RunOptions {
   onDirections?: (dirs: Direction[]) => void;
   noCopy: boolean;
   /** Real brand/product images. Preferred over anything generated. */
-  userImages?: UserImageRequest[];
+  userImages?: import('./userassets.js').UserImageRequest[];
   /** Directory the user image paths resolve against. */
   userImageRoot?: string;
   images: ImageOptions;
@@ -82,7 +76,8 @@ export interface RunResult {
   html: string;
   notes: string[];
   files: { html: string; spec: string; assets: string[] };
-  timings: { decideMs: number; writerMs: number; imageMs: number; totalMs: number };
+  /** Each stage measured separately: decide, write, assets, local render, total. */
+  timings: { decideMs: number; writerMs: number; imageMs: number; renderMs: number; totalMs: number };
 }
 
 export function slugify(input: string): string {
@@ -96,22 +91,10 @@ export function slugify(input: string): string {
 }
 
 /**
- * Alt text for generated artwork.
- *
- * It says what the image IS — including calling an enlarged 256px asset a
- * texture rather than letting it pass as a photograph — because alt text is
- * where that honesty actually reaches a reader.
+ * Alt text for generated artwork — now owned by the shared asset plan, so the
+ * CLI, sessions and exports all describe an image the same way.
  */
-export function assetAlt(kind: string, spec: DesignSpec, slot?: { role?: string; scale?: string }): string {
-  const emotion = spec.tokens.emotion ?? 'studio';
-  const texture = slot?.scale === 'texture' ? 'enlarged texture' : 'study';
-  const map: Record<string, string> = {
-    backdrop: `Abstract atmospheric ${texture} in a ${emotion} register`,
-    surface: `Surface ${texture} in a ${emotion} register`,
-    motif: `Geometric motif suggesting ${emotion}`,
-  };
-  return map[kind] ?? 'Generated decorative artwork';
-}
+export { assetAlt };
 
 /**
  * Compose the brief actually sent to the decider.
@@ -160,22 +143,48 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
     ((decided.response.answers.wants_dark_ground as { noul?: number } | undefined)?.noul ?? 0) > 0.6;
 
   const seed = opts.seed ?? Date.now() % 1_000_000;
-  const dirs = buildDirections({
+  const project = projectId();
+  /* Project history is an INPUT to selection: a single-design run avoids
+     repeating what this project recently resolved, from a snapshot taken
+     before the search so the run reproduces from (version, inputs, seed,
+     snapshot). */
+  const snapshot = await historyFeatures(opts.outDir, project);
+  const built = buildDirections({
     brief: briefForDecider,
     distributions,
     count: opts.directionCount ?? 6,
     seed,
     wantsDark,
     explore: opts.explore ?? 0.45,
+    history: snapshot.features,
+    // Offline runs write specimen content: only modules the specimen can
+    // honestly fill are eligible. With a writer configured every module is
+    // requested and compatibility is checked against the real content below.
+    ...(opts.noCopy ? { availableModules: availableModulesOf(fallbackContent(briefForDecider, [])) } : {}),
   });
+  const dirs = built.directions;
   opts.onDirections?.(dirs);
+  if (built.stats.generated) {
+    notes.push(
+      `selection: ${built.stats.structures} layouts × bounded styling = ${built.stats.generated} candidates → ` +
+        `${built.stats.afterContent} after de-duplication, near-duplicate rejection, history and content filters`,
+    );
+  }
+  if (dirs.length && !built.report.met) {
+    notes.push(
+      `diversity targets missed: ${built.report.shortfall.map((s) => `${s.target} (${s.got}/${s.wanted} — ${s.reason})`).join('; ')}`,
+    );
+  }
+  if (built.stats.historyRelaxed) {
+    notes.push('project history separation was relaxed: the recent-fingerprint filter would have starved this run');
+  }
 
-  const idx = Math.max(0, Math.min(dirs.length - 1, opts.directionIndex ?? 0));
-  const chosenDir = dirs[idx];
+  let idx = Math.max(0, Math.min(dirs.length - 1, opts.directionIndex ?? 0));
+  let chosenDir = dirs[idx];
   if (chosenDir) {
     say(
       'decide',
-      `Direction ${idx + 1}/${dirs.length}: ${chosenDir.blueprint.id} (${chosenDir.blueprint.lead}-led), fit ${chosenDir.fit.toFixed(3)}, novelty ${chosenDir.novelty.toFixed(2)}`,
+      `Direction ${idx + 1}/${dirs.length}: ${chosenDir.blueprint.id} (${chosenDir.blueprint.lead}-led), fit ${chosenDir.fit.toFixed(3)}, separation ${chosenDir.novelty.toFixed(2)}`,
     );
   }
 
@@ -236,9 +245,41 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
   // A blueprint that cannot be filled honestly is rejected, not faked.
   const usable = validateContentForBlueprint(written.content, required ?? []);
   if (!usable.ok) {
-    notes.push(
-      `direction ${spec.blueprint} needed ${usable.missing.join(', ')} which the brief did not supply — rendered the available modules instead`,
+    /* Content compatibility: prefer the best-fitting direction the written
+       content CAN fill, rather than rendering empty pricing tables or an
+       empty gallery to satisfy a pick. No model call: the set is stored. */
+    const available = availableModulesOf(written.content);
+    const eligible = dirs.find(
+      (d) => d.blueprint.id !== chosenDir?.blueprint.id && requiredModules(d.blueprint).every((m) => available.has(m)),
     );
+    if (eligible && chosenDir && !requiredModules(chosenDir.blueprint).every((m) => available.has(m))) {
+      notes.push(
+        `direction ${chosenDir.blueprint.id} needed ${usable.missing.join(', ')} which the brief did not supply — ` +
+          `switched to ${eligible.blueprint.id}, which the written content fills honestly (fit ${eligible.fit.toFixed(3)})`,
+      );
+      idx = dirs.indexOf(eligible);
+      chosenDir = eligible;
+      const recompose = compose(briefForDecider, decided, {
+        seed: directionSeedForLocal(seed, eligible.id),
+        direction: {
+          blueprint: eligible.blueprint.id,
+          palette: eligible.palette,
+          typography: eligible.typography,
+          effects: eligible.effects,
+          motion: eligible.motion,
+          density: eligible.density,
+          fit: eligible.fit,
+          novelty: eligible.novelty,
+          rationale: eligible.rationale,
+          alternatives: dirs.filter((_, i) => i !== idx).slice(0, 5).map((d) => ({ blueprint: d.blueprint.id, fit: d.fit })),
+        },
+      });
+      Object.assign(spec, recompose.spec);
+    } else {
+      notes.push(
+        `direction ${spec.blueprint} needed ${usable.missing.join(', ')} which the brief did not supply — rendered the available modules instead`,
+      );
+    }
   }
   // Always present: either written or the honest specimen.
   spec.content = written.content;
@@ -252,6 +293,10 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
   if (written.fallbackReason) {
     notes.push(`writer fell back to the specimen — ${written.fallbackReason}`);
   }
+  const blueprintForAssets = resolveBlueprint(spec.blueprint) ?? undefined;
+  if (blueprintForAssets) {
+    for (const d of contentDiagnostics(blueprintForAssets, written.content)) notes.push(d);
+  }
   say(
     'content',
     written.source === 'llm'
@@ -259,104 +304,67 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
       : 'Using specimen content',
   );
 
-  // ---- 3. images (optional, never fatal) ----------------------------------
-  if (opts.images.enabled) {
-    const service = resolveImageService();
-    if (!service) {
-      notes.push('images requested but no allowlisted image service is configured');
-      say('images', 'No image service configured — skipping');
-    } else {
+  // ---- 3. assets: ONE shared plan (supplied first, generate only what is left)
+  const assetSettings: AssetSettings = {
+    enabled: opts.images.enabled,
+    count: opts.images.count,
+    preset: opts.images.preset,
+    ...(opts.images.steps !== undefined ? { steps: opts.images.steps } : {}),
+    ...(opts.images.cfg !== undefined ? { cfg: opts.images.cfg } : {}),
+    ...(opts.images.seed !== undefined ? { seed: opts.images.seed } : {}),
+  };
+  if (blueprintForAssets && (assetSettings.enabled || opts.userImages?.length)) {
+    if (assetSettings.enabled) {
       const { steps, cfg, preset } = resolveImageSettings({
-        imagePreset: opts.images.preset,
-        ...(opts.images.steps !== undefined ? { imageSteps: opts.images.steps } : {}),
-        ...(opts.images.cfg !== undefined ? { imageCfg: opts.images.cfg } : {}),
+        imagePreset: assetSettings.preset,
+        ...(assetSettings.steps !== undefined ? { imageSteps: assetSettings.steps } : {}),
+        ...(assetSettings.cfg !== undefined ? { imageCfg: assetSettings.cfg } : {}),
       });
-      /* Only the places this direction actually renders. Asking for six images
-         for a page with two slots is how the baseline ended up with artwork on
-         disk and 0 <img> elements in the page. */
-      const slots = chosenDir ? imageSlotsFor(chosenDir.blueprint) : [];
-      const wanted = slots.length ? Math.min(opts.images.count, slots.length) : opts.images.count;
+      spec.meta.imageSteps = steps;
+      spec.meta.imageCfg = cfg;
       say(
         'images',
-        slots.length
-          ? `Filling ${wanted} of ${slots.length} slot(s): ${slots.slice(0, wanted).map((x) => x.id).join(', ')} — ${preset.label}`
-          : `Generating ${opts.images.count} image(s) — ${preset.label} (steps ${steps}, guidance ${cfg})`,
-        { index: 0, total: wanted },
+        `Shared asset plan for ${blueprintForAssets.id} — ${preset.label}, steps ${steps}, guidance ${cfg}`,
+        { index: 0, total: opts.images.count },
       );
-      try {
-        const run = await generateAssets(spec, {
-          count: wanted,
-          steps,
-          cfg,
-          ...(slots.length ? { slots } : {}),
-          ...(opts.images.seed !== undefined ? { seed: opts.images.seed } : {}),
-          outDir: opts.outDir,
-          slug: opts.slug,
-          service,
-          onProgress: (m) => say('images', m),
-        });
-        spec.assets = run.assets.map((a) => {
-          const warn = promptBudgetWarning(a.prompt);
-          if (warn) notes.push(warn);
-          const slot = slots.find((x) => x.id === a.slot);
-          return {
-            kind: a.kind,
-            slot: a.slot,
-            source: 'generated' as const,
-            file: path.relative(opts.outDir, a.file).split(path.sep).join('/'),
-            alt: assetAlt(a.kind, spec, slot),
-            credit: '',
-            license: '',
-            nativeWidth: 256,
-            nativeHeight: 256,
-            prompt: a.prompt,
-            seed: a.seed,
-            steps: a.steps,
-            cfg: a.cfg,
-            bytes: a.bytes,
-            seconds: a.seconds,
-          };
-        });
-        spec.meta.imageSteps = steps;
-        spec.meta.imageCfg = cfg;
-        spec.meta.imageCount = spec.assets.length;
-        spec.meta.imageMs = run.totalMs;
-        notes.push(
-          `images: ${spec.assets.length} filled of ${slots.length || opts.images.count} slot(s) at ${preset.label} ` +
-            `(steps ${steps}, guidance ${cfg}) in ${run.totalMs}ms`,
-        );
-        say('images', `${spec.assets.length} image(s) in ${run.totalMs}ms`);
-      } catch (err) {
-        notes.push(
-          `image generation failed — continuing without art: ${err instanceof Error ? err.message : String(err)}`,
-        );
-        say('images', 'Image generation failed — continuing without art');
-      }
     }
-  }
-
-  // ---- 3b. user-supplied images (always preferred over generated ones) ----
-  if (opts.userImages?.length) {
-    const slotIds = chosenDir ? imageSlotsFor(chosenDir.blueprint).map((x) => x.id) : [];
-    const ingested = await ingestUserImages({
-      outDir: opts.outDir,
-      slug: opts.slug,
-      root: opts.userImageRoot ?? process.cwd(),
-      requests: opts.userImages,
-      allowedSlots: slotIds,
-    });
-    notes.push(...ingested.notes);
-    if (ingested.assets.length) {
-      // A supplied image replaces whatever was generated for the same slot.
-      const taken = new Set(ingested.assets.map((a) => a.slot));
-      spec.assets = [...ingested.assets, ...spec.assets.filter((a) => !taken.has(a.slot))];
-      notes.push(`user images: ${ingested.assets.length} supplied (preferred over generated art)`);
-    }
+    const planned = await finalizeAssets(
+      {
+        spec,
+        blueprint: blueprintForAssets,
+        settings: assetSettings,
+        ...(opts.userImages?.length
+          ? { userImages: opts.userImages, userImageRoot: opts.userImageRoot ?? process.cwd() }
+          : {}),
+        outDir: opts.outDir,
+        slug: opts.slug,
+      },
+      null,
+      (m) => say('images', m),
+    );
+    spec.assets = planned.assets;
+    spec.meta.imageCount = planned.assets.filter((a) => a.source === 'generated').length;
+    spec.meta.imageMs = planned.imageMs;
+    notes.push(...planned.notes);
+    say('images', `${spec.assets.length} asset(s) placed, ${planned.imageMs}ms generating`);
+  } else if (assetSettings.enabled && !blueprintForAssets) {
+    notes.push('images requested but the blueprint could not be resolved — no requests were made');
   }
 
   // ---- 4. render + persist ------------------------------------------------
   say('render', 'Rendering…');
+  const renderStart = Date.now();
   const html = renderHtml(spec);
+  const renderMs = Date.now() - renderStart;
+
+  /* Placement is verified, not assumed: every asset must be in the slot it
+     was made for, or the run says so. */
+  const placement = verifyAssetPlacement(html, spec.assets);
+  if (!placement.ok) {
+    for (const issue of placement.issues) {
+      notes.push(`asset placement: slot "${issue.slot}" (${issue.file}) — ${issue.reason}`);
+    }
+  }
 
   await mkdir(opts.outDir, { recursive: true });
   const htmlFile = path.join(opts.outDir, `${opts.slug}.html`);
@@ -364,6 +372,16 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
   await writeFile(htmlFile, html, 'utf8');
   await writeFile(specFile, JSON.stringify(spec, null, 2), 'utf8');
   say('write', `Wrote ${path.basename(htmlFile)}`);
+
+  /* Record what this run actually resolved, so the next run in this project
+     can avoid it (project-scoped history). */
+  if (chosenDir) {
+    await recordHistory(
+      opts.outDir,
+      [{ features: chosenDir.features, source: `design:${opts.slug}`, seed: directionSeedForLocal(seed, chosenDir.id) }],
+      project,
+    );
+  }
 
   const totalMs = Date.now() - started;
   say('done', `Done in ${totalMs}ms`);
@@ -377,9 +395,20 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
       decideMs: decided.latencyMs,
       writerMs: written.latencyMs,
       imageMs: spec.meta.imageMs,
+      renderMs,
       totalMs,
     },
   };
+}
+
+/** Stable per-direction seed for a single-design run. */
+function directionSeedForLocal(seed: number, directionId: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < directionId.length; i++) {
+    h ^= directionId.charCodeAt(i);
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return ((h ^ Math.imul(seed, 0x9e3779b1)) >>> 0) % 2147483647;
 }
 
 /** Named presets, for the control surface to display. */

@@ -1,8 +1,10 @@
 # Layout diversity — findings and implementation
 
-**Revision:** `7bec1b6` · **Baseline measured at:** `48687b3`
-**Artefacts:** [`baseline/`](../baseline/) (the before-state) · [`after/`](../after/) (the after-state,
-with [`after/FINDINGS.md`](../after/FINDINGS.md) for the matched comparison)
+**Baseline measured at:** `48687b3` · **after-state measured at** `7bec1b6` · **current tree:** see
+[`docs/IMPLEMENTATION-REPORT.md`](IMPLEMENTATION-REPORT.md) for exact starting/final SHAs
+**Artefacts:** [`baseline/`](../baseline/) (the before-state) · [`after/`](../after/) (the matched
+comparison) · [`evidence/`](../evidence/) (the current corpus: direction sets, live-browser
+geometry, calibration, generated tables)
 
 ---
 
@@ -181,18 +183,44 @@ npm run sheet-shot -- --url http://127.0.0.1:4400 --out /tmp/sheet
 
 ---
 
-## 4. Structural fingerprints
+## 4. Structural and visual fingerprints
 
-Fingerprints exclude HTML length, class names, colour and copy — each of which can differ while the
-page reads identically. They are built from `lead | hero | nav | footer | columns | rhythm |
-section sequence`. Same-family blueprints sit ≈0.5–0.66 apart; different families ≈0.8–1.0. Those
-bands tune the minimum-separation thresholds. A test asserts all 19 blueprints have unique
-fingerprints and that the closest pair differs by at least 0.18.
+Fingerprints exclude copy and byte length — both can differ while a page reads
+identically. Since the diversity pass they describe the **resolved design**,
+not the catalog entry it started from (`src/fingerprint.ts`): composition
+(lead, hero, chrome, rhythm, block sequence), typography proportions
+(construction, measure, scale, weight, tracking, alignment, label style),
+imagery (treatment, motif, slot count and scale) and surface (tone, density,
+effects, motion). Two directions sharing a blueprint can then be far apart —
+and a palette swap alone can be near-duplicate.
 
-They are complemented by real measurement rather than replaced by it: `scripts/measure.ts` reports
-document width, horizontal overflow, first-screen blocks, `h1` size and line count, section
-heights, image counts and **upscale factors**, id uniqueness and anchor resolution from a live
-browser.
+Three distances carry the work, all weighted sums over that feature vector:
+
+| threshold | name | job |
+|---|---|---|
+| ≤ 0.06 | `NEAR_DUPLICATE` | explicit rejection inside the candidate pool |
+| ≥ 0.20 | `MIN_SEPARATION` | minimum distance between two members of one set |
+| ≥ 0.17 | `HISTORY_SEPARATION` | keeps a new run off what the project just made |
+
+`grayscaleDistance` drops the hue-only terms (effects, motion) so a set can be
+asked to differ *even in grayscale*. These are measurable separations within a
+set and against recent history — not a percentage of perceptual uniqueness and
+not a claim that any page is universally unique.
+
+**Calibration** (`scripts/calibrate.ts`, `evidence/calibration.json`): 465
+within-brief pairs of *measured pages* — same brief, so the content inventory
+is fixed and geometry differences are design differences. The rendered-geometry
+distance (section heights, hero height, headline size, first-screen shape)
+rises monotonically across the fingerprint bands (median 0.21 → 0.35 → 0.41),
+and pages with an identical section sequence measure within 0.04 of each other
+even when their styling differs. Pairs below the near-duplicate threshold are
+deliberately absent from the corpus — that is the enforcement working; the
+style-probe pages exist to calibrate the bands the selector removes.
+
+Complemented by real measurement rather than replaced by it:
+`scripts/measure.ts` reports document width, horizontal overflow, first-screen
+blocks, `h1` size and line count, section heights, image counts and **upscale
+factors**, id uniqueness and anchor resolution from a live browser.
 
 ---
 
@@ -209,39 +237,65 @@ browser.
 Thinking mode is off by default (see [`JEV-RESEARCH.md`](JEV-RESEARCH.md)); the writer leg is ~7 s
 and dominates.
 
+The current evidence corpus (`evidence/tables.md` §5) runs the **offline control** — local
+decider, specimen inventory: 1 model call per six-direction set, ~90–115 ms end to end per set,
+4–9 ms of that spent rendering all six previews locally. Candidate search is bounded at 2,394
+candidates per set. The second (inventory) call is the one that appears when a writer is
+configured; it is never paid per direction.
+
 ---
 
 ## 6. Tests
 
-**281 offline checks across 8 suites** (`npm test`) — no keys, no network, no GPU.
+Run `npm test` — 12 offline suites, no keys, no network, no GPU. The generated
+counts (passed / failed / skipped per suite) live in
+[`evidence/tables.md`](../evidence/tables.md) §8, produced from
+`evidence/tests.txt` by `scripts/report.ts`, so the number quoted here can
+never drift from the suite again.
 
-| Suite | Checks | Protects |
-|---|---|---|
-| `forge.test.ts` | 58 | blueprint + visual-blueprint validation (5,481 combinations), fingerprint uniqueness, every blueprint renders with resolving anchors, unique ids, the three hero recipes, typographic recipes, treatments, icons |
-| `images.test.ts` | 24 | payload validation, path-traversal refusal, PNG magic bytes, foreign-job filtering |
-| `zip.test.ts` | 10 | CRC-32 vectors, real `unzip` round-trips |
-| `motifs.test.ts` | 23 | determinism, element budgets, density, data-URI encoding |
-| `assets.test.ts` | 31 | frame composition, icon family consistency, escaping |
-| `fonts.test.ts` | 19 | every bundled file exists and is a real woff2, licences present, only used faces emitted |
-| `session.test.ts` | 22 | selection performs **no** model call and leaves the decision byte-identical; regeneration is deterministic and free; locks pin exactly their axes; previews are labelled; ids unique; anchors resolve |
-| `slots.test.ts` | 13 | slot derivation, the texture-vs-native rule, prompt budgets, header parsing, traversal refusal, slot-scoped resolution, supplied-beats-generated |
+| Suite | Protects |
+|---|---|
+| `forge.test.ts` | decision composition, composite scoring, confidence gates, catalog drift, blueprint + visual-blueprint validation, fingerprint uniqueness, every blueprint renders with resolving anchors, unique ids, the three hero recipes, typographic recipes, treatments, icons |
+| `images.test.ts` | payload validation, path-traversal refusal, PNG magic bytes, foreign-job filtering, busy/429 backoff |
+| `zip.test.ts` | CRC-32 vectors, real `unzip` round-trips (incl. Unicode names), DEFLATE vs STORE, traversal rejection, header-safe download filenames |
+| `motifs.test.ts` | determinism, element budgets, density, data-URI encoding |
+| `assets.test.ts` | frame composition, icon family consistency, escaping |
+| `fonts.test.ts` | every bundled file exists and is a real woff2, licences present, only used faces emitted |
+| `session.test.ts` | selection performs no model call and leaves the decision byte-identical; previews labelled, ids unique, anchors resolve; finalize writes a real design |
+| `slots.test.ts` | slot derivation, the texture-vs-native rule, prompt budgets, header parsing, traversal refusal, slot-scoped resolution, supplied-beats-generated |
+| `diversity.test.ts` | the explore targets on all seven baseline briefs across seeds, near-duplicate rejection, bounded search, project-scoped history, reproducibility from inputs + seed + snapshot |
+| `locks.test.ts` | locks bound to explicit values and source cards, blueprint/composition locks applied, invalid and incompatible locks explained, immutable previous batches |
+| `revision.test.ts` | copy-only revision preserves the resolved visual spec (the `data-metrics` → `story-origin` regression), visual edits touch only named axes, no re-decision |
+| `assetplan.test.ts` | zero slots ⇒ zero asset-service requests (controlled fixture), supplied images suppress generation, slot ownership by rendered variant, placement verification, ZIP export carries assets + fonts + licences |
 
-Three regression checks exist because of bugs found during this work: the affinity/catalog drift
-check, the palette-guardrail lightness check, and "no asset is ever referenced from a path outside
-the output".
+Regression checks that exist because of bugs found during this work: the
+affinity/catalog drift check, the palette-guardrail lightness check, "no asset
+is ever referenced from a path outside the output", copy-revision visual
+preservation, and the header-safe download filename check.
 
 ---
 
 ## 7. Remaining limitations
 
-1. **The `after/` corpus has no generated images.** The slot system is verified by tests and by
-   live API runs, but not by a photographed before/after image batch.
-2. **Three of four repeated runs of one brief still converge.** The direction set is diverse; a
-   single best-fit run is not, by design. Choosing among the six is what the contact sheet is for.
-3. **Fingerprints remain blueprint-derived.** Rendered geometry is now measured but is not fed back
-   into the diversity objective.
+1. **No live-service image batch in this environment.** Slot-aware planning, the zero-slot rule,
+   supplied-image precedence and placement verification are proven against a *controlled local
+   fixture* of the image-service API (every request counted) and by tests; the fixture is
+   labelled as fixture evidence wherever it appears, and a live-service batch still needs a
+   configured service to capture.
+2. **A single best-fit run still converges across repeats.** By design: direction 1 is the page
+   the brief most wants. The diversity lives in the SET — six directions spanning six
+   compositions, 3–4 headline constructions and 3–4 treatments, several distinct in grayscale
+   (`evidence/tables.md` §1) — and choosing among them is what the contact sheet is for.
+3. **Palette spread is bounded by the decision distribution.** The offline local decider's
+   marginals are peaked, so 54 directions used 3 of 11 palettes. Structure, typography and
+   treatment are what the enforced targets move; hue diversity moves when the distributions do
+   (live Jev returns a full distribution per axis to spread across).
 4. **Third-party image search is not implemented**, deliberately — user-supplied local images are
    the supported path, and a licensed search that cannot verify its licences would be worse than
    none.
-5. **The visual blueprint is derived, not decided.** It is deterministic and validated, but the
-   model has no say in it. Whether it should is an open question, not an oversight.
+5. **The visual blueprint is derived, not decided.** It is deterministic, validated and now
+   seed-varied per direction, but the model has no say in it. Whether it should is an open
+   question, not an oversight.
+6. **Live Jev and live writer paths are environment-gated.** This machine has no keys, so those
+   checks skip with a reason; everything else runs against the local decider and the specimen
+   inventory, which is the control the baseline itself used.

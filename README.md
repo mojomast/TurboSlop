@@ -126,10 +126,13 @@ Output of the pipeline above, at `256×256` artwork and all.
 **Every stage is optional.** No Jev key → a deterministic local decider. No LLM → canonical
 copy. No image service → CSS gradient fallbacks. The page always ships.
 
-See [`docs/JEV-RESEARCH.md`](docs/JEV-RESEARCH.md) for the decision-model research,
-[`docs/MODERN-CSS.md`](docs/MODERN-CSS.md) for the CSS feature set, and
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for how the layers fit together,
+[`docs/JEV-RESEARCH.md`](docs/JEV-RESEARCH.md) for the decision-model research,
+[`docs/MODERN-CSS.md`](docs/MODERN-CSS.md) for the CSS feature set,
 [`docs/LAYOUT-DIVERSITY.md`](docs/LAYOUT-DIVERSITY.md) for how page structure is chosen —
-including the measured baseline this work started from and the limitations that remain.
+including the measured baseline this work started from and the limitations that remain — and
+[`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT.md) for this pass's measurements,
+commands and requirement-to-evidence mapping.
 
 ---
 
@@ -430,18 +433,33 @@ platform's secret store. `.gitignore` covers `.env*`, `*.key`, `*.pem`.
 ## Testing
 
 ```bash
-npm test         # 281 checks across 8 suites, fully offline — no keys, no network, no GPU
+npm test         # 12 offline suites — no keys, no network, no GPU
 npm run typecheck
 ```
 
-| Suite | Checks | Covers |
-|---|---|---|
-| `test/forge.test.ts` | 18 | decision composition, composite scoring, confidence gates, catalog drift, renderer, modern-CSS emission |
-| `test/images.test.ts` | 19 | payload validation, path-traversal refusal, URL allowlist, PNG magic bytes, **foreign-job filtering**, busy/429 backoff, ambiguous submissions |
-| `test/zip.test.ts` | 10 | CRC-32 vectors, real `unzip` round-trips, DEFLATE vs STORE selection, traversal rejection |
+The authoritative counts (**passed / failed / skipped**, per suite and total) are *generated*
+from the captured run rather than hand-maintained: see
+[`evidence/tables.md`](evidence/tables.md) §8, produced by `scripts/report.ts` from
+`evidence/tests.txt`. The suites:
 
-The ZIP writer's output was additionally verified with Python's `zipfile` — an independent
-implementation — confirming valid CRCs and correct per-entry compression choices.
+| Suite | Covers |
+|---|---|
+| `test/forge.test.ts` | decision composition, composite scoring, confidence gates, catalog drift, blueprint + visual-blueprint validation, fingerprint uniqueness, anchors, hero recipes, typographic recipes, treatments, icons, renderer, modern-CSS emission |
+| `test/images.test.ts` | payload validation, path-traversal refusal, URL allowlist, PNG magic bytes, **foreign-job filtering**, busy/429 backoff, ambiguous submissions |
+| `test/zip.test.ts` | CRC-32 vectors, real `unzip` round-trips (incl. Unicode names), DEFLATE vs STORE, traversal rejection, header-safe download filenames |
+| `test/motifs.test.ts` | deterministic seeded motifs, element budgets, density, data-URI encoding |
+| `test/assets.test.ts` | frame composition, icon family consistency, escaping |
+| `test/fonts.test.ts` | every bundled file exists and is a real woff2, licences present, only used faces emitted |
+| `test/session.test.ts` | selection makes no model call, previews are labelled, ids unique, anchors resolve, finalize writes a real design |
+| `test/slots.test.ts` | slot derivation, texture-vs-native rule, prompt budgets, slot-scoped resolution, supplied-beats-generated |
+| `test/diversity.test.ts` | the explore targets on all seven baseline briefs across seeds, near-duplicate rejection, bounded search, project-scoped history, reproducibility |
+| `test/locks.test.ts` | locks bound to explicit values and source cards, blueprint/composition locks applied, invalid/incompatible locks explained, immutable previous batches |
+| `test/revision.test.ts` | copy-only revision preserves the resolved visual spec; visual edits touch only named axes; no re-decision |
+| `test/assetplan.test.ts` | zero slots ⇒ zero asset-service requests (controlled fixture), supplied images suppress generation, placement verification, ZIP carries assets + fonts + licences |
+
+Verification evidence (measured pages, screenshots, calibration, generated tables) lives in
+[`evidence/`](evidence/); the ZIP writer is additionally verified with Python's `zipfile` — an
+independent implementation — and with busybox, see `evidence/zip-unicode.txt`.
 
 ---
 
@@ -451,11 +469,16 @@ implementation — confirming valid CRCs and correct per-entry compression choic
 src/
   types.ts        zod schemas + inferred types — the contract
   catalog.ts      every value the machine may emit (the "deck")
-  blueprint.ts    the layout grammar: leads, variants, image slots, validation
+  blueprint.ts    the layout grammar: leads, variants, image slots, bounded variation, validation
+  fingerprint.ts  resolved-design fingerprints, distances, diversity targets + reports
+  history.ts      project-scoped recent-design history (a selection input)
   visual.ts       the visual blueprint: hero + typographic + section recipes, art direction
-  blocks.ts       one renderer per module, per variant
-  directions.ts   ranked alternatives -> scored, diverse direction sets
-  sessions.ts     direction sessions: the contact sheet, locks, finalize, revise
+  blocks.ts       one renderer per module, per variant (data-slot markers, honest empty states)
+  directions.ts   bounded candidate search -> enforced-diverse direction sets
+  sessions.ts     direction sessions: contact sheet, locks, immutable batches, finalize, revise
+  revise.ts       scope classification + catalog-only visual edits for revision
+  assetplan.ts    THE asset path: slot ownership, supplied-first, zero-slot rule, placement
+  export.ts       ZIP / self-contained / README export builders (shared with tests)
   motifs.ts       deterministic seeded SVG motifs, five families
   frames.ts       presentation frames rendered in code (browser, device, ticket, cover…)
   icons.ts        one consistent, original 24x24 line-icon family
@@ -473,14 +496,16 @@ src/
   pipeline.ts     the one definition of "generate a design"
   registry.ts     design history and lineage
   zip.ts          dependency-free ZIP writer
-  server.ts       control surface API + SSE
+  server.ts       control surface API + SSE, uploads, scoped revision
 public/
   index.html      the control surface (no build step)
 deploy/           systemd unit, nginx config
-docs/             research, CSS reference, layout-diversity findings, screenshots
-scripts/          measurement, matrix rendering, contact-sheet capture, font fetch
+docs/             research, CSS reference, layout-diversity findings, implementation report, screenshots
+scripts/          measurement, evidence generation, calibration, report tables, ZIP check, font fetch
 baseline/         the measured BEFORE-state: 33 screenshots, specs, structure, timings
 after/            the measured AFTER-state, plus the matched comparison in FINDINGS.md
+evidence/         the CURRENT corpus: raw.json, measure.json, calibration, tests, generated tables
+ARCHITECTURE.md   how the layers fit together — start here
 ```
 
 ### Why so few dependencies?

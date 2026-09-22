@@ -162,13 +162,23 @@ await test('selecting a direction performs no model call and changes no decision
   const before = JSON.stringify(session.decision.response);
   const s = (await loadSession(outDir, session.id))!;
   s.selectedIndex = 2;
-  s.locks = ['palette', 'typography'];
+  s.selectedDirectionId = s.directions[2]?.id ?? null;
+  // Locks are bound to an explicit value and the card it came from.
+  s.locks = [
+    { name: 'palette', value: s.directions[1]!.palette, fromIndex: 1 },
+    { name: 'typography', value: s.directions[1]!.typography, fromIndex: 1 },
+  ];
   s.history.push({ at: new Date().toISOString(), event: 'selected', detail: 'test' });
   await saveSession(outDir, s);
 
   const after = (await loadSession(outDir, session.id))!;
   assert.equal(after.selectedIndex, 2);
-  assert.deepEqual(after.locks, ['palette', 'typography']);
+  assert.deepEqual(
+    after.locks.map((l) => l.name),
+    ['palette', 'typography'],
+  );
+  assert.equal(after.locks[0]!.fromIndex, 1, 'each lock records the card its value came from');
+  assert.equal(after.locks[0]!.value, after.directions[1]!.palette, 'each lock records the exact value pinned');
   assert.equal(JSON.stringify(after.decision.response), before, 'the decision must be byte-identical');
   assert.deepEqual(
     after.directions.map((d) => d.blueprint),
@@ -228,9 +238,17 @@ await test('locks pin exactly the axes they name, and nothing else', async () =>
 
 await test('locks are recorded on the session for the next regeneration', async () => {
   const regen = await regenerateSession(outDir, session, { seed: 3, count: 6, locks: ['effects'] });
-  assert.deepEqual(regen.locks, ['effects']);
+  // Each lock is bound to an EXPLICIT value and the card it came from.
+  assert.equal(regen.locks.length, 1);
+  assert.equal(regen.locks[0]!.name, 'effects');
+  assert.equal(regen.locks[0]!.value, session.directions[0]!.effects, 'the value is the source card’s value');
+  assert.equal(regen.locks[0]!.fromIndex, 0, 'no card specified: the source defaults to index 0');
+  assert.ok(
+    regen.directions.every((d) => d.effects === regen.locks[0]!.value),
+    'every regenerated direction honours the locked effects value',
+  );
   const reloaded = (await loadSession(outDir, regen.id))!;
-  assert.deepEqual(reloaded.locks, ['effects']);
+  assert.deepEqual(reloaded.locks, regen.locks);
 });
 
 /* ------------------------------------------------------------------ *
@@ -248,7 +266,12 @@ await test('finalizing writes a real design with bundled fonts and no remote req
 
   const json = JSON.parse(await readFile(path.join(outDir, 'final-check.spec.json'), 'utf8')) as typeof spec;
   assert.equal(json.blueprint, spec.blueprint);
-  assert.equal(json.seed, s.seed, 'the seed must be persisted so the direction can be reproduced');
+  assert.equal(
+    json.seed,
+    s.directions[0]!.seed,
+    'the DIRECTION seed must be persisted so motifs, frames and section recipes reproduce exactly',
+  );
+  assert.notEqual(json.seed, s.seed, 'each direction gets its own seed so a batch does not share one decoration');
   assert.ok(json.direction, 'selection rationale must be persisted');
 });
 

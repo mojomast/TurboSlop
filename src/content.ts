@@ -489,7 +489,13 @@ export function fallbackContent(brief: string, axes: FallbackAxis[]): Content {
     footerNote: 'Specimen content. The design, not the words.',
 
     ticker: axes.slice(0, 6).map((a) => pretty(a.axis)),
-    pullQuote: undefined,
+    /* The specimen's quote is about the tool that made it — honest content for
+       an honest subject, so a quote-bearing blueprint is fillable offline too
+       and the diversity targets are not quietly starved by the fallback. */
+    pullQuote: {
+      text: 'Deciding is cheap. Generating is not — so one decision and one inventory write fill six directions here.',
+      attribution: 'the specimen, on how it was made',
+    },
     process: [
       { name: 'Decide', detail: 'Jev chooses every axis from the catalog and returns calibrated confidence.' },
       { name: 'Write', detail: 'A language model writes the content in the register the design selected.' },

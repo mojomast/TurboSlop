@@ -74,6 +74,14 @@ export interface TypoRecipe {
   /** Headline weight, layered on the typeface's own. */
   weight: number;
   tracking: string;
+  /**
+   * Relative width, in percent — the variable font's `wdth` axis via
+   * `font-stretch`. Bundled faces without a width axis ignore it, which is the
+   * legible fallback rather than a failure.
+   */
+  width: number;
+  /** Line-breaking strategy for display type. */
+  wrap: 'balance' | 'pretty' | 'wrap';
   /** False renders the headline as an outline — only for very large type. */
   fill: boolean;
   /** Letter-by-letter or word-by-word spacing for the poster construction. */
@@ -123,6 +131,8 @@ interface TypoVoice {
   scale: number;
   weight: number;
   tracking: string;
+  width: number;
+  wrap: TypoRecipe['wrap'];
   fill: boolean;
   lineGap: string;
 }
@@ -131,28 +141,47 @@ const TYPO_VOICES: Record<string, TypoVoice> = {
   /** Poster: enormous, tight, stacked, all-fill. The biggest type on the page. */
   poster: {
     construction: 'stacked', measure: '62ch', alignment: 'start', labelStyle: 'caps-rule',
-    scale: 1.22, weight: 800, tracking: '-0.045em', fill: true, lineGap: '0.88',
+    scale: 1.22, weight: 800, tracking: '-0.045em', width: 92, wrap: 'balance', fill: true, lineGap: '0.88',
   },
   /** Literary: measured, centered on its own axis, with a ruled label. */
   literary: {
     construction: 'run-on', measure: '64ch', alignment: 'start', labelStyle: 'rule',
-    scale: 1.02, weight: 600, tracking: '-0.02em', fill: true, lineGap: '1.06',
+    scale: 1.02, weight: 600, tracking: '-0.02em', width: 100, wrap: 'pretty', fill: true, lineGap: '1.06',
   },
   /** Friendly: big but open, occasionally edged for play. */
   friendly: {
     construction: 'broken', measure: '66ch', alignment: 'start', labelStyle: 'bracket',
-    scale: 1.1, weight: 800, tracking: '-0.025em', fill: true, lineGap: '0.98',
+    scale: 1.1, weight: 800, tracking: '-0.025em', width: 105, wrap: 'balance', fill: true, lineGap: '0.98',
   },
   /** Technical: condensed caps, monospaced labels, everything annotated. */
   technical: {
     construction: 'caps', measure: '74ch', alignment: 'start', labelStyle: 'bracket',
-    scale: 0.96, weight: 700, tracking: '0.005em', fill: true, lineGap: '1',
+    scale: 0.96, weight: 700, tracking: '0.005em', width: 87, wrap: 'wrap', fill: true, lineGap: '1',
   },
   /** Restrained: quiet, wide measure, generous leading, occasional outline. */
   restrained: {
     construction: 'stacked', measure: '58ch', alignment: 'start', labelStyle: 'eyebrow',
-    scale: 0.92, weight: 300, tracking: '-0.01em', fill: true, lineGap: '1.04',
+    scale: 0.92, weight: 300, tracking: '-0.01em', width: 100, wrap: 'pretty', fill: true, lineGap: '1.04',
   },
+};
+
+/**
+ * Explicit compatibility rules for typographic recipes.
+ *
+ * Written down (rather than implied by whichever branch fired last) so a new
+ * construction cannot be introduced without stating what it needs to stay
+ * legible. `validateVisualBlueprint` checks these on every render.
+ */
+export const TYPO_COMPAT: Record<HeadlineConstruction, { minMeasureCh: number; minScale?: number; maxScale?: number }> = {
+  /* An outline headline is only readable when it is big and the measure is
+     wide enough for the stroke to carry the shape. */
+  outline: { minMeasureCh: 60, minScale: 0.9 },
+  /* All-caps at poster scale becomes a wall; the recipe caps it. */
+  caps: { minMeasureCh: 54, maxScale: 1.15 },
+  /* Tight stacked display needs room to break across lines. */
+  stacked: { minMeasureCh: 54 },
+  'run-on': { minMeasureCh: 54 },
+  broken: { minMeasureCh: 54 },
 };
 
 /** Which voice a catalog typeface uses. Mirrors fonts.ts's direction mapping. */
@@ -193,11 +222,25 @@ export function typoRecipeFor(typefaceId: string, lead: Lead, density: string): 
     t.fill = false;
     t.construction = 'outline';
     if (parseFloat(t.measure) < 62) t.measure = '64ch';
+    // Outline is a display effect: keep it at or above the size where a
+    // 1.25px stroke still reads as a letter rather than a hairline.
+    if (t.scale < 0.9) t.scale = 0.9;
   }
   // A data-led page should not set its figures in a poster construction.
   if (lead === 'data') {
     t.construction = 'caps';
     t.scale = Math.min(t.scale, 1);
+  }
+
+  /* Explicit compatibility rules: whatever the branches above produced, the
+     recipe has to satisfy TYPO_COMPAT before it can be rendered. */
+  const rule = TYPO_COMPAT[t.construction];
+  const ch = parseFloat(t.measure);
+  if (rule) {
+    if (ch < rule.minMeasureCh) t.measure = `${rule.minMeasureCh}ch`;
+    if (rule.minScale !== undefined && t.scale < rule.minScale) t.scale = rule.minScale;
+    if (rule.maxScale !== undefined && t.scale > rule.maxScale) t.scale = rule.maxScale;
+    if (t.construction === 'outline') t.fill = false;
   }
   return t;
 }
@@ -258,8 +301,10 @@ function sectionRecipeFor(
 /* ------------------------------------------------------------------ *
  * Derived whole-direction choices
  * ------------------------------------------------------------------ */
-/** Which image treatment suits a brief, without ever hurting legibility. */
-function treatmentFor(lead: Lead, emotion: string, hasImages: boolean): ImageTreatment {
+/** Which image treatment suits a brief, without ever hurting legibility.
+ *  Exported for the fingerprint layer, which must see the SAME choice the
+ *  renderer will make. */
+export function treatmentFor(lead: Lead, emotion: string, hasImages: boolean): ImageTreatment {
   if (!hasImages) return 'plain';
   if (lead === 'image') return emotion === 'mystery' ? 'layered' : 'shaped';
   if (lead === 'story' || lead === 'catalogue') return 'textwrap';
@@ -358,6 +403,24 @@ export function validateVisualBlueprint(vb: VisualBlueprint): VisualIssue[] {
   if (!Number.isFinite(vb.typo.scale) || vb.typo.scale < 0.6 || vb.typo.scale > 1.6) {
     add('scale', `headline scale ${vb.typo.scale} is outside 0.6..1.6`);
   }
+  if (!Number.isFinite(vb.typo.width) || vb.typo.width < 75 || vb.typo.width > 125) {
+    add('width', `headline width ${vb.typo.width}% is outside 75..125`);
+  }
+
+  /* The explicit compatibility rules, enforced rather than hoped for. */
+  const compat = TYPO_COMPAT[vb.typo.construction];
+  if (compat) {
+    const ch = parseFloat(vb.typo.measure);
+    if (Number.isFinite(ch) && ch < compat.minMeasureCh) {
+      add('typo-compat', `a "${vb.typo.construction}" headline needs at least ${compat.minMeasureCh}ch, got ${vb.typo.measure}`);
+    }
+    if (compat.minScale !== undefined && vb.typo.scale < compat.minScale) {
+      add('typo-compat', `a "${vb.typo.construction}" headline needs scale ≥ ${compat.minScale}, got ${vb.typo.scale}`);
+    }
+    if (compat.maxScale !== undefined && vb.typo.scale > compat.maxScale) {
+      add('typo-compat', `a "${vb.typo.construction}" headline needs scale ≤ ${compat.maxScale}, got ${vb.typo.scale}`);
+    }
+  }
 
   // An outline headline is only legible at large sizes on a page with room.
   if (!vb.typo.fill && parseFloat(vb.typo.measure) < 60) {
@@ -439,8 +502,23 @@ export function visualCss({ vb, motif, fg, bg }: VisualCssInput): string {
   lines.push(`  --head-weight: ${t.weight};`);
   lines.push(`  --head-tracking: ${t.tracking};`);
   lines.push(`  --head-gap: ${t.lineGap};`);
+  lines.push(`  --head-width: ${t.width}%;`);
+  lines.push(`  --head-wrap: ${t.wrap};`);
   lines.push(`  --measure: ${t.measure};`);
+  /* Hierarchy: the recipe's scale shapes the WHOLE heading ramp, not just the
+     h1 — a poster recipe blows up h2s too, a restrained one keeps them quiet. */
+  lines.push(`  --h2-scale: ${(1 + (t.scale - 1) * 0.45).toFixed(3)};`);
+  lines.push(`  --h3-scale: ${(1 + (t.scale - 1) * 0.25).toFixed(3)};`);
   lines.push(`}`);
+
+  /* Typography proportions: width (the variable font's wdth axis via
+     font-stretch — ignored, legibly, by faces without one) and the display
+     line-breaking strategy. */
+  lines.push(`.display, h1 { font-stretch: var(--head-width); }`);
+  lines.push(`.display, h1, .hgroup h2, .masthead { text-wrap: var(--head-wrap); }`);
+  lines.push(`h2 { font-size: calc(var(--fs-h2) * var(--h2-scale)); font-stretch: var(--head-width); }`);
+  lines.push(`h3 { font-size: calc(var(--fs-h3, 1.05rem) * var(--h3-scale)); }`);
+  lines.push(`.display, h1, h2, h3 { word-break: normal; line-break: auto; overflow-wrap: anywhere; }`);
 
   /* Headline constructions. Each changes how the SAME words are built, which is
      what makes two pages sharing a typeface still read differently. */

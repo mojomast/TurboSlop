@@ -320,6 +320,253 @@ export const BLUEPRINTS: Blueprint[] = [
 export const BLUEPRINT_BY_ID = Object.fromEntries(BLUEPRINTS.map((b) => [b.id, b]));
 
 /* ------------------------------------------------------------------ *
+ * Bounded variation — composable layouts from a blueprint
+ *
+ * A blueprint is a constraint set, not a finished page: two directions that
+ * share one can still differ in hero geometry, block variant, section order,
+ * navigation, rhythm and measure. Variation here is BOUNDED and VALIDATED —
+ * every edit is checked against `validateBlueprint`, and a variant that would
+ * break a lead, a chrome rule or an image rule is discarded rather than
+ * rendered.
+ *
+ * ## Why the id carries the variation
+ *
+ * A variant's id is `<base>~<h><bucket>` where `h` is a hash of the session
+ * seed and the base id, and `bucket` is the explore dial rounded to 0-4. The
+ * variation is therefore a PURE function of the id: `resolveBlueprint` re-runs
+ * the same edits from the same rng and rebuilds the identical layout. A spec
+ * on disk, an export opened next week, or a preview link saved yesterday all
+ * resolve to the layout that produced them — no registry, no hidden state.
+ * ------------------------------------------------------------------ */
+
+/** Exploratory edit budget per bucket (0 = the untouched blueprint). */
+const VARIANT_BUCKETS = 4;
+
+/** Deterministic rng, identical to directions.ts's mulberry32 by design. */
+function rngFor(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const pick = <T>(arr: readonly T[], r: () => number): T => arr[Math.floor(r() * arr.length) % arr.length]!;
+
+/** Hero variants each lead may draw its first screen with, respecting slots. */
+const HERO_CHOICES: Record<Lead, readonly HeroVariant[]> = {
+  statement: ['display', 'split', 'panel', 'poster', 'compact'],
+  product: ['product-demo', 'split', 'compact', 'panel'],
+  catalogue: ['compact', 'index', 'split', 'media'],
+  story: ['editorial-figure', 'split', 'dateline', 'display', 'media'],
+  date: ['dateline', 'compact', 'split', 'media'],
+  data: ['compact', 'panel', 'split', 'index'],
+  image: ['media', 'editorial-figure', 'poster', 'display'],
+  offer: ['split', 'compact', 'panel', 'poster'],
+};
+
+/** Heroes that require at least one image slot. */
+const SLOT_HEROES: readonly HeroVariant[] = ['media', 'editorial-figure', 'product-demo'];
+
+/** Widths the grid may take; columns themselves stay as the blueprint set them. */
+const MAX_WIDTHS = ['76rem', '80rem', '84rem', '88rem', '92rem', '96rem', '100rem'] as const;
+
+export interface VaryOptions {
+  /** 0 = untouched, 1 = the full bounded edit budget. */
+  explore: number;
+}
+
+/**
+ * Does this layout still satisfy its own validation rules?
+ * Variation is never allowed to emit an invalid blueprint.
+ */
+function valid(bp: Blueprint): boolean {
+  return validateBlueprint(bp).length === 0;
+}
+
+/**
+ * Apply bounded variation to a blueprint.
+ *
+ * Deterministic in (base, seed, explore): the same triple always yields the
+ * same layout, which is what makes a variant id resolvable back to the exact
+ * blueprint that rendered it.
+ */
+export function varyBlueprint(base: Blueprint, seed: number, opts: VaryOptions): Blueprint {
+  const bucket = Math.max(0, Math.min(VARIANT_BUCKETS, Math.round(opts.explore * VARIANT_BUCKETS)));
+  if (bucket === 0) return base;
+
+  const r = rngFor(seed);
+  const work: Blueprint = {
+    ...base,
+    sections: base.sections.map((x) => ({ ...x })),
+    grid: { ...base.grid },
+  };
+  let edits = 0;
+  const budget = bucket; // 1..4 bounded edits
+
+  const commit = (apply: () => void): boolean => {
+    const before = JSON.stringify(work);
+    apply();
+    if (valid(work)) return true;
+    Object.assign(work, JSON.parse(before) as Blueprint);
+    return false;
+  };
+
+  /* 1 — block variant swaps: the same module, drawn as a different shape. */
+  if (edits < budget && r() < 0.85) {
+    commit(() => {
+      const i = Math.floor(r() * work.sections.length);
+      const sec = work.sections[i]!;
+      const options = BLOCK_VARIANTS[sec.module].filter((v) => v !== sec.variant);
+      if (options.length) {
+        const next = pick(options, r);
+        work.sections[i] = { ...sec, variant: next };
+        edits++;
+      }
+    });
+  }
+
+  /* 2 — section order: move one section, never the lead-critical opener. */
+  if (edits < budget && r() < 0.8) {
+    commit(() => {
+      const first = work.sections[0]!;
+      const movable = work.sections.length > 2 ? work.sections.slice(1) : [];
+      if (movable.length >= 2) {
+        const from = 1 + Math.floor(r() * (work.sections.length - 1));
+        const to = 1 + Math.floor(r() * (work.sections.length - 1));
+        if (from !== to) {
+          const [moved] = work.sections.splice(from, 1);
+          work.sections.splice(to, 0, moved!);
+          work.sections[0] = first; // the opener never drifts
+          edits++;
+        }
+      }
+    });
+  }
+
+  /* 3 — hero geometry: a different first screen for the same content. */
+  if (edits < budget && r() < 0.75) {
+    commit(() => {
+      const options = HERO_CHOICES[base.lead].filter((h) => {
+        if (h === base.hero) return false;
+        const modules = work.sections.map((s) => s.module);
+        if (h === 'index' && !modules.includes('items')) return false;
+        if (SLOT_HEROES.includes(h) && work.imageSlots === 0) return false;
+        if (h === 'product-demo' && !modules.includes('items') && !modules.includes('features')) return false;
+        return true;
+      });
+      if (options.length) {
+        work.hero = pick(options, r);
+        edits++;
+      }
+    });
+  }
+
+  /* 4 — navigation and footer: chrome is part of the composition. */
+  if (edits < budget && r() < 0.7) {
+    commit(() => {
+      if (r() < 0.5) {
+        const options = NAV_VARIANTS.filter((n) => {
+          if (n === base.nav) return false;
+          if (n === 'none' && (work.sections.length > 4 || work.footer === 'masthead')) return false;
+          return true;
+        });
+        if (options.length) {
+          work.nav = pick(options, r);
+          edits++;
+        }
+      } else {
+        const options = FOOTER_VARIANTS.filter((f) => f !== base.footer);
+        if (options.length) {
+          work.footer = pick(options, r);
+          edits++;
+        }
+      }
+    });
+  }
+
+  /* 5 — rhythm and measure: how much room the page takes. */
+  if (edits < budget && r() < 0.7) {
+    commit(() => {
+      if (r() < 0.55) {
+        const idx = RHYTHMS.indexOf(base.rhythm);
+        const step = r() < 0.5 ? -1 : 1;
+        const next = RHYTHMS[Math.max(0, Math.min(RHYTHMS.length - 1, idx + step))];
+        if (next && next !== work.rhythm) {
+          work.rhythm = next;
+          edits++;
+        }
+      } else {
+        work.grid.maxWidth = pick(MAX_WIDTHS.filter((w) => w !== base.grid.maxWidth), r);
+        edits++;
+      }
+    });
+  }
+
+  /* 6 — module selection: add one section the brief can honestly fill.
+     Content availability is enforced at SELECTION time (a candidate whose
+     modules the inventory cannot fill is dropped there), so this stays a pure
+     function of the id. */
+  if (edits < budget && work.sections.length < 7 && r() < 0.5) {
+    commit(() => {
+      const present = new Set(work.sections.map((s) => s.module));
+      const options = MODULES.filter((m) => !present.has(m));
+      if (options.length) {
+        const module = pick(options, r);
+        const variant = pick(BLOCK_VARIANTS[module], r);
+        const at = Math.min(work.sections.length, 1 + Math.floor(r() * work.sections.length));
+        work.sections.splice(at, 0, { module, variant });
+        edits++;
+      }
+    });
+  }
+
+  if (JSON.stringify(work) === JSON.stringify(base)) return base;
+
+  /* The id carries the exact seed the edits drew from, so `resolveBlueprint`
+     re-runs the identical rng and rebuilds this identical layout. */
+  const h = (seed >>> 0).toString(16).padStart(4, '0').slice(-8);
+  return {
+    ...work,
+    id: `${base.id}~${h}${bucket}`,
+    label: `${base.label} · variant ${bucket}`,
+    family: base.family,
+  };
+}
+
+/** Parse a variant id back into its base id and variation seed, if it is one. */
+export function parseVariantId(id: string): { base: string; seed: number; explore: number } | null {
+  const m = /^([a-z0-9-]+)~([0-9a-f]{4,8})([0-4])$/.exec(id);
+  if (!m) return null;
+  return { base: m[1]!, seed: parseInt(m[2]!, 16) >>> 0, explore: Number(m[3]) / VARIANT_BUCKETS };
+}
+
+/**
+ * Resolve a blueprint id — base or variant — back to the exact layout.
+ *
+ * Every lookup of a spec's blueprint goes through here, so a stored spec, an
+ * export or a preview link always rebuilds the layout that produced it.
+ */
+export function resolveBlueprint(id: string): Blueprint | null {
+  const direct = BLUEPRINT_BY_ID[id];
+  if (direct) return direct;
+  const v = parseVariantId(id);
+  if (!v) return null;
+  const base = BLUEPRINT_BY_ID[v.base];
+  if (!base) return null;
+  return varyBlueprint(base, v.seed >>> 0, { explore: v.explore });
+}
+
+/** Every blueprint id that is a variant of `baseId`. */
+export function isVariantOf(id: string, baseId: string): boolean {
+  if (id === baseId) return true;
+  return parseVariantId(id)?.base === baseId;
+}
+
+/* ------------------------------------------------------------------ *
  * Image slots
  *
  * An image request has to describe a PLACE, not just a count. The previous

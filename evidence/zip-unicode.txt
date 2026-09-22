@@ -1,0 +1,39 @@
+# Unicode ZIP filename investigation
+
+node v22.23.1 · unzip: /home/mojo/.local/bin/unzip
+
+## archive: 427 bytes, general-purpose bit 11 (UTF-8) set by the writer
+
+## Info-ZIP unzip, LC_ALL=C
+- unzip -t: PASS — "No errors detected"
+- unzip -Z1 lists the unicode names intact: yes
+## Info-ZIP unzip, LC_ALL=en_US.UTF-8
+- unzip -t: PASS — "No errors detected"
+- unzip -Z1 lists the unicode names intact: yes
+
+## Python zipfile, LC_ALL=C
+testzip: None
+names ok: True ['index.html', 'assets/demo/café-photo-ünïcode.png', '空白/файл-🎨.txt']
+extracted: ['assets/demo/café-photo-ünïcode.png', 'index.html', '空白/файл-🎨.txt']
+bytes ok: True
+
+## busybox unzip (the minimal-tool case)
+- unzip -t: exit 0
+- console output shows '?' for non-ASCII: yes — display only
+- files on disk: assets/demo/café-photo-ünïcode.png, index.html, 空白/файл-🎨.txt
+- names extracted CORRECTLY despite the '?' display: yes (assets/demo/café-photo-ünïcode.png, index.html, 空白/файл-🎨.txt)
+
+## The reproducible hard failure: a non-ASCII filename in a response header
+- raw header filename="plain.zip": status 200, cd="attachment; filename=\"plain.zip\""
+- raw header filename="caffè.zip": status 200, cd="attachment; filename=\"caffè.zip\""
+- raw header filename="设计图纸.zip": ERR_INVALID_CHAR (Node rejects chars beyond ISO-8859-1)
+- our exported header for a unicode name: attachment; filename="____.zip"; filename*=UTF-8''%E8%AE%BE%E8%AE%A1%E5%9B%BE%E7%BA%B8.zip
+- slugs are ASCII by construction ([a-z0-9-], enforced by SLUG_RE + slugify), so exports never reach this path;
+  contentDisposition() RFC 6266-encodes anyway.
+
+## Conclusion
+- The ARCHIVE is valid: three independent readers (Info-ZIP in two locales, Python zipfile,
+  busybox) verify CRCs and extract Unicode names byte-correct. Not an archive defect.
+- The "?" characters busybox prints are console-encoding display behaviour, not corruption.
+- The one reproducible hard failure is ERR_INVALID_CHAR for a non-latin1 download filename in
+  an HTTP header — impossible for our ASCII slugs and encoded by contentDisposition() regardless.

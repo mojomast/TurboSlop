@@ -232,7 +232,7 @@ export function elementCss(): string {
     line-height: 0.98;
     letter-spacing: var(--track);
     text-wrap: balance;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
   }
   .masthead__side { display: grid; gap: var(--s-4); justify-items: start; }
 
@@ -357,7 +357,7 @@ export function elementCss(): string {
     line-height: 1;
     letter-spacing: var(--track);
     text-wrap: balance;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
   }
   .hero-compact__side { display: grid; gap: var(--s-4); justify-items: start; }
 

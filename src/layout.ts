@@ -353,8 +353,11 @@ ${atm.grain > 0
     letter-spacing: var(--track);
     line-height: 1.05;
     text-wrap: balance;
-    /* Display type at 11vw must never be able to blow out the viewport. */
-    overflow-wrap: break-word;
+    /* Display type at 11vw must never be able to blow out the viewport.
+       "anywhere" (not "break-word") because only anywhere affects intrinsic
+       min-content sizing — a grid column otherwise inherits the longest
+       unbreakable word as its floor and the mobile page overflows. */
+    overflow-wrap: anywhere;
     /* Optical alignment: trims the half-leading above cap height so display
        type sits flush with its container edge. Purely visual, safe to ignore. */
     text-box-trim: trim-both;
@@ -376,7 +379,7 @@ ${atm.grain > 0
     overflow-wrap: anywhere;
   }
 
-  p { max-inline-size: var(--measure); text-wrap: pretty; overflow-wrap: break-word; }
+  p { max-inline-size: var(--measure); text-wrap: pretty; overflow-wrap: anywhere; }
   .note {
     font-family: var(--font-mono);
     font-size: var(--fs-label);
@@ -418,9 +421,18 @@ ${atm.grain > 0
     }
   }
 
-  .work-grid { display: grid; gap: var(--s-6); }
+  /* The gap is fluid: this grid can render 12 tracks inside a 390px phone, and
+     a fixed --s-6 (36px under dense density) makes the gutters alone wider
+     than the viewport — 11 × 36px = 396px of overflow before any content. */
+  .work-grid { display: grid; gap: clamp(var(--s-2), 2vw, var(--s-6)); }
   @container (min-width: 48rem) {
     .work-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @container (max-width: 30rem) {
+    /* Phones: one column. Two 180px cards side by side is a spreadsheet, not
+       a portfolio. */
+    .work-grid { grid-template-columns: minmax(0, 1fr); }
+    .work-grid .work-card { grid-column: auto; }
   }
   @container (min-width: 72rem) {
     .work-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
