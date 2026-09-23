@@ -220,10 +220,11 @@ await test('zero renderable slots make zero requests to the asset service', asyn
   );
 });
 
-await test('the CLI pipeline path honours the same rule: a zero-slot design requests nothing', async () => {
-  /* Find a seed whose BEST direction has zero image slots — the baseline's
-     failure was exactly "the chosen layout has no slots, the legacy request
-     path fired anyway". */
+await test('the CLI pipeline path turns an enabled image setting into an image-capable layout and real requests', async () => {
+  /* The resolved defect: the best fit for a brief was a layout with zero image
+     slots, so "generate images" requested nothing. Selection must now prefer a
+     layout that can hold an image; the plan still never fires a request into a
+     layout that cannot (that rule is covered by the plan and session tests). */
   const decided = await decideWithFallback(BRIEF, { preference: 'local' });
   const distributions: Record<string, Record<string, number>> = {};
   for (const [id, ans] of Object.entries(decided.response.answers)) {
@@ -246,6 +247,7 @@ await test('the CLI pipeline path honours the same rule: a zero-slot design requ
     }
   }
   assert.ok(seed > 0, 'expected to find a zero-slot best direction within 400 seeds');
+
   const before = fixture.generateCalls;
   const run = await runPipeline({
     brief: BRIEF,
@@ -254,12 +256,22 @@ await test('the CLI pipeline path honours the same rule: a zero-slot design requ
     seed,
     images: { enabled: true, count: 4, preset: 'turbo' },
     outDir,
-    slug: 'pipeline-zero',
+    slug: 'pipeline-images',
   });
-  assert.equal(fixture.generateCalls, before, `zero-slot pipeline run must make 0 requests (notes: ${run.notes.join(' | ')})`);
-  assert.equal(run.spec.meta.imageCount, 0);
-  assert.ok(run.notes.some((n) => /0 image slots/.test(n)), `expected the honest note, got: ${run.notes.join(' | ')}`);
-  assert.equal(run.timings.imageMs, 0, 'asset time measured separately, zero here');
+  const blueprint = resolveBlueprint(run.spec.blueprint)!;
+  assert.ok(
+    blueprint.imageSlots > 0,
+    `an image-enabled run must resolve to a layout with slots, got ${blueprint.id} (${blueprint.imageSlots})`,
+  );
+  const requests = fixture.generateCalls - before;
+  assert.ok(requests > 0, `image setting is on and the layout has slots, so requests must happen (notes: ${run.notes.join(' | ')})`);
+  assert.equal(requests, run.spec.meta.imageCount, 'every generated asset came from one request');
+  assert.ok(
+    run.notes.some((n) => /layouts that cannot hold an image were excluded/.test(n)),
+    `the search restriction must be reported, got: ${run.notes.join(' | ')}`,
+  );
+  assert.ok(!run.notes.some((n) => /0 image slots/.test(n)), 'no request can be skipped for this run');
+  assert.ok(run.timings.imageMs >= 0, 'asset time measured separately');
   assert.ok(run.timings.renderMs >= 0, 'local render time is measured separately');
 });
 

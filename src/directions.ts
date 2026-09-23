@@ -314,6 +314,21 @@ export interface BuildOptions {
    */
   history?: DesignFeatures[];
   /**
+   * The run will place or generate images. Keep selection to layouts that can
+   * actually hold one; a layout with zero image slots would silently drop the
+   * request. Falls back to the full pool when no image-capable candidate
+   * survives, so the run still produces a page — with the plan's note saying
+   * why no request was made.
+   */
+  wantsImages?: boolean;
+  /**
+   * Standalone (non-iteration) runs only: do not open on a lead the newest N
+   * history entries already used, so pressing "generate" again gives a
+   * different KIND of page instead of another variant of the last one. Falls
+   * back when every lead has been used recently.
+   */
+  freshLeads?: number;
+  /**
    * Modules the available content can honestly fill. Candidates that need
    * anything else are dropped: a diversity target never justifies a pricing
    * table with no prices or an empty gallery.
@@ -338,6 +353,10 @@ export interface BuildStats {
   afterContent: number;
   /** Whether the history filter had to be relaxed to avoid starving. */
   historyRelaxed: boolean;
+  /** Selection was limited to image-capable layouts (some were dropped). */
+  imageCapableOnly?: boolean;
+  /** Selection skipped the leads used by the newest history entries. */
+  leadRestricted?: boolean;
   /** Selection stages used (1 = strict separation held for the whole set). */
   stages: number;
 }
@@ -637,13 +656,27 @@ export function buildDirections(opts: BuildOptions): BuildResult {
   const raw = buildCandidates(opts);
   const { kept, unique, nearDupFree } = dedupe(raw);
 
+  /* ---- image capability: an enabled image setting must land on a layout
+     that can actually hold an image. Structural, so it applies before
+     history; falls back to the full pool when nothing capable exists, and the
+     asset plan then reports why no request was made. ---- */
+  let base = kept;
+  let imageCapableOnly = false;
+  if (opts.wantsImages) {
+    const capable = kept.filter((c) => c.features.imageSlots > 0);
+    if (capable.length) {
+      imageCapableOnly = capable.length < kept.length;
+      base = capable;
+    }
+  }
+
   /* ---- project history: reject recent repeats, escape starvation ---- */
   const historyPass = (c: Candidate) =>
     !history.some((h) => featureDistance(c.features, h) < HISTORY_SEPARATION);
-  let pool = kept.filter(historyPass);
+  let pool = base.filter(historyPass);
   let historyRelaxed = false;
-  if (pool.length < wanted && kept.length >= wanted) {
-    pool = kept; // a repeat that fits beats having nothing to show
+  if (pool.length < wanted && base.length >= wanted) {
+    pool = base; // a repeat that fits beats having nothing to show
     historyRelaxed = history.length > 0;
   }
 
@@ -654,6 +687,22 @@ export function buildDirections(opts: BuildOptions): BuildResult {
       c.blueprint.sections.every((s) => opts.availableModules!.has(s.module)),
     );
     if (!afterContent.length) afterContent = pool; // nothing is renderable as-is: say so via the report
+  }
+  const contentPoolSize = afterContent.length;
+
+  /* ---- a standalone run opens on a lead the project has not just seen ----
+     History separation only rules out the resolved design; the best fit for
+     two similar briefs is still the same KIND of page. For a single pressed
+     "generate", skip the leads the newest entries used so the result visibly
+     differs — unless that would starve the pool. */
+  let leadRestricted = false;
+  if (opts.freshLeads && opts.freshLeads > 0 && history.length) {
+    const recentLeads = new Set(history.slice(-opts.freshLeads).map((h) => h.lead));
+    const leadPool = afterContent.filter((c) => !recentLeads.has(c.blueprint.lead));
+    if (leadPool.length) {
+      leadRestricted = leadPool.length < afterContent.length;
+      afterContent = leadPool;
+    }
   }
 
   /* Deterministic shuffle so equal-fit candidates do not always win in
@@ -672,8 +721,10 @@ export function buildDirections(opts: BuildOptions): BuildResult {
     unique,
     afterNearDuplicate: nearDupFree,
     afterHistory: pool.length,
-    afterContent: afterContent.length,
+    afterContent: contentPoolSize,
     historyRelaxed,
+    imageCapableOnly,
+    leadRestricted,
     stages: 1,
   };
 

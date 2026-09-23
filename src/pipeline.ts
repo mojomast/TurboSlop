@@ -157,6 +157,12 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
     wantsDark,
     explore: opts.explore ?? 0.45,
     history: snapshot.features,
+    // Image settings are an input to SELECTION, not just to the asset step:
+    // a run that will place images must not resolve to a layout with no slots.
+    ...(opts.images.enabled || opts.userImages?.length ? { wantsImages: true } : {}),
+    // A fresh "generate" must not open on the kind of page the project just
+    // saw; an iteration follows the instruction instead and keeps its lead.
+    ...(opts.parent ? {} : { freshLeads: 3 }),
     // Offline runs write specimen content: only modules the specimen can
     // honestly fill are eligible. With a writer configured every module is
     // requested and compatibility is checked against the real content below.
@@ -177,6 +183,12 @@ export async function runPipeline(opts: RunOptions): Promise<RunResult> {
   }
   if (built.stats.historyRelaxed) {
     notes.push('project history separation was relaxed: the recent-fingerprint filter would have starved this run');
+  }
+  if (built.stats.imageCapableOnly) {
+    notes.push('image generation is on — layouts that cannot hold an image were excluded from the search');
+  }
+  if (built.stats.leadRestricted) {
+    notes.push('a fresh run: the leads the project used most recently were skipped so the page opens differently');
   }
 
   let idx = Math.max(0, Math.min(dirs.length - 1, opts.directionIndex ?? 0));

@@ -95,6 +95,16 @@ blueprint family per direction. Seeded and deterministic.
 The `explore` dial (0..1) trades fit for range. At `0` the shop brief yields 3 families; at the
 `0.45` default, 6.
 
+Two selection inputs are not "the brief":
+
+- **Images on** (`wantsImages`): layouts with zero image slots are dropped, so an enabled image
+  setting cannot resolve to the "generated but never rendered" case. A lock is honoured, and if
+  nothing image-capable exists the full pool comes back — the asset plan then records why no
+  request was made rather than dropping the setting quietly.
+- **A fresh standalone run** (`freshLeads`): the leads the newest three history entries used are
+  skipped, so pressing generate again opens on a different kind of page instead of another
+  variant of the last one. Falls back when every lead was used recently.
+
 ### 2.4 Direction sessions — the contact sheet
 
 `src/sessions.ts`. A session owns the decision, which is what the old flow threw away:
@@ -253,7 +263,7 @@ Run `npm test` — 13 suites, offline by construction. The generated
 counts (passed / failed / skipped per suite) live in
 [`evidence/tables.md`](../evidence/tables.md) §8, produced from
 `evidence/tests.txt` by `scripts/report.ts`, so the number quoted here can
-never drift from the suite again. **262 checks passed, 0 failed, 0 skipped**
+never drift from the suite again. **264 checks passed, 0 failed, 0 skipped**
 in this environment, where the credentials for the live halves are present;
 without them those checks skip *with the reason in the test name* rather than
 disappearing.
@@ -268,10 +278,10 @@ disappearing.
 | `fonts.test.ts` | every bundled file exists and is a real woff2, licences present, only used faces emitted |
 | `session.test.ts` | selection performs no model call and leaves the decision byte-identical; previews labelled, ids unique, anchors resolve; finalize writes a real design |
 | `slots.test.ts` | slot derivation, the texture-vs-native rule, prompt budgets, header parsing, traversal refusal, slot-scoped resolution, supplied-beats-generated |
-| `diversity.test.ts` | the explore targets on all seven baseline briefs across seeds, near-duplicate rejection, bounded search, project-scoped history, reproducibility from inputs + seed + snapshot, **and the same targets under a live Jev decision** (9 live sets; skips with the reason when no key) |
+| `diversity.test.ts` | the explore targets on all seven baseline briefs across seeds, near-duplicate rejection, bounded search, project-scoped history, image-on selection kept to image-capable layouts, fresh-lead avoidance on repeated standalone runs, reproducibility from inputs + seed + snapshot, **and the same targets under a live Jev decision** (9 live sets; skips with the reason when no key) |
 | `locks.test.ts` | locks bound to explicit values and source cards, blueprint/composition locks applied, invalid and incompatible locks explained, immutable previous batches |
 | `revision.test.ts` | copy-only revision preserves the resolved visual spec (the `data-metrics` → `story-origin` regression), visual edits touch only named axes, no re-decision |
-| `assetplan.test.ts` | zero slots ⇒ zero asset-service requests (controlled fixture), supplied images suppress generation, slot ownership by rendered variant, placement verification, ZIP export carries assets + fonts + licences |
+| `assetplan.test.ts` | zero slots ⇒ zero asset-service requests (controlled fixture), image-enabled pipeline resolves to an image-capable layout and makes real requests, supplied images suppress generation, slot ownership by rendered variant, placement verification, ZIP export carries assets + fonts + licences |
 | `viewport.test.ts` | the REAL control surface in a real browser: 1440×900 / 390×844 simulated viewports, card resize changes only the scale, labels outside the canvas, fonts-ready + motion-frozen before a thumbnail is "ready" |
 
 Regression checks that exist because of bugs found during this work: the
@@ -308,7 +318,7 @@ preservation, and the header-safe download filename check.
 6. **Live Jev and live writer paths are environment-gated, and they ran here.** With
    `TYPESAFE_API_KEY` and an LLM key present, `test/diversity.test.ts` checks the targets
    against nine live-decided sets (all met) and `test/forge.test.ts` runs the writer, the
-   decision and their composition — 262 passed / 0 failed / 0 skipped. On a machine without
+   decision and their composition — 264 passed / 0 failed / 0 skipped. On a machine without
    credentials those same checks skip *with the reason in the test name*, the offline corpus is
    unchanged, and `scripts/evidence.ts` records why its live phase did not run instead of
    dropping the rows.

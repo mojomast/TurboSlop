@@ -168,12 +168,12 @@ Thresholds in force: NEAR_DUPLICATE 0.06, MIN_SEPARATION 0.2, HISTORY_SEPARATION
 
 | status | checks |
 |---|---|
-| **passed** | 262 |
+| **passed** | 264 |
 | **failed** | 0 |
 | **skipped** | 0 (no suite skipped: live checks ran) |
 | suite headers seen | 13 |
 
-Per-suite: 58 · 24 · 11 · 23 · 31 · 19 · 22 · 13 · 20 · 14 · 8 · 13 · 6
+Per-suite: 58 · 24 · 11 · 23 · 31 · 19 · 22 · 13 · 22 · 14 · 8 · 13 · 6
 
 ## 9. Unicode ZIP filename investigation
 

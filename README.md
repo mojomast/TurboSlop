@@ -7,7 +7,7 @@
 A brief goes in. A designed, written and illustrated page comes out — in about a second,
 for a fraction of a cent, with every decision typed, scored and reproducible.
 
-[![tests](https://img.shields.io/badge/tests-262%20passed%20%C2%B7%200%20skipped-3fb950?style=flat-square)](#testing)
+[![tests](https://img.shields.io/badge/tests-264%20passed%20%C2%B7%200%20skipped-3fb950?style=flat-square)](#testing)
 [![node](https://img.shields.io/badge/node-%E2%89%A520-3fb950?style=flat-square)](https://nodejs.org)
 [![deps](https://img.shields.io/badge/runtime%20deps-1%20(zod)-3fb950?style=flat-square)](#why-so-few-dependencies)
 [![typescript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square)](tsconfig.json)
@@ -143,7 +143,11 @@ Output of the pipeline above, at `256×256` artwork and all.
 | **Compose** | code | weights, thresholds, tokens, markup | hallucinate |
 
 **Every stage is optional.** No Jev key → a deterministic local decider. No LLM → canonical
-copy. No image service → CSS gradient fallbacks. The page always ships.
+copy. No image service → CSS gradient fallbacks. The page always ships. Image generation is
+opt-in (the switch in the surface / `images.enabled` in the API) **and it constrains the layout
+search**: with images on, a page that cannot hold one is never chosen, so the setting cannot be
+silently dropped. A fresh single-design generate also skips the kind of opening the project just
+used, so two similar briefs do not come back as the same page.
 
 See [`ARCHITECTURE.md`](ARCHITECTURE.md) for how the layers fit together,
 [`docs/JEV-RESEARCH.md`](docs/JEV-RESEARCH.md) for the decision-model research,
@@ -476,10 +480,10 @@ from the captured run rather than hand-maintained: see
 | `test/fonts.test.ts` | every bundled file exists and is a real woff2, licences present, only used faces emitted |
 | `test/session.test.ts` | selection makes no model call, previews are labelled, ids unique, anchors resolve, finalize writes a real design |
 | `test/slots.test.ts` | slot derivation, texture-vs-native rule, prompt budgets, slot-scoped resolution, supplied-beats-generated |
-| `test/diversity.test.ts` | the explore targets on all seven baseline briefs across seeds, near-duplicate rejection, bounded search, project-scoped history, reproducibility, **and the same targets under a live Jev decision** (skips with the reason when no key) |
+| `test/diversity.test.ts` | the explore targets on all seven baseline briefs across seeds, near-duplicate rejection, bounded search, project-scoped history, **image-on selection kept to layouts that can hold an image**, **fresh-lead avoidance for repeated standalone runs**, reproducibility, **and the same targets under a live Jev decision** (skips with the reason when no key) |
 | `test/locks.test.ts` | locks bound to explicit values and source cards, blueprint/composition locks applied, invalid/incompatible locks explained, immutable previous batches |
 | `test/revision.test.ts` | copy-only revision preserves the resolved visual spec; visual edits touch only named axes; no re-decision |
-| `test/assetplan.test.ts` | zero slots ⇒ zero asset-service requests (controlled fixture), supplied images suppress generation, placement verification, ZIP carries assets + fonts + licences |
+| `test/assetplan.test.ts` | zero slots ⇒ zero asset-service requests (controlled fixture), an image-enabled pipeline resolves to a layout that can hold one and makes real requests, supplied images suppress generation, placement verification, ZIP carries assets + fonts + licences |
 
 Verification evidence (measured pages, screenshots, calibration, generated tables) lives in
 [`evidence/`](evidence/); the ZIP writer is additionally verified with Python's `zipfile` — an

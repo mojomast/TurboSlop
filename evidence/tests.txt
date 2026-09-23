@@ -60,11 +60,11 @@
   ok    a product demonstration is wrapped in a real frame
   ok    art-directed treatments degrade rather than hide text
   ok    icons are used sparingly and never as the only carrier of meaning
-        -> deepseek-flash wrote "Padaria Crua" — We grind the wheat before the sun hits the cobbles.
+        -> deepseek-flash wrote "Moa" — We mill the wheat at dawn and bake it before lunch.
   ok    live writing (deepseek/deepseek-flash (key from DEEPSEEK_API_KEY))
-        -> emotion=mystery(1.00) composition=gallery-first(1.00) effects=cinematic-depth(0.61) palette=void-violet(0.99) typography=editorial-serif(0.80) layout=editorial-asymmetric(0.61) motion=glacial(0.94) density=balanced(0.00)
+        -> emotion=mystery(1.00) composition=gallery-first(1.00) effects=cinematic-depth(0.57) palette=void-violet(0.99) typography=editorial-serif(0.80) layout=editorial-asymmetric(0.61) motion=glacial(0.95) density=balanced(0.00)
   ok    live Jev decision
-        -> design by jev-1.13.0, content "GRIDLOCK" by deepseek-flash, 9149ms total
+        -> design by jev-1.13.0, content "COMBOBREAK" by deepseek-flash, 8774ms total
   ok    both halves compose: Jev designs, the writer writes
 
 all 58 checks passed
@@ -275,6 +275,8 @@ all 13 checks passed
   ok    resolved fingerprints persist across sessions, scoped by project
   ok    an invalid project id is refused rather than silently writing a weird file
   ok    a single-design run records its resolved design and avoids repeating it next time
+  ok    an image-enabled selection stays on layouts that can hold an image (with an honest fallback)
+  ok    a fresh single-design run skips the lead the project just used
   ok    the diversity report counts what a set actually contains
   ok    the selection version is recorded and stable
   info  festival seed 11: statement-letter/arctic-cyan/stacked/plain | event-festival/hazard-mono/outline/shaped | data-metrics/hazard-mono/caps/plain | product-demo~cc6415a14/hazard-mono/stacked/cutout | story-editorial~cc67caeb4/arctic-cyan/stacked/textwrap | statement-display/arctic-cyan/stacked/plain
@@ -287,18 +289,18 @@ all 13 checks passed
   info  software seed 42: statement-panel~f51a96034/noir-lime/stacked/plain | image-mosaic~f5233d054/arctic-cyan/outline/shaped | product-demo~f51bd2714/arctic-cyan/stacked/cutout | data-calculator/arctic-cyan/caps/plain | catalogue-gallery~f51dad164/noir-lime/stacked/textwrap | statement-display~f519f76b4/arctic-cyan/stacked/plain
   info  software seed 97: statement-panel~f305bb0a4/noir-lime/stacked/plain | image-mosaic~f30e620c4/arctic-cyan/outline/shaped | product-demo/noir-lime/stacked/cutout | catalogue-rail/arctic-cyan/stacked/textwrap | data-calculator/arctic-cyan/caps/plain | statement-display~f3051c724/arctic-cyan/stacked/plain
   ok    festival, ceramics-shop and software produce different COMPLETE sets across seeds
-  info  LIVE festival (live jev-1.13.0, 390ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE festival (live jev-1.13.0, 390ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE festival (live jev-1.13.0, 390ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE shop (live jev-1.13.0, 233ms) seed 11: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE shop (live jev-1.13.0, 233ms) seed 42: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE shop (live jev-1.13.0, 233ms) seed 97: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE software (live jev-1.13.0, 234ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE software (live jev-1.13.0, 234ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE software (live jev-1.13.0, 234ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE festival (live jev-1.13.0, 648ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE festival (live jev-1.13.0, 648ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE festival (live jev-1.13.0, 648ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE shop (live jev-1.13.0, 251ms) seed 11: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE shop (live jev-1.13.0, 251ms) seed 42: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE shop (live jev-1.13.0, 251ms) seed 97: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE software (live jev-1.13.0, 407ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE software (live jev-1.13.0, 407ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE software (live jev-1.13.0, 407ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
   ok    a LIVE Jev decision also yields sets that meet every diversity target
 
-all 20 checks passed
+all 22 checks passed
 
 
 === TurboSlop — locks, regeneration, batch versions ===
@@ -341,7 +343,7 @@ all 8 checks passed
   ok    an empty gallery renders no figures, so gallery slots are not renderable
   ok    a layout with imageSlots: 0 has no slots at all
   ok    zero renderable slots make zero requests to the asset service
-  ok    the CLI pipeline path honours the same rule: a zero-slot design requests nothing
+  ok    the CLI pipeline path turns an enabled image setting into an image-capable layout and real requests
   ok    supplied images suppress generation for their slots; the rest are filled
   ok    when every renderable slot is supplied, generation is skipped entirely
   ok    a supplied image for a slot this layout does not render is REFUSED with a note

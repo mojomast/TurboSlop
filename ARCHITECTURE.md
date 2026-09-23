@@ -82,6 +82,13 @@ resolved-design fingerprints:
   de-duplication, then explicit near-duplicate rejection
   (`NEAR_DUPLICATE`), then project-history separation
   (`HISTORY_SEPARATION`), then content-availability filtering.
+- Two selection inputs are not "the brief": when the run will place images
+  (`wantsImages`), layouts with zero image slots are dropped so an enabled
+  image setting cannot resolve to "generated but never rendered" (a lock, or
+  a pool with nothing capable left, is honoured and the asset plan then says
+  why no request was made); and a standalone run (`freshLeads`) skips the
+  leads the newest three history entries used, so pressing "generate" again
+  opens on a different KIND of page instead of another variant of the last one.
 - Selection keeps the best-fit direction first, then adds alternatives under
   an escalating minimum separation (`MIN_SEPARATION`, grayscale separation)
   with coverage bonuses for compositions, headline constructions and
@@ -231,7 +238,7 @@ per-batch seed, per-direction seed, and the history snapshot keys
 
 ## 5. Testing and evidence
 
-`npm test` runs 13 suites — 262 checks passed, 0 failed, 0 skipped when credentials are
+`npm test` runs 13 suites — 264 checks passed, 0 failed, 0 skipped when credentials are
 present (the live Jev / writer halves run); without keys those same checks skip with the
 reason in their name. See `evidence/tables.md` §8 for the generated counts. Evidence is
 produced by:

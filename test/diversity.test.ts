@@ -380,6 +380,80 @@ delete process.env.FORGE_PROJECT;
 await rm(pipeDir, { recursive: true, force: true });
 
 /* ================================================================== *
+ * 4b. Selection inputs that are not "the brief": image settings and
+ *     freshness across repeated single-design runs
+ * ================================================================== */
+await test('an image-enabled selection stays on layouts that can hold an image (with an honest fallback)', async () => {
+  const input = await inputsFor(BRIEFS[0]![1]);
+  const built = buildDirections({
+    brief: input.brief,
+    distributions: input.distributions,
+    count: 6,
+    seed: 11,
+    explore: 1,
+    availableModules: input.availableModules,
+    wantsImages: true,
+  });
+  assert.equal(built.directions.length, 6, 'six directions as usual');
+  for (const d of built.directions) {
+    assert.ok(
+      d.features.imageSlots > 0,
+      `every direction must be able to hold an image, got ${d.blueprint.id} with ${d.features.imageSlots} slots`,
+    );
+  }
+  assert.equal(built.stats.imageCapableOnly, true, 'the restriction must be reported in the stats');
+
+  /* A blueprint lock that pins a zero-slot layout is honoured — a human asked
+     for it — and the fallback keeps the run possible; the asset plan then says
+     why no request was made. Nothing here silently drops the lock. */
+  const locked = buildDirections({
+    brief: input.brief,
+    distributions: input.distributions,
+    count: 1,
+    seed: 11,
+    explore: 1,
+    availableModules: input.availableModules,
+    wantsImages: true,
+    locks: [{ name: 'blueprint', value: 'event-programme' }],
+  });
+  assert.equal(
+    locked.directions[0]?.baseBlueprint,
+    'event-programme',
+    'the lock wins over the image preference (the resolved id may be a variant)',
+  );
+  assert.equal(locked.directions[0]?.blueprint.imageSlots, 0, 'the locked origin really has no slots');
+  assert.equal(locked.stats.imageCapableOnly, false, 'no restriction happened when nothing capable existed');
+});
+
+await test('a fresh single-design run skips the lead the project just used', async () => {
+  const input = await inputsFor(BRIEFS[0]![1]);
+  const inputOpts = {
+    brief: input.brief,
+    distributions: input.distributions,
+    count: 6,
+    seed: 42,
+    explore: 1,
+    availableModules: input.availableModules,
+  } as const;
+  const baseline = buildDirections({ ...inputOpts });
+  const top = baseline.directions[0]!;
+  const history: DesignFeatures[] = [top.features];
+
+  const fresh = buildDirections({ ...inputOpts, history, freshLeads: 3 });
+  assert.notEqual(
+    fresh.directions[0]!.blueprint.lead,
+    top.blueprint.lead,
+    'the newest history entry used this lead; a fresh run must open differently',
+  );
+  assert.equal(fresh.stats.leadRestricted, true, 'the restriction must be reported in the stats');
+
+  /* Iterations do not pass freshLeads (the instruction decides), and with no
+     history there is nothing to avoid — neither may change the baseline. */
+  const same = buildDirections({ ...inputOpts, history: [] });
+  assert.equal(same.directions[0]!.blueprint.lead, top.blueprint.lead, 'empty history selects as before');
+});
+
+/* ================================================================== *
  * 5. The report itself
  * ================================================================== */
 await test('the diversity report counts what a set actually contains', () => {
