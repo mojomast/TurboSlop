@@ -196,6 +196,20 @@ export function renderHtml(spec: DesignSpec, opts: RenderOptions = {}): string {
   const assets = spec.assets ?? [];
   /* User-supplied images win over generated ones for the same slot. */
   const ordered = [...assets.filter((a) => a.source === 'user'), ...assets.filter((a) => a.source !== 'user')];
+  const heroSlot = imageSlotsFor(blueprint).find((s) => s.id === 'hero');
+  /* The hero slot is EITHER a plate inside a figure/media hero (native scale)
+     or the atmosphere layer behind the opening (texture scale). Strict slot
+     resolution applies once ANY asset carries a slot — a supplied hero image
+     must fill the same layer a generated backdrop would, or "hero" silently
+     renders nothing and placement verification (rightly) fails the page. A
+     legacy spec whose assets carry no slots at all keeps the old kind-based
+     fallback, exactly like the plate resolver. */
+  const hasSlotAssets = ordered.some((a) => a.slot.length > 0);
+  const backdrops = hasSlotAssets
+    ? heroSlot?.scale === 'texture'
+      ? ordered.filter((a) => a.slot === 'hero')
+      : []
+    : ordered.filter((a) => a.kind === 'backdrop');
   const textureSlots = new Set(
     imageSlotsFor(blueprint)
       .filter((s) => s.scale === 'texture')
@@ -207,7 +221,7 @@ export function renderHtml(spec: DesignSpec, opts: RenderOptions = {}): string {
     paletteId: palette.id,
     typeId: type.id,
     plateAssets: ordered.filter((a) => a.kind !== 'backdrop' || a.slot === 'hero'),
-    backdrops: ordered.filter((a) => a.kind === 'backdrop'),
+    backdrops,
     blueprint,
     visual: vb,
     textureSlots,
@@ -267,9 +281,9 @@ ${renderModule(sec.module, sec.variant, ctx)}
     blueprint.hero,
   )}" data-construction="${esc(vb.typo.construction)}" data-label="${esc(
     vb.typo.labelStyle,
-  )}" data-treatment="${esc(vb.imageTreatment)}" data-motif-family="${esc(vb.motif.family)}"${
-    opts.preview ? ' data-preview="1"' : ''
-  }>
+  )}" data-treatment="${esc(vb.imageTreatment)}" data-motif-family="${esc(vb.motif.family)}" data-icon-family="${esc(
+    vb.iconFamily,
+  )}"${opts.preview ? ' data-preview="1"' : ''}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">

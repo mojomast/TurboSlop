@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-09-23T02:43:28.695Z",
+ "generatedAt": "2026-09-23T03:10:10.956Z",
  "node": "v22.23.1",
  "selectionVersion": "turboslop/directions@2",
  "command": "npx tsx scripts/evidence.ts --out evidence --seeds 11,42,97 --briefs festival,shop,software",
@@ -43,8 +43,8 @@
   {
    "brief": "festival",
    "seed": 11,
-   "session": "ses_33d4fa26c7b5434f9bcaef57",
-   "createdAt": "2026-09-23T02:43:06.719Z",
+   "session": "ses_cce07323644d412fae354fb4",
+   "createdAt": "2026-09-23T03:09:52.822Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -56,7 +56,7 @@
     "inventoryMs": 0,
     "renderMs": 9,
     "assetsMs": 0,
-    "totalMs": 101,
+    "totalMs": 103,
     "modelCalls": 1,
     "estimateUsd": 0.0000042000000000000004
    },
@@ -92,7 +92,7 @@
     "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 105,
+   "wallMs": 108,
    "directions": [
     {
      "index": 0,
@@ -117,7 +117,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/0.html",
+     "preview": "previews/ses_cce07323644d412fae354fb4/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "display",
@@ -168,7 +168,7 @@
      "tone": "dark",
      "imageSlots": 5,
      "diagnostics": [],
-     "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/1.html",
+     "preview": "previews/ses_cce07323644d412fae354fb4/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "media",
@@ -219,7 +219,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/2.html",
+     "preview": "previews/ses_cce07323644d412fae354fb4/b0/2.html",
      "features": {
       "lead": "data",
       "hero": "compact",
@@ -270,7 +270,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/3.html",
+     "preview": "previews/ses_cce07323644d412fae354fb4/b0/3.html",
      "features": {
       "lead": "product",
       "hero": "product-demo",
@@ -321,7 +321,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/4.html",
+     "preview": "previews/ses_cce07323644d412fae354fb4/b0/4.html",
      "features": {
       "lead": "story",
       "hero": "editorial-figure",
@@ -372,7 +372,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/5.html",
+     "preview": "previews/ses_cce07323644d412fae354fb4/b0/5.html",
      "features": {
       "lead": "statement",
       "hero": "poster",
@@ -405,8 +405,8 @@
   {
    "brief": "festival",
    "seed": 42,
-   "session": "ses_8161e01f4ba24219bf50417a",
-   "createdAt": "2026-09-23T02:43:06.817Z",
+   "session": "ses_46aff11c6d814af4b9e95d08",
+   "createdAt": "2026-09-23T03:09:52.919Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -416,9 +416,9 @@
    "metrics": {
     "decideMs": 0,
     "inventoryMs": 0,
-    "renderMs": 5,
+    "renderMs": 7,
     "assetsMs": 0,
-    "totalMs": 94,
+    "totalMs": 92,
     "modelCalls": 1,
     "estimateUsd": 0.0000042000000000000004
    },
@@ -454,7 +454,7 @@
     "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 97,
+   "wallMs": 95,
    "directions": [
     {
      "index": 0,
@@ -479,7 +479,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/0.html",
+     "preview": "previews/ses_46aff11c6d814af4b9e95d08/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "panel",
@@ -530,7 +530,7 @@
      "tone": "dark",
      "imageSlots": 5,
      "diagnostics": [],
-     "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/1.html",
+     "preview": "previews/ses_46aff11c6d814af4b9e95d08/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "poster",
@@ -581,7 +581,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/2.html",
+     "preview": "previews/ses_46aff11c6d814af4b9e95d08/b0/2.html",
      "features": {
       "lead": "data",
       "hero": "split",
@@ -632,7 +632,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/3.html",
+     "preview": "previews/ses_46aff11c6d814af4b9e95d08/b0/3.html",
      "features": {
       "lead": "product",
       "hero": "product-demo",
@@ -683,7 +683,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/4.html",
+     "preview": "previews/ses_46aff11c6d814af4b9e95d08/b0/4.html",
      "features": {
       "lead": "catalogue",
       "hero": "compact",
@@ -734,7 +734,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/5.html",
+     "preview": "previews/ses_46aff11c6d814af4b9e95d08/b0/5.html",
      "features": {
       "lead": "statement",
       "hero": "compact",
@@ -767,8 +767,8 @@
   {
    "brief": "festival",
    "seed": 97,
-   "session": "ses_14e96e7f558e4041a2127693",
-   "createdAt": "2026-09-23T02:43:06.908Z",
+   "session": "ses_ace66795a23d4be4904781ce",
+   "createdAt": "2026-09-23T03:09:53.016Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -778,9 +778,9 @@
    "metrics": {
     "decideMs": 0,
     "inventoryMs": 0,
-    "renderMs": 4,
+    "renderMs": 6,
     "assetsMs": 0,
-    "totalMs": 87,
+    "totalMs": 94,
     "modelCalls": 1,
     "estimateUsd": 0.0000042000000000000004
    },
@@ -816,7 +816,7 @@
     "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 90,
+   "wallMs": 96,
    "directions": [
     {
      "index": 0,
@@ -841,7 +841,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_14e96e7f558e4041a2127693/b0/0.html",
+     "preview": "previews/ses_ace66795a23d4be4904781ce/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "panel",
@@ -892,7 +892,7 @@
      "tone": "dark",
      "imageSlots": 5,
      "diagnostics": [],
-     "preview": "previews/ses_14e96e7f558e4041a2127693/b0/1.html",
+     "preview": "previews/ses_ace66795a23d4be4904781ce/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "display",
@@ -943,7 +943,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_14e96e7f558e4041a2127693/b0/2.html",
+     "preview": "previews/ses_ace66795a23d4be4904781ce/b0/2.html",
      "features": {
       "lead": "data",
       "hero": "index",
@@ -994,7 +994,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_14e96e7f558e4041a2127693/b0/3.html",
+     "preview": "previews/ses_ace66795a23d4be4904781ce/b0/3.html",
      "features": {
       "lead": "catalogue",
       "hero": "compact",
@@ -1045,7 +1045,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_14e96e7f558e4041a2127693/b0/4.html",
+     "preview": "previews/ses_ace66795a23d4be4904781ce/b0/4.html",
      "features": {
       "lead": "product",
       "hero": "split",
@@ -1096,7 +1096,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_14e96e7f558e4041a2127693/b0/5.html",
+     "preview": "previews/ses_ace66795a23d4be4904781ce/b0/5.html",
      "features": {
       "lead": "statement",
       "hero": "compact",
@@ -1129,8 +1129,8 @@
   {
    "brief": "shop",
    "seed": 11,
-   "session": "ses_c793ef07014a422082d5891a",
-   "createdAt": "2026-09-23T02:43:07.003Z",
+   "session": "ses_7911981837014805b249f897",
+   "createdAt": "2026-09-23T03:09:53.111Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -1140,9 +1140,9 @@
    "metrics": {
     "decideMs": 1,
     "inventoryMs": 0,
-    "renderMs": 6,
+    "renderMs": 4,
     "assetsMs": 0,
-    "totalMs": 92,
+    "totalMs": 93,
     "modelCalls": 1,
     "estimateUsd": 0.000003822
    },
@@ -1178,7 +1178,7 @@
     "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 95,
+   "wallMs": 96,
    "directions": [
     {
      "index": 0,
@@ -1203,7 +1203,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_c793ef07014a422082d5891a/b0/0.html",
+     "preview": "previews/ses_7911981837014805b249f897/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "panel",
@@ -1254,7 +1254,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_c793ef07014a422082d5891a/b0/1.html",
+     "preview": "previews/ses_7911981837014805b249f897/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "media",
@@ -1305,7 +1305,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_c793ef07014a422082d5891a/b0/2.html",
+     "preview": "previews/ses_7911981837014805b249f897/b0/2.html",
      "features": {
       "lead": "product",
       "hero": "product-demo",
@@ -1356,7 +1356,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_c793ef07014a422082d5891a/b0/3.html",
+     "preview": "previews/ses_7911981837014805b249f897/b0/3.html",
      "features": {
       "lead": "data",
       "hero": "compact",
@@ -1407,7 +1407,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_c793ef07014a422082d5891a/b0/4.html",
+     "preview": "previews/ses_7911981837014805b249f897/b0/4.html",
      "features": {
       "lead": "catalogue",
       "hero": "split",
@@ -1458,7 +1458,7 @@
      "tone": "dark",
      "imageSlots": 3,
      "diagnostics": [],
-     "preview": "previews/ses_c793ef07014a422082d5891a/b0/5.html",
+     "preview": "previews/ses_7911981837014805b249f897/b0/5.html",
      "features": {
       "lead": "story",
       "hero": "display",
@@ -1491,8 +1491,8 @@
   {
    "brief": "shop",
    "seed": 42,
-   "session": "ses_b3bb0de920034fe7a1f2df8f",
-   "createdAt": "2026-09-23T02:43:07.103Z",
+   "session": "ses_2d73658c19294ccf99406d44",
+   "createdAt": "2026-09-23T03:09:53.211Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -1502,7 +1502,7 @@
    "metrics": {
     "decideMs": 0,
     "inventoryMs": 0,
-    "renderMs": 6,
+    "renderMs": 5,
     "assetsMs": 0,
     "totalMs": 97,
     "modelCalls": 1,
@@ -1565,7 +1565,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/0.html",
+     "preview": "previews/ses_2d73658c19294ccf99406d44/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "panel",
@@ -1616,7 +1616,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/1.html",
+     "preview": "previews/ses_2d73658c19294ccf99406d44/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "poster",
@@ -1667,7 +1667,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/2.html",
+     "preview": "previews/ses_2d73658c19294ccf99406d44/b0/2.html",
      "features": {
       "lead": "product",
       "hero": "compact",
@@ -1718,7 +1718,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/3.html",
+     "preview": "previews/ses_2d73658c19294ccf99406d44/b0/3.html",
      "features": {
       "lead": "data",
       "hero": "compact",
@@ -1769,7 +1769,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/4.html",
+     "preview": "previews/ses_2d73658c19294ccf99406d44/b0/4.html",
      "features": {
       "lead": "story",
       "hero": "editorial-figure",
@@ -1820,7 +1820,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/5.html",
+     "preview": "previews/ses_2d73658c19294ccf99406d44/b0/5.html",
      "features": {
       "lead": "offer",
       "hero": "poster",
@@ -1853,8 +1853,8 @@
   {
    "brief": "shop",
    "seed": 97,
-   "session": "ses_d34ffa59f8424451a815c6c6",
-   "createdAt": "2026-09-23T02:43:07.205Z",
+   "session": "ses_50cd8125d68a4700ae08ddac",
+   "createdAt": "2026-09-23T03:09:53.314Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -1862,11 +1862,11 @@
    "inventoryHash": "2a6e1dd1c87de736",
    "historyKeys": 30,
    "metrics": {
-    "decideMs": 0,
+    "decideMs": 1,
     "inventoryMs": 0,
-    "renderMs": 4,
+    "renderMs": 5,
     "assetsMs": 0,
-    "totalMs": 99,
+    "totalMs": 100,
     "modelCalls": 1,
     "estimateUsd": 0.000003822
    },
@@ -1902,7 +1902,7 @@
     "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 103,
+   "wallMs": 102,
    "directions": [
     {
      "index": 0,
@@ -1927,7 +1927,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/0.html",
+     "preview": "previews/ses_50cd8125d68a4700ae08ddac/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "compact",
@@ -1978,7 +1978,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/1.html",
+     "preview": "previews/ses_50cd8125d68a4700ae08ddac/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "media",
@@ -2029,7 +2029,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/2.html",
+     "preview": "previews/ses_50cd8125d68a4700ae08ddac/b0/2.html",
      "features": {
       "lead": "story",
       "hero": "editorial-figure",
@@ -2080,7 +2080,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/3.html",
+     "preview": "previews/ses_50cd8125d68a4700ae08ddac/b0/3.html",
      "features": {
       "lead": "product",
       "hero": "product-demo",
@@ -2131,7 +2131,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/4.html",
+     "preview": "previews/ses_50cd8125d68a4700ae08ddac/b0/4.html",
      "features": {
       "lead": "data",
       "hero": "panel",
@@ -2182,7 +2182,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/5.html",
+     "preview": "previews/ses_50cd8125d68a4700ae08ddac/b0/5.html",
      "features": {
       "lead": "offer",
       "hero": "compact",
@@ -2215,8 +2215,8 @@
   {
    "brief": "software",
    "seed": 11,
-   "session": "ses_212464e631e845328c411fed",
-   "createdAt": "2026-09-23T02:43:07.316Z",
+   "session": "ses_8b4177cab7ed49878538c540",
+   "createdAt": "2026-09-23T03:09:53.430Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -2226,9 +2226,9 @@
    "metrics": {
     "decideMs": 0,
     "inventoryMs": 0,
-    "renderMs": 6,
+    "renderMs": 9,
     "assetsMs": 0,
-    "totalMs": 107,
+    "totalMs": 114,
     "modelCalls": 1,
     "estimateUsd": 0.0000036960000000000003
    },
@@ -2264,7 +2264,7 @@
     "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 110,
+   "wallMs": 117,
    "directions": [
     {
      "index": 0,
@@ -2289,7 +2289,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_212464e631e845328c411fed/b0/0.html",
+     "preview": "previews/ses_8b4177cab7ed49878538c540/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "compact",
@@ -2340,7 +2340,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_212464e631e845328c411fed/b0/1.html",
+     "preview": "previews/ses_8b4177cab7ed49878538c540/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "poster",
@@ -2391,7 +2391,7 @@
      "tone": "dark",
      "imageSlots": 1,
      "diagnostics": [],
-     "preview": "previews/ses_212464e631e845328c411fed/b0/2.html",
+     "preview": "previews/ses_8b4177cab7ed49878538c540/b0/2.html",
      "features": {
       "lead": "product",
       "hero": "split",
@@ -2442,7 +2442,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_212464e631e845328c411fed/b0/3.html",
+     "preview": "previews/ses_8b4177cab7ed49878538c540/b0/3.html",
      "features": {
       "lead": "data",
       "hero": "panel",
@@ -2493,7 +2493,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_212464e631e845328c411fed/b0/4.html",
+     "preview": "previews/ses_8b4177cab7ed49878538c540/b0/4.html",
      "features": {
       "lead": "catalogue",
       "hero": "index",
@@ -2544,7 +2544,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_212464e631e845328c411fed/b0/5.html",
+     "preview": "previews/ses_8b4177cab7ed49878538c540/b0/5.html",
      "features": {
       "lead": "offer",
       "hero": "poster",
@@ -2577,8 +2577,8 @@
   {
    "brief": "software",
    "seed": 42,
-   "session": "ses_e376458b3a384f7c96cfc6b4",
-   "createdAt": "2026-09-23T02:43:07.432Z",
+   "session": "ses_5fa05a02eee24716903c54d9",
+   "createdAt": "2026-09-23T03:09:53.545Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -2588,9 +2588,9 @@
    "metrics": {
     "decideMs": 0,
     "inventoryMs": 0,
-    "renderMs": 8,
+    "renderMs": 6,
     "assetsMs": 0,
-    "totalMs": 113,
+    "totalMs": 112,
     "modelCalls": 1,
     "estimateUsd": 0.0000036960000000000003
    },
@@ -2626,7 +2626,7 @@
     "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 117,
+   "wallMs": 115,
    "directions": [
     {
      "index": 0,
@@ -2651,7 +2651,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/0.html",
+     "preview": "previews/ses_5fa05a02eee24716903c54d9/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "split",
@@ -2702,7 +2702,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/1.html",
+     "preview": "previews/ses_5fa05a02eee24716903c54d9/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "display",
@@ -2753,7 +2753,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/2.html",
+     "preview": "previews/ses_5fa05a02eee24716903c54d9/b0/2.html",
      "features": {
       "lead": "product",
       "hero": "compact",
@@ -2804,7 +2804,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/3.html",
+     "preview": "previews/ses_5fa05a02eee24716903c54d9/b0/3.html",
      "features": {
       "lead": "data",
       "hero": "compact",
@@ -2855,7 +2855,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/4.html",
+     "preview": "previews/ses_5fa05a02eee24716903c54d9/b0/4.html",
      "features": {
       "lead": "catalogue",
       "hero": "index",
@@ -2906,7 +2906,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/5.html",
+     "preview": "previews/ses_5fa05a02eee24716903c54d9/b0/5.html",
      "features": {
       "lead": "statement",
       "hero": "panel",
@@ -2939,8 +2939,8 @@
   {
    "brief": "software",
    "seed": 97,
-   "session": "ses_bc9a40d07d0d40049bf8559c",
-   "createdAt": "2026-09-23T02:43:07.551Z",
+   "session": "ses_e41f8f3b2fa74c3b821e5a2d",
+   "createdAt": "2026-09-23T03:09:53.673Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -2952,7 +2952,7 @@
     "inventoryMs": 0,
     "renderMs": 7,
     "assetsMs": 0,
-    "totalMs": 115,
+    "totalMs": 125,
     "modelCalls": 1,
     "estimateUsd": 0.0000036960000000000003
    },
@@ -2988,7 +2988,7 @@
     "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 119,
+   "wallMs": 128,
    "directions": [
     {
      "index": 0,
@@ -3013,7 +3013,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/0.html",
+     "preview": "previews/ses_e41f8f3b2fa74c3b821e5a2d/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "poster",
@@ -3064,7 +3064,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/1.html",
+     "preview": "previews/ses_e41f8f3b2fa74c3b821e5a2d/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "media",
@@ -3115,7 +3115,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/2.html",
+     "preview": "previews/ses_e41f8f3b2fa74c3b821e5a2d/b0/2.html",
      "features": {
       "lead": "product",
       "hero": "split",
@@ -3166,7 +3166,7 @@
      "tone": "dark",
      "imageSlots": 3,
      "diagnostics": [],
-     "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/3.html",
+     "preview": "previews/ses_e41f8f3b2fa74c3b821e5a2d/b0/3.html",
      "features": {
       "lead": "story",
       "hero": "split",
@@ -3217,7 +3217,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/4.html",
+     "preview": "previews/ses_e41f8f3b2fa74c3b821e5a2d/b0/4.html",
      "features": {
       "lead": "data",
       "hero": "compact",
@@ -3268,7 +3268,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/5.html",
+     "preview": "previews/ses_e41f8f3b2fa74c3b821e5a2d/b0/5.html",
      "features": {
       "lead": "product",
       "hero": "panel",
@@ -3304,379 +3304,379 @@
    "brief": "festival",
    "seed": 11,
    "direction": 0,
-   "session": "ses_33d4fa26c7b5434f9bcaef57",
-   "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/0.html"
+   "session": "ses_cce07323644d412fae354fb4",
+   "preview": "previews/ses_cce07323644d412fae354fb4/b0/0.html"
   },
   "festival-s11-d1": {
    "brief": "festival",
    "seed": 11,
    "direction": 1,
-   "session": "ses_33d4fa26c7b5434f9bcaef57",
-   "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/1.html"
+   "session": "ses_cce07323644d412fae354fb4",
+   "preview": "previews/ses_cce07323644d412fae354fb4/b0/1.html"
   },
   "festival-s11-d2": {
    "brief": "festival",
    "seed": 11,
    "direction": 2,
-   "session": "ses_33d4fa26c7b5434f9bcaef57",
-   "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/2.html"
+   "session": "ses_cce07323644d412fae354fb4",
+   "preview": "previews/ses_cce07323644d412fae354fb4/b0/2.html"
   },
   "festival-s11-d3": {
    "brief": "festival",
    "seed": 11,
    "direction": 3,
-   "session": "ses_33d4fa26c7b5434f9bcaef57",
-   "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/3.html"
+   "session": "ses_cce07323644d412fae354fb4",
+   "preview": "previews/ses_cce07323644d412fae354fb4/b0/3.html"
   },
   "festival-s11-d4": {
    "brief": "festival",
    "seed": 11,
    "direction": 4,
-   "session": "ses_33d4fa26c7b5434f9bcaef57",
-   "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/4.html"
+   "session": "ses_cce07323644d412fae354fb4",
+   "preview": "previews/ses_cce07323644d412fae354fb4/b0/4.html"
   },
   "festival-s11-d5": {
    "brief": "festival",
    "seed": 11,
    "direction": 5,
-   "session": "ses_33d4fa26c7b5434f9bcaef57",
-   "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/5.html"
+   "session": "ses_cce07323644d412fae354fb4",
+   "preview": "previews/ses_cce07323644d412fae354fb4/b0/5.html"
   },
   "festival-s42-d0": {
    "brief": "festival",
    "seed": 42,
    "direction": 0,
-   "session": "ses_8161e01f4ba24219bf50417a",
-   "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/0.html"
+   "session": "ses_46aff11c6d814af4b9e95d08",
+   "preview": "previews/ses_46aff11c6d814af4b9e95d08/b0/0.html"
   },
   "festival-s42-d1": {
    "brief": "festival",
    "seed": 42,
    "direction": 1,
-   "session": "ses_8161e01f4ba24219bf50417a",
-   "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/1.html"
+   "session": "ses_46aff11c6d814af4b9e95d08",
+   "preview": "previews/ses_46aff11c6d814af4b9e95d08/b0/1.html"
   },
   "festival-s42-d2": {
    "brief": "festival",
    "seed": 42,
    "direction": 2,
-   "session": "ses_8161e01f4ba24219bf50417a",
-   "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/2.html"
+   "session": "ses_46aff11c6d814af4b9e95d08",
+   "preview": "previews/ses_46aff11c6d814af4b9e95d08/b0/2.html"
   },
   "festival-s42-d3": {
    "brief": "festival",
    "seed": 42,
    "direction": 3,
-   "session": "ses_8161e01f4ba24219bf50417a",
-   "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/3.html"
+   "session": "ses_46aff11c6d814af4b9e95d08",
+   "preview": "previews/ses_46aff11c6d814af4b9e95d08/b0/3.html"
   },
   "festival-s42-d4": {
    "brief": "festival",
    "seed": 42,
    "direction": 4,
-   "session": "ses_8161e01f4ba24219bf50417a",
-   "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/4.html"
+   "session": "ses_46aff11c6d814af4b9e95d08",
+   "preview": "previews/ses_46aff11c6d814af4b9e95d08/b0/4.html"
   },
   "festival-s42-d5": {
    "brief": "festival",
    "seed": 42,
    "direction": 5,
-   "session": "ses_8161e01f4ba24219bf50417a",
-   "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/5.html"
+   "session": "ses_46aff11c6d814af4b9e95d08",
+   "preview": "previews/ses_46aff11c6d814af4b9e95d08/b0/5.html"
   },
   "festival-s97-d0": {
    "brief": "festival",
    "seed": 97,
    "direction": 0,
-   "session": "ses_14e96e7f558e4041a2127693",
-   "preview": "previews/ses_14e96e7f558e4041a2127693/b0/0.html"
+   "session": "ses_ace66795a23d4be4904781ce",
+   "preview": "previews/ses_ace66795a23d4be4904781ce/b0/0.html"
   },
   "festival-s97-d1": {
    "brief": "festival",
    "seed": 97,
    "direction": 1,
-   "session": "ses_14e96e7f558e4041a2127693",
-   "preview": "previews/ses_14e96e7f558e4041a2127693/b0/1.html"
+   "session": "ses_ace66795a23d4be4904781ce",
+   "preview": "previews/ses_ace66795a23d4be4904781ce/b0/1.html"
   },
   "festival-s97-d2": {
    "brief": "festival",
    "seed": 97,
    "direction": 2,
-   "session": "ses_14e96e7f558e4041a2127693",
-   "preview": "previews/ses_14e96e7f558e4041a2127693/b0/2.html"
+   "session": "ses_ace66795a23d4be4904781ce",
+   "preview": "previews/ses_ace66795a23d4be4904781ce/b0/2.html"
   },
   "festival-s97-d3": {
    "brief": "festival",
    "seed": 97,
    "direction": 3,
-   "session": "ses_14e96e7f558e4041a2127693",
-   "preview": "previews/ses_14e96e7f558e4041a2127693/b0/3.html"
+   "session": "ses_ace66795a23d4be4904781ce",
+   "preview": "previews/ses_ace66795a23d4be4904781ce/b0/3.html"
   },
   "festival-s97-d4": {
    "brief": "festival",
    "seed": 97,
    "direction": 4,
-   "session": "ses_14e96e7f558e4041a2127693",
-   "preview": "previews/ses_14e96e7f558e4041a2127693/b0/4.html"
+   "session": "ses_ace66795a23d4be4904781ce",
+   "preview": "previews/ses_ace66795a23d4be4904781ce/b0/4.html"
   },
   "festival-s97-d5": {
    "brief": "festival",
    "seed": 97,
    "direction": 5,
-   "session": "ses_14e96e7f558e4041a2127693",
-   "preview": "previews/ses_14e96e7f558e4041a2127693/b0/5.html"
+   "session": "ses_ace66795a23d4be4904781ce",
+   "preview": "previews/ses_ace66795a23d4be4904781ce/b0/5.html"
   },
   "shop-s11-d0": {
    "brief": "shop",
    "seed": 11,
    "direction": 0,
-   "session": "ses_c793ef07014a422082d5891a",
-   "preview": "previews/ses_c793ef07014a422082d5891a/b0/0.html"
+   "session": "ses_7911981837014805b249f897",
+   "preview": "previews/ses_7911981837014805b249f897/b0/0.html"
   },
   "shop-s11-d1": {
    "brief": "shop",
    "seed": 11,
    "direction": 1,
-   "session": "ses_c793ef07014a422082d5891a",
-   "preview": "previews/ses_c793ef07014a422082d5891a/b0/1.html"
+   "session": "ses_7911981837014805b249f897",
+   "preview": "previews/ses_7911981837014805b249f897/b0/1.html"
   },
   "shop-s11-d2": {
    "brief": "shop",
    "seed": 11,
    "direction": 2,
-   "session": "ses_c793ef07014a422082d5891a",
-   "preview": "previews/ses_c793ef07014a422082d5891a/b0/2.html"
+   "session": "ses_7911981837014805b249f897",
+   "preview": "previews/ses_7911981837014805b249f897/b0/2.html"
   },
   "shop-s11-d3": {
    "brief": "shop",
    "seed": 11,
    "direction": 3,
-   "session": "ses_c793ef07014a422082d5891a",
-   "preview": "previews/ses_c793ef07014a422082d5891a/b0/3.html"
+   "session": "ses_7911981837014805b249f897",
+   "preview": "previews/ses_7911981837014805b249f897/b0/3.html"
   },
   "shop-s11-d4": {
    "brief": "shop",
    "seed": 11,
    "direction": 4,
-   "session": "ses_c793ef07014a422082d5891a",
-   "preview": "previews/ses_c793ef07014a422082d5891a/b0/4.html"
+   "session": "ses_7911981837014805b249f897",
+   "preview": "previews/ses_7911981837014805b249f897/b0/4.html"
   },
   "shop-s11-d5": {
    "brief": "shop",
    "seed": 11,
    "direction": 5,
-   "session": "ses_c793ef07014a422082d5891a",
-   "preview": "previews/ses_c793ef07014a422082d5891a/b0/5.html"
+   "session": "ses_7911981837014805b249f897",
+   "preview": "previews/ses_7911981837014805b249f897/b0/5.html"
   },
   "shop-s42-d0": {
    "brief": "shop",
    "seed": 42,
    "direction": 0,
-   "session": "ses_b3bb0de920034fe7a1f2df8f",
-   "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/0.html"
+   "session": "ses_2d73658c19294ccf99406d44",
+   "preview": "previews/ses_2d73658c19294ccf99406d44/b0/0.html"
   },
   "shop-s42-d1": {
    "brief": "shop",
    "seed": 42,
    "direction": 1,
-   "session": "ses_b3bb0de920034fe7a1f2df8f",
-   "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/1.html"
+   "session": "ses_2d73658c19294ccf99406d44",
+   "preview": "previews/ses_2d73658c19294ccf99406d44/b0/1.html"
   },
   "shop-s42-d2": {
    "brief": "shop",
    "seed": 42,
    "direction": 2,
-   "session": "ses_b3bb0de920034fe7a1f2df8f",
-   "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/2.html"
+   "session": "ses_2d73658c19294ccf99406d44",
+   "preview": "previews/ses_2d73658c19294ccf99406d44/b0/2.html"
   },
   "shop-s42-d3": {
    "brief": "shop",
    "seed": 42,
    "direction": 3,
-   "session": "ses_b3bb0de920034fe7a1f2df8f",
-   "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/3.html"
+   "session": "ses_2d73658c19294ccf99406d44",
+   "preview": "previews/ses_2d73658c19294ccf99406d44/b0/3.html"
   },
   "shop-s42-d4": {
    "brief": "shop",
    "seed": 42,
    "direction": 4,
-   "session": "ses_b3bb0de920034fe7a1f2df8f",
-   "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/4.html"
+   "session": "ses_2d73658c19294ccf99406d44",
+   "preview": "previews/ses_2d73658c19294ccf99406d44/b0/4.html"
   },
   "shop-s42-d5": {
    "brief": "shop",
    "seed": 42,
    "direction": 5,
-   "session": "ses_b3bb0de920034fe7a1f2df8f",
-   "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/5.html"
+   "session": "ses_2d73658c19294ccf99406d44",
+   "preview": "previews/ses_2d73658c19294ccf99406d44/b0/5.html"
   },
   "shop-s97-d0": {
    "brief": "shop",
    "seed": 97,
    "direction": 0,
-   "session": "ses_d34ffa59f8424451a815c6c6",
-   "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/0.html"
+   "session": "ses_50cd8125d68a4700ae08ddac",
+   "preview": "previews/ses_50cd8125d68a4700ae08ddac/b0/0.html"
   },
   "shop-s97-d1": {
    "brief": "shop",
    "seed": 97,
    "direction": 1,
-   "session": "ses_d34ffa59f8424451a815c6c6",
-   "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/1.html"
+   "session": "ses_50cd8125d68a4700ae08ddac",
+   "preview": "previews/ses_50cd8125d68a4700ae08ddac/b0/1.html"
   },
   "shop-s97-d2": {
    "brief": "shop",
    "seed": 97,
    "direction": 2,
-   "session": "ses_d34ffa59f8424451a815c6c6",
-   "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/2.html"
+   "session": "ses_50cd8125d68a4700ae08ddac",
+   "preview": "previews/ses_50cd8125d68a4700ae08ddac/b0/2.html"
   },
   "shop-s97-d3": {
    "brief": "shop",
    "seed": 97,
    "direction": 3,
-   "session": "ses_d34ffa59f8424451a815c6c6",
-   "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/3.html"
+   "session": "ses_50cd8125d68a4700ae08ddac",
+   "preview": "previews/ses_50cd8125d68a4700ae08ddac/b0/3.html"
   },
   "shop-s97-d4": {
    "brief": "shop",
    "seed": 97,
    "direction": 4,
-   "session": "ses_d34ffa59f8424451a815c6c6",
-   "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/4.html"
+   "session": "ses_50cd8125d68a4700ae08ddac",
+   "preview": "previews/ses_50cd8125d68a4700ae08ddac/b0/4.html"
   },
   "shop-s97-d5": {
    "brief": "shop",
    "seed": 97,
    "direction": 5,
-   "session": "ses_d34ffa59f8424451a815c6c6",
-   "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/5.html"
+   "session": "ses_50cd8125d68a4700ae08ddac",
+   "preview": "previews/ses_50cd8125d68a4700ae08ddac/b0/5.html"
   },
   "software-s11-d0": {
    "brief": "software",
    "seed": 11,
    "direction": 0,
-   "session": "ses_212464e631e845328c411fed",
-   "preview": "previews/ses_212464e631e845328c411fed/b0/0.html"
+   "session": "ses_8b4177cab7ed49878538c540",
+   "preview": "previews/ses_8b4177cab7ed49878538c540/b0/0.html"
   },
   "software-s11-d1": {
    "brief": "software",
    "seed": 11,
    "direction": 1,
-   "session": "ses_212464e631e845328c411fed",
-   "preview": "previews/ses_212464e631e845328c411fed/b0/1.html"
+   "session": "ses_8b4177cab7ed49878538c540",
+   "preview": "previews/ses_8b4177cab7ed49878538c540/b0/1.html"
   },
   "software-s11-d2": {
    "brief": "software",
    "seed": 11,
    "direction": 2,
-   "session": "ses_212464e631e845328c411fed",
-   "preview": "previews/ses_212464e631e845328c411fed/b0/2.html"
+   "session": "ses_8b4177cab7ed49878538c540",
+   "preview": "previews/ses_8b4177cab7ed49878538c540/b0/2.html"
   },
   "software-s11-d3": {
    "brief": "software",
    "seed": 11,
    "direction": 3,
-   "session": "ses_212464e631e845328c411fed",
-   "preview": "previews/ses_212464e631e845328c411fed/b0/3.html"
+   "session": "ses_8b4177cab7ed49878538c540",
+   "preview": "previews/ses_8b4177cab7ed49878538c540/b0/3.html"
   },
   "software-s11-d4": {
    "brief": "software",
    "seed": 11,
    "direction": 4,
-   "session": "ses_212464e631e845328c411fed",
-   "preview": "previews/ses_212464e631e845328c411fed/b0/4.html"
+   "session": "ses_8b4177cab7ed49878538c540",
+   "preview": "previews/ses_8b4177cab7ed49878538c540/b0/4.html"
   },
   "software-s11-d5": {
    "brief": "software",
    "seed": 11,
    "direction": 5,
-   "session": "ses_212464e631e845328c411fed",
-   "preview": "previews/ses_212464e631e845328c411fed/b0/5.html"
+   "session": "ses_8b4177cab7ed49878538c540",
+   "preview": "previews/ses_8b4177cab7ed49878538c540/b0/5.html"
   },
   "software-s42-d0": {
    "brief": "software",
    "seed": 42,
    "direction": 0,
-   "session": "ses_e376458b3a384f7c96cfc6b4",
-   "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/0.html"
+   "session": "ses_5fa05a02eee24716903c54d9",
+   "preview": "previews/ses_5fa05a02eee24716903c54d9/b0/0.html"
   },
   "software-s42-d1": {
    "brief": "software",
    "seed": 42,
    "direction": 1,
-   "session": "ses_e376458b3a384f7c96cfc6b4",
-   "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/1.html"
+   "session": "ses_5fa05a02eee24716903c54d9",
+   "preview": "previews/ses_5fa05a02eee24716903c54d9/b0/1.html"
   },
   "software-s42-d2": {
    "brief": "software",
    "seed": 42,
    "direction": 2,
-   "session": "ses_e376458b3a384f7c96cfc6b4",
-   "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/2.html"
+   "session": "ses_5fa05a02eee24716903c54d9",
+   "preview": "previews/ses_5fa05a02eee24716903c54d9/b0/2.html"
   },
   "software-s42-d3": {
    "brief": "software",
    "seed": 42,
    "direction": 3,
-   "session": "ses_e376458b3a384f7c96cfc6b4",
-   "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/3.html"
+   "session": "ses_5fa05a02eee24716903c54d9",
+   "preview": "previews/ses_5fa05a02eee24716903c54d9/b0/3.html"
   },
   "software-s42-d4": {
    "brief": "software",
    "seed": 42,
    "direction": 4,
-   "session": "ses_e376458b3a384f7c96cfc6b4",
-   "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/4.html"
+   "session": "ses_5fa05a02eee24716903c54d9",
+   "preview": "previews/ses_5fa05a02eee24716903c54d9/b0/4.html"
   },
   "software-s42-d5": {
    "brief": "software",
    "seed": 42,
    "direction": 5,
-   "session": "ses_e376458b3a384f7c96cfc6b4",
-   "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/5.html"
+   "session": "ses_5fa05a02eee24716903c54d9",
+   "preview": "previews/ses_5fa05a02eee24716903c54d9/b0/5.html"
   },
   "software-s97-d0": {
    "brief": "software",
    "seed": 97,
    "direction": 0,
-   "session": "ses_bc9a40d07d0d40049bf8559c",
-   "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/0.html"
+   "session": "ses_e41f8f3b2fa74c3b821e5a2d",
+   "preview": "previews/ses_e41f8f3b2fa74c3b821e5a2d/b0/0.html"
   },
   "software-s97-d1": {
    "brief": "software",
    "seed": 97,
    "direction": 1,
-   "session": "ses_bc9a40d07d0d40049bf8559c",
-   "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/1.html"
+   "session": "ses_e41f8f3b2fa74c3b821e5a2d",
+   "preview": "previews/ses_e41f8f3b2fa74c3b821e5a2d/b0/1.html"
   },
   "software-s97-d2": {
    "brief": "software",
    "seed": 97,
    "direction": 2,
-   "session": "ses_bc9a40d07d0d40049bf8559c",
-   "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/2.html"
+   "session": "ses_e41f8f3b2fa74c3b821e5a2d",
+   "preview": "previews/ses_e41f8f3b2fa74c3b821e5a2d/b0/2.html"
   },
   "software-s97-d3": {
    "brief": "software",
    "seed": 97,
    "direction": 3,
-   "session": "ses_bc9a40d07d0d40049bf8559c",
-   "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/3.html"
+   "session": "ses_e41f8f3b2fa74c3b821e5a2d",
+   "preview": "previews/ses_e41f8f3b2fa74c3b821e5a2d/b0/3.html"
   },
   "software-s97-d4": {
    "brief": "software",
    "seed": 97,
    "direction": 4,
-   "session": "ses_bc9a40d07d0d40049bf8559c",
-   "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/4.html"
+   "session": "ses_e41f8f3b2fa74c3b821e5a2d",
+   "preview": "previews/ses_e41f8f3b2fa74c3b821e5a2d/b0/4.html"
   },
   "software-s97-d5": {
    "brief": "software",
    "seed": 97,
    "direction": 5,
-   "session": "ses_bc9a40d07d0d40049bf8559c",
-   "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/5.html"
+   "session": "ses_e41f8f3b2fa74c3b821e5a2d",
+   "preview": "previews/ses_e41f8f3b2fa74c3b821e5a2d/b0/5.html"
   },
   "cal-s0": {
    "brief": "__styleProbe__",
@@ -3869,17 +3869,17 @@
    "issues": []
   },
   "notes": [
-   "generated 2 image(s) for gallery-1, gallery-2 at Turbo (steps 4, guidance 2) in 21ms"
+   "generated 2 image(s) for gallery-1, gallery-2 at Turbo (steps 4, guidance 2) in 22ms"
   ],
-  "imageMs": 21,
+  "imageMs": 22,
   "zipTestOk": true,
   "zipEntries": [
    "index.html",
    "design.spec.json",
    "README.md",
    "assets/fixture-final/00-user-hero.png",
-   "assets/fixture-final/00-gallery-1-89382386.png",
-   "assets/fixture-final/01-gallery-2-541601581.png",
+   "assets/fixture-final/00-gallery-1-147052063.png",
+   "assets/fixture-final/01-gallery-2-175306323.png",
    "fonts/LICENSES.md",
    "fonts/archivo-latin-var.woff2",
    "fonts/inter-latin-var.woff2",
@@ -3890,7 +3890,7 @@
   ]
  },
  "live": {
-  "capturedAt": "2026-09-23T02:43:07.759Z",
+  "capturedAt": "2026-09-23T03:09:53.886Z",
   "note": "real services in this environment; each part that could not run says why",
   "environment": {
    "jev": "TYPESAFE_API_KEY present",
@@ -3900,14 +3900,14 @@
   "decision": {
    "status": "live",
    "model": "jev-1.13.0",
-   "latencyMs": 335
+   "latencyMs": 267
   },
   "diversity": [
    {
     "brief": "festival",
     "seed": 11,
     "model": "jev-1.13.0",
-    "decideMs": 335,
+    "decideMs": 267,
     "met": true,
     "targets": {
      "directions": 6,
@@ -3969,6 +3969,68 @@
     "brief": "festival",
     "seed": 42,
     "model": "jev-1.13.0",
+    "decideMs": 233,
+    "met": true,
+    "targets": {
+     "directions": 6,
+     "compositions": 4,
+     "constructions": 3,
+     "treatments": 3,
+     "grayscaleDistinct": 4
+    },
+    "achieved": {
+     "directions": 6,
+     "compositions": 6,
+     "constructions": 4,
+     "treatments": 4,
+     "grayscaleDistinct": 6,
+     "minSeparation": 0.5752,
+     "minGrayscaleSeparation": 0.5933
+    },
+    "shortfall": [],
+    "directions": [
+     {
+      "blueprint": "event-programme",
+      "palette": "electric-acid",
+      "construction": "broken",
+      "treatment": "plain"
+     },
+     {
+      "blueprint": "event-festival~f52200974",
+      "palette": "electric-acid",
+      "construction": "outline",
+      "treatment": "shaped"
+     },
+     {
+      "blueprint": "story-profile~f52025f24",
+      "palette": "electric-acid",
+      "construction": "stacked",
+      "treatment": "textwrap"
+     },
+     {
+      "blueprint": "product-demo~f51bd2104",
+      "palette": "electric-acid",
+      "construction": "caps",
+      "treatment": "cutout"
+     },
+     {
+      "blueprint": "catalogue-rail~f51e4b4d4",
+      "palette": "electric-acid",
+      "construction": "broken",
+      "treatment": "textwrap"
+     },
+     {
+      "blueprint": "data-metrics~f52479734",
+      "palette": "electric-acid",
+      "construction": "caps",
+      "treatment": "plain"
+     }
+    ]
+   },
+   {
+    "brief": "festival",
+    "seed": 97,
+    "model": "jev-1.13.0",
     "decideMs": 189,
     "met": true,
     "targets": {
@@ -3984,70 +4046,8 @@
      "constructions": 4,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.5824,
-     "minGrayscaleSeparation": 0.6009
-    },
-    "shortfall": [],
-    "directions": [
-     {
-      "blueprint": "event-programme",
-      "palette": "electric-acid",
-      "construction": "broken",
-      "treatment": "plain"
-     },
-     {
-      "blueprint": "event-festival~f52200364",
-      "palette": "electric-acid",
-      "construction": "outline",
-      "treatment": "shaped"
-     },
-     {
-      "blueprint": "catalogue-rail~f51e4aec4",
-      "palette": "electric-acid",
-      "construction": "stacked",
-      "treatment": "textwrap"
-     },
-     {
-      "blueprint": "product-demo~f51bd2104",
-      "palette": "electric-acid",
-      "construction": "caps",
-      "treatment": "cutout"
-     },
-     {
-      "blueprint": "statement-display~f519f76b4",
-      "palette": "electric-acid",
-      "construction": "stacked",
-      "treatment": "plain"
-     },
-     {
-      "blueprint": "story-editorial~f51f875a4",
-      "palette": "electric-acid",
-      "construction": "broken",
-      "treatment": "textwrap"
-     }
-    ]
-   },
-   {
-    "brief": "festival",
-    "seed": 97,
-    "model": "jev-1.13.0",
-    "decideMs": 293,
-    "met": true,
-    "targets": {
-     "directions": 6,
-     "compositions": 4,
-     "constructions": 3,
-     "treatments": 3,
-     "grayscaleDistinct": 4
-    },
-    "achieved": {
-     "directions": 6,
-     "compositions": 6,
-     "constructions": 4,
-     "treatments": 4,
-     "grayscaleDistinct": 6,
-     "minSeparation": 0.5891,
-     "minGrayscaleSeparation": 0.6082
+     "minSeparation": 0.5777,
+     "minGrayscaleSeparation": 0.596
     },
     "shortfall": [],
     "directions": [
@@ -4076,16 +4076,16 @@
       "treatment": "textwrap"
      },
      {
-      "blueprint": "story-origin",
-      "palette": "electric-acid",
-      "construction": "broken",
-      "treatment": "textwrap"
-     },
-     {
       "blueprint": "statement-panel",
       "palette": "electric-acid",
       "construction": "stacked",
       "treatment": "plain"
+     },
+     {
+      "blueprint": "story-profile~f30b4a984",
+      "palette": "electric-acid",
+      "construction": "broken",
+      "treatment": "textwrap"
      }
     ]
    },
@@ -4093,7 +4093,7 @@
     "brief": "shop",
     "seed": 11,
     "model": "jev-1.13.0",
-    "decideMs": 285,
+    "decideMs": 213,
     "met": true,
     "targets": {
      "directions": 6,
@@ -4108,13 +4108,13 @@
      "constructions": 5,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.4561,
-     "minGrayscaleSeparation": 0.45
+     "minSeparation": 0.4567,
+     "minGrayscaleSeparation": 0.441
     },
     "shortfall": [],
     "directions": [
      {
-      "blueprint": "statement-letter~cc63776a4",
+      "blueprint": "statement-letter",
       "palette": "bone-terracotta",
       "construction": "stacked",
       "treatment": "plain"
@@ -4126,13 +4126,13 @@
       "treatment": "shaped"
      },
      {
-      "blueprint": "product-demo~cc6416024",
-      "palette": "bone-terracotta",
+      "blueprint": "product-demo~cc6415a14",
+      "palette": "sage-mist",
       "construction": "broken",
       "treatment": "cutout"
      },
      {
-      "blueprint": "catalogue-gallery~cc65f0464",
+      "blueprint": "catalogue-rail",
       "palette": "bone-terracotta",
       "construction": "run-on",
       "treatment": "textwrap"
@@ -4145,7 +4145,7 @@
      },
      {
       "blueprint": "event-ticketing",
-      "palette": "bone-terracotta",
+      "palette": "sage-mist",
       "construction": "outline",
       "treatment": "plain"
      }
@@ -4155,7 +4155,7 @@
     "brief": "shop",
     "seed": 42,
     "model": "jev-1.13.0",
-    "decideMs": 194,
+    "decideMs": 201,
     "met": true,
     "targets": {
      "directions": 6,
@@ -4170,25 +4170,25 @@
      "constructions": 5,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.485,
-     "minGrayscaleSeparation": 0.4714
+     "minSeparation": 0.4912,
+     "minGrayscaleSeparation": 0.4781
     },
     "shortfall": [],
     "directions": [
      {
-      "blueprint": "statement-display",
+      "blueprint": "statement-panel~f51a96034",
       "palette": "bone-terracotta",
       "construction": "stacked",
       "treatment": "plain"
      },
      {
-      "blueprint": "image-strip",
+      "blueprint": "event-festival~f52200974",
       "palette": "bone-terracotta",
       "construction": "outline",
       "treatment": "shaped"
      },
      {
-      "blueprint": "catalogue-rail",
+      "blueprint": "catalogue-gallery~f51dad164",
       "palette": "bone-terracotta",
       "construction": "broken",
       "treatment": "textwrap"
@@ -4200,7 +4200,7 @@
       "treatment": "cutout"
      },
      {
-      "blueprint": "product-spec~f51c70474",
+      "blueprint": "data-metrics~f52479124",
       "palette": "bone-terracotta",
       "construction": "caps",
       "treatment": "plain"
@@ -4217,7 +4217,7 @@
     "brief": "shop",
     "seed": 97,
     "model": "jev-1.13.0",
-    "decideMs": 270,
+    "decideMs": 202,
     "met": true,
     "targets": {
      "directions": 6,
@@ -4232,25 +4232,25 @@
      "constructions": 5,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.5184,
-     "minGrayscaleSeparation": 0.5074
+     "minSeparation": 0.4763,
+     "minGrayscaleSeparation": 0.487
     },
     "shortfall": [],
     "directions": [
      {
-      "blueprint": "statement-panel~f305bb0a4",
+      "blueprint": "statement-display~f3051c724",
       "palette": "bone-terracotta",
       "construction": "stacked",
       "treatment": "plain"
      },
      {
-      "blueprint": "event-festival~f30d259e4",
+      "blueprint": "image-strip~f30effe24",
       "palette": "bone-terracotta",
       "construction": "outline",
       "treatment": "shaped"
      },
      {
-      "blueprint": "catalogue-gallery~f308d1bc4",
+      "blueprint": "catalogue-gallery",
       "palette": "bone-terracotta",
       "construction": "broken",
       "treatment": "textwrap"
@@ -4262,7 +4262,7 @@
       "treatment": "cutout"
      },
      {
-      "blueprint": "data-metrics~f30f9e7a4",
+      "blueprint": "data-metrics",
       "palette": "bone-terracotta",
       "construction": "caps",
       "treatment": "plain"
@@ -4279,7 +4279,7 @@
     "brief": "software",
     "seed": 11,
     "model": "jev-1.13.0",
-    "decideMs": 245,
+    "decideMs": 198,
     "met": true,
     "targets": {
      "directions": 6,
@@ -4294,8 +4294,8 @@
      "constructions": 4,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.5412,
-     "minGrayscaleSeparation": 0.5816
+     "minSeparation": 0.4204,
+     "minGrayscaleSeparation": 0.4518
     },
     "shortfall": [],
     "directions": [
@@ -4330,10 +4330,10 @@
       "treatment": "textwrap"
      },
      {
-      "blueprint": "statement-letter",
+      "blueprint": "product-demo~cc6416024",
       "palette": "steel-signal",
-      "construction": "stacked",
-      "treatment": "plain"
+      "construction": "caps",
+      "treatment": "cutout"
      }
     ]
    },
@@ -4341,7 +4341,7 @@
     "brief": "software",
     "seed": 42,
     "model": "jev-1.13.0",
-    "decideMs": 231,
+    "decideMs": 220,
     "met": true,
     "targets": {
      "directions": 6,
@@ -4374,7 +4374,7 @@
       "treatment": "shaped"
      },
      {
-      "blueprint": "product-demo~f51bd2714",
+      "blueprint": "product-demo~f51bd2104",
       "palette": "steel-signal",
       "construction": "broken",
       "treatment": "cutout"
@@ -4392,7 +4392,7 @@
       "treatment": "textwrap"
      },
      {
-      "blueprint": "statement-letter~f51b33d94",
+      "blueprint": "event-programme~f52161ff4",
       "palette": "steel-signal",
       "construction": "stacked",
       "treatment": "plain"
@@ -4403,7 +4403,7 @@
     "brief": "software",
     "seed": 97,
     "model": "jev-1.13.0",
-    "decideMs": 220,
+    "decideMs": 241,
     "met": true,
     "targets": {
      "directions": 6,
@@ -4418,16 +4418,22 @@
      "constructions": 4,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.5229,
-     "minGrayscaleSeparation": 0.5619
+     "minSeparation": 0.5604,
+     "minGrayscaleSeparation": 0.6022
     },
     "shortfall": [],
     "directions": [
      {
-      "blueprint": "data-metrics~f30f9e7a4",
+      "blueprint": "data-calculator~f3103c504",
       "palette": "steel-signal",
       "construction": "caps",
       "treatment": "plain"
+     },
+     {
+      "blueprint": "image-mosaic~f30e620c4",
+      "palette": "steel-signal",
+      "construction": "outline",
+      "treatment": "shaped"
      },
      {
       "blueprint": "product-demo~f306f7174",
@@ -4436,28 +4442,22 @@
       "treatment": "cutout"
      },
      {
-      "blueprint": "image-mosaic~f30e61ab4",
-      "palette": "steel-signal",
-      "construction": "outline",
-      "treatment": "shaped"
-     },
-     {
-      "blueprint": "catalogue-gallery",
+      "blueprint": "story-origin~f30be8cf4",
       "palette": "steel-signal",
       "construction": "broken",
       "treatment": "textwrap"
      },
      {
-      "blueprint": "product-pricing~f30833e64",
-      "palette": "steel-signal",
-      "construction": "outline",
-      "treatment": "plain"
-     },
-     {
-      "blueprint": "story-origin",
+      "blueprint": "catalogue-gallery~f308d21d4",
       "palette": "steel-signal",
       "construction": "caps",
       "treatment": "textwrap"
+     },
+     {
+      "blueprint": "catalogue-market~f30a0e2a4",
+      "palette": "steel-signal",
+      "construction": "stacked",
+      "treatment": "plain"
      }
     ]
    }
@@ -4465,16 +4465,16 @@
   "writer": {
    "status": "live",
    "model": "deepseek-flash",
-   "latencyMs": 8428,
+   "latencyMs": 9670,
    "inputTokens": 955,
-   "outputTokens": 1544,
-   "estimatedUsd": 0.00106965,
-   "brand": "Wijhaven"
+   "outputTokens": 1815,
+   "estimatedUsd": 0.0012322499999999998,
+   "brand": "VOLTAGE"
   },
   "image": {
    "status": "live",
    "service": "https://kimi.tailec998.ts.net:4363 (https)",
-   "direction": "dir_a3fbc1ff",
+   "direction": "dir_5ab30f5b",
    "blueprint": "event-festival",
    "renderableSlots": [
     "hero",
@@ -4502,16 +4502,16 @@
      "source": "generated",
      "license": "",
      "size": "256x256",
-     "bytes": 47547,
-     "seconds": 6.41
+     "bytes": 45833,
+     "seconds": 0.98
     },
     {
      "slot": "gallery-2",
      "source": "generated",
      "license": "",
      "size": "256x256",
-     "bytes": 39139,
-     "seconds": 0.81
+     "bytes": 32580,
+     "seconds": 0.82
     }
    ],
    "placement": {
@@ -4519,15 +4519,15 @@
     "checked": 3,
     "issues": []
    },
-   "imageMs": 8098,
+   "imageMs": 3263,
    "zipTestOk": true,
    "zipEntries": [
     "index.html",
     "design.spec.json",
     "README.md",
     "assets/live-final/00-user-hero.png",
-    "assets/live-final/00-gallery-1-640669446.png",
-    "assets/live-final/01-gallery-2-806734444.png",
+    "assets/live-final/00-gallery-1-523271738.png",
+    "assets/live-final/01-gallery-2-778890358.png",
     "fonts/LICENSES.md",
     "fonts/archivo-latin-var.woff2",
     "fonts/inter-latin-var.woff2",
@@ -4537,9 +4537,9 @@
     "index.selfcontained.html"
    ],
    "notes": [
-    "generated 2 image(s) for gallery-1, gallery-2 at Turbo (steps 4, guidance 2) in 8098ms"
+    "generated 2 image(s) for gallery-1, gallery-2 at Turbo (steps 4, guidance 2) in 3263ms"
    ]
   }
  },
- "wallMs": 22077
+ "wallMs": 18237
 }

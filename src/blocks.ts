@@ -11,7 +11,7 @@
  */
 import { emphasize, stripEmphasis, type Content, type Item } from './content.js';
 import { renderFrame } from './frames.js';
-import { renderIcon, type IconName } from './icons.js';
+import { resolveIconRole, renderIcon, type IconRole } from './icons.js';
 import type { Asset } from './types.js';
 import type { HeroVariant, ModuleId, NavVariant, FooterVariant, Blueprint } from './blueprint.js';
 import type { VisualBlueprint } from './visual.js';
@@ -31,13 +31,20 @@ export interface BlockCtx {
 }
 
 /**
- * An icon, but only if this direction's visual blueprint allows it.
- * Icons are meaning, not decoration: if the set does not include it, we draw
- * nothing rather than reaching for a different family.
+ * An icon for one meaning, drawn in the page's own family.
+ *
+ * The block asks for a ROLE ("the email route"), never a glyph: the visual
+ * blueprint already chose one family and one glyph per role, so the same block
+ * renders either vocabulary without knowing which is on the page. Icons are
+ * meaning, not decoration: when the role has no glyph in the allowlist we draw
+ * nothing rather than reaching for another family.
  */
-function icon(ctx: BlockCtx, name: IconName): string {
-  if (!ctx.visual || !ctx.visual.icons.includes(name)) return '';
-  return renderIcon(name);
+function icon(ctx: BlockCtx, role: IconRole): string {
+  const vb = ctx.visual;
+  if (!vb) return '';
+  const name = resolveIconRole(vb.iconFamily, role, vb.icons);
+  if (!name) return '';
+  return renderIcon(name, vb.iconFamily);
 }
 
 function esc(s: string): string {
@@ -360,9 +367,10 @@ ${c.items
         </div>`;
 };
 
-const scheduleBlock = (c: Content, variant: string): string => {
+const scheduleBlock = (c: Content, variant: string, ctx: BlockCtx): string => {
   /* No programme in the content: say so instead of drawing empty rows. */
   if (!c.items.length) return empty('programme entries');
+  const day = (i: number): string => `${icon(ctx, 'schedule-date')}Day ${i + 1}`;
   return (
     variant === 'agenda'
     ? `        <ol class="agenda">
@@ -370,7 +378,7 @@ ${c.items
   .slice(0, 5)
   .map(
     (it, i) => `          <li class="reveal" data-reveal="fade">
-            <span class="mono">Day ${i + 1}</span>
+            <span class="mono">${day(i)}</span>
             <h3>${esc(it.name)}</h3>
             <p>${esc(it.meta)}</p>
           </li>`,
@@ -381,15 +389,16 @@ ${c.items
           <thead><tr><th scope="col">When</th><th scope="col">What</th><th scope="col">Detail</th></tr></thead>
           <tbody>${c.items
             .slice(0, 5)
-            .map((it, i) => `<tr><td class="mono">Day ${i + 1}</td><th scope="row">${esc(it.name)}</th><td>${esc(it.meta)}</td></tr>`)
+            .map((it, i) => `<tr><td class="mono">${day(i)}</td><th scope="row">${esc(it.name)}</th><td>${esc(it.meta)}</td></tr>`)
             .join('')}</tbody>
         </table></div>`
   );
 };
 
-const pricingBlock = (c: Content, variant: string) => {
+const pricingBlock = (c: Content, variant: string, ctx: BlockCtx) => {
   /* A price the brief did not supply is a price this page does not print. */
   if (!c.features.length || !c.stats.length) return empty('pricing');
+  const included = `${icon(ctx, 'pricing-included')}`;
   if (variant === 'tiers') {
     return `        <div class="grid tiers">
 ${c.features
@@ -398,7 +407,7 @@ ${c.features
     (f, i) => `          <div class="tier card${i === 1 ? ' tier--featured' : ''}">
             <h3>${esc(f.name)}</h3>
             <p class="tier__price mono">${esc(c.stats[i]?.value ?? '—')}</p>
-            <p>${esc(f.detail)}</p>
+            <p>${included}${esc(f.detail)}</p>
           </div>`,
   )
   .join('\n')}
@@ -408,18 +417,18 @@ ${c.features
           <thead><tr><th scope="col">Tier</th><th scope="col">Price</th><th scope="col">Includes</th></tr></thead>
           <tbody>${c.features
             .slice(0, 4)
-            .map((f, i) => `<tr><th scope="row">${esc(f.name)}</th><td class="mono">${esc(c.stats[i]?.value ?? '—')}</td><td>${esc(f.detail)}</td></tr>`)
+            .map((f, i) => `<tr><th scope="row">${esc(f.name)}</th><td class="mono">${esc(c.stats[i]?.value ?? '—')}</td><td>${included}${esc(f.detail)}</td></tr>`)
             .join('')}</tbody>
         </table></div>`;
 };
 
-const faqBlock = (c: Content): string => {
+const faqBlock = (c: Content, ctx: BlockCtx): string => {
   if (!c.features.length) return empty('questions');
   return `        <ul class="faq">
 ${c.features
   .slice(0, 4)
   .map(
-    (f, i) => `          <li><details${i === 0 ? ' open' : ''}><summary>${esc(f.name)}</summary><p>${esc(f.detail)}</p></details></li>`,
+    (f, i) => `          <li><details${i === 0 ? ' open' : ''}><summary>${icon(ctx, 'faq-answer')}${esc(f.name)}</summary><p>${esc(f.detail)}</p></details></li>`,
   )
   .join('\n')}
         </ul>`;
@@ -439,12 +448,12 @@ function contactBlock(c: Content, variant: string, ctx: BlockCtx): string {
   const bits: string[] = [];
   if (k.email) {
     bits.push(
-      `        <p class="display"><a class="link-u with-icon" href="mailto:${esc(k.email)}">${icon(ctx, 'mail')}${esc(k.email)}</a></p>`,
+      `        <p class="display"><a class="link-u with-icon" href="mailto:${esc(k.email)}">${icon(ctx, 'contact-email')}${esc(k.email)}</a></p>`,
     );
   }
   const tags: string[] = [];
-  if (k.phone) tags.push(`          <a class="tag with-icon" href="${esc(telHref(k.phone))}">${icon(ctx, 'phone')}${esc(k.phone)}</a>`);
-  if (k.address) tags.push(`          <span class="tag with-icon">${icon(ctx, 'map-pin')}${esc(k.address)}</span>`);
+  if (k.phone) tags.push(`          <a class="tag with-icon" href="${esc(telHref(k.phone))}">${icon(ctx, 'contact-phone')}${esc(k.phone)}</a>`);
+  if (k.address) tags.push(`          <span class="tag with-icon">${icon(ctx, 'contact-address')}${esc(k.address)}</span>`);
   if (k.handle) tags.push(`          <span class="tag">${esc(k.handle)}</span>`);
   if (k.url) {
     tags.push(
@@ -505,11 +514,11 @@ export function renderModule(module: ModuleId, variant: string, ctx: BlockCtx): 
     case 'gallery':
       return galleryBlock(c, ctx, variant);
     case 'schedule':
-      return scheduleBlock(c, variant);
+      return scheduleBlock(c, variant, ctx);
     case 'pricing':
-      return pricingBlock(c, variant);
+      return pricingBlock(c, variant, ctx);
     case 'faq':
-      return faqBlock(c);
+      return faqBlock(c, ctx);
     case 'contact':
       return contactBlock(c, variant, ctx);
     default:
@@ -526,7 +535,7 @@ export function renderHero(variant: HeroVariant, ctx: BlockCtx): string {
   const art = backdrop
     ? `<figure class="hero-art"${backdrop.slot ? ` data-slot="${esc(backdrop.slot)}"` : ''} aria-hidden="true"><img src="${esc(
         backdrop.file,
-      )}" alt="" width="256" height="256" loading="eager" decoding="async"></figure>`
+      )}" alt="" width="${backdrop.nativeWidth || 256}" height="${backdrop.nativeHeight || 256}" loading="eager" decoding="async"></figure>`
     : '';
   const hasContact = ctx.blueprint.sections.some((s) => s.module === 'contact');
   const first = ctx.blueprint.sections[0]?.module;
@@ -771,7 +780,7 @@ export function renderNav(
      control surface — never in the page a visitor reads. */
   const cta =
     variant === 'bar-cta' && contactTarget
-      ? `<a class="btn btn--sm" href="#${esc(contactTarget.id)}">${esc(c.cta)}</a>`
+      ? `<a class="btn btn--sm" href="#${esc(contactTarget.id)}">${esc(c.cta)}${icon(ctx, 'nav-cta')}</a>`
       : '';
 
   return `  <header class="site-head"><div class="wrap"><nav aria-label="Primary">
@@ -821,7 +830,7 @@ export function renderFooter(variant: FooterVariant, ctx: BlockCtx): string {
       <h2 class="footer__cta">${emphasize(c.sections.contact?.title ?? `Work with ${c.brand}`)}</h2>
       <p class="cluster">${
         k.email
-          ? `<a class="btn" href="mailto:${esc(k.email)}">${esc(c.cta)}</a><span class="tag">${esc(k.email)}</span>`
+          ? `<a class="btn" href="mailto:${esc(k.email)}">${esc(c.cta)}${icon(ctx, 'nav-cta')}</a><span class="tag">${esc(k.email)}</span>`
           : `<span class="tag">No contact details supplied for this brief</span>`
       }</p>
   </div></footer>`;

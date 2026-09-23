@@ -175,8 +175,10 @@ page makes no remote font request at all** — the Google Fonts link is gone. Fo
 - `src/frames.ts` — seven presentation frames (browser, device, packaging, ticket, cover, figure,
   plain); they wrap the figure and demo heroes, so they change image placement rather than
   decorating it.
-- `src/icons.ts` — 22 original 24×24 line icons in one consistent stroke family, chosen only where
-  they annotate a real route (contact, schedule, pricing) and capped at six per page.
+- `src/icons.ts` — two vendored families: the 22 original 24×24 line icons and a curated
+  **Lucide** subset (69 glyphs, ISC, pinned commit, licence in `public/icons/LICENSES.md`). A
+  page draws from exactly ONE family — chosen by its seed — and each meaning (email, date,
+  price, …) resolves through a small candidate list, capped at six icons per page.
 
 ---
 
@@ -255,12 +257,12 @@ Thinking mode is off by default (see [`JEV-RESEARCH.md`](JEV-RESEARCH.md)); the 
 and dominates.
 
 The current evidence corpus (`evidence/tables.md` §5) runs the **offline control** — local
-decider, specimen inventory: 1 model call per six-direction set, ~87–115 ms end to end per set,
+decider, specimen inventory: 1 model call per six-direction set, ~92–125 ms end to end per set,
 4–9 ms of that spent rendering all six previews locally. Candidate search is bounded at 2,394
 candidates per set. The second (inventory) call is the one that appears when a writer is
 configured; it is never paid per direction. The same two calls measured **live**
-(`evidence/tables.md` §10): Jev answered in 189–335 ms per decision (9 calls), and the shared
-inventory write took 8,428 ms for 955 in / 1,544 out tokens — $0.00107 on `deepseek-flash`.
+(`evidence/tables.md` §10): Jev answered in 189–267 ms per decision (9 calls), and the shared
+inventory write took 9,670 ms for 955 in / 1,815 out tokens — $0.00123 on `deepseek-flash`.
 
 ---
 
@@ -270,7 +272,7 @@ Run `npm test` — 13 suites, offline by construction. The generated
 counts (passed / failed / skipped per suite) live in
 [`evidence/tables.md`](../evidence/tables.md) §8, produced from
 `evidence/tests.txt` by `scripts/report.ts`, so the number quoted here can
-never drift from the suite again. **268 checks passed, 0 failed, 0 skipped**
+never drift from the suite again. **277 checks passed, 0 failed, 0 skipped**
 in this environment, where the credentials for the live halves are present;
 without them those checks skip *with the reason in the test name* rather than
 disappearing.
@@ -281,7 +283,7 @@ disappearing.
 | `images.test.ts` | payload validation, path-traversal refusal, PNG magic bytes, foreign-job filtering, busy/429 backoff, flat-frame rejection (a uniform black/blank render is discarded, the slot keeps its plate) |
 | `zip.test.ts` | CRC-32 vectors, real `unzip` round-trips (incl. Unicode names), DEFLATE vs STORE, traversal rejection, header-safe download filenames |
 | `motifs.test.ts` | determinism, element budgets, density, data-URI encoding |
-| `assets.test.ts` | frame composition, icon family consistency, escaping |
+| `assets.test.ts` | frame composition, icon consistency and both vendored icon families (original + Lucide ISC), escaping |
 | `fonts.test.ts` | every bundled file exists and is a real woff2, licences present, only used faces emitted |
 | `session.test.ts` | selection performs no model call and leaves the decision byte-identical; previews labelled, ids unique, anchors resolve; finalize writes a real design |
 | `slots.test.ts` | slot derivation, the texture-vs-native rule, prompt budgets, header parsing, traversal refusal, slot-scoped resolution, supplied-beats-generated |
@@ -304,7 +306,7 @@ preservation, and the header-safe download filename check.
    `evidence/tables.md` §10 ran against the image service this environment provides (a CPU
    host): a direction with 5 renderable slots, **1 supplied → 2 requests** and **2 new jobs
    observed on the service**, 3 assets on the page, placement `ok, 3 checked, 0 issues`, image
-   step 8,087 ms, ZIP 13 entries and `unzip -t` clean. The controlled fixture remains the
+   step 3,263 ms, ZIP 13 entries and `unzip -t` clean. The controlled fixture remains the
    request-counting control and the offline corpus stays offline so it reproduces
    byte-for-byte; a different provider's queueing, pricing and failure modes are unmeasured.
 2. **A single best-fit run still converges across repeats.** By design: direction 1 is the page
@@ -325,7 +327,7 @@ preservation, and the header-safe download filename check.
 6. **Live Jev and live writer paths are environment-gated, and they ran here.** With
    `TYPESAFE_API_KEY` and an LLM key present, `test/diversity.test.ts` checks the targets
    against nine live-decided sets (all met) and `test/forge.test.ts` runs the writer, the
-   decision and their composition — 268 passed / 0 failed / 0 skipped. On a machine without
+   decision and their composition — 277 passed / 0 failed / 0 skipped. On a machine without
    credentials those same checks skip *with the reason in the test name*, the offline corpus is
    unchanged, and `scripts/evidence.ts` records why its live phase did not run instead of
    dropping the rows.

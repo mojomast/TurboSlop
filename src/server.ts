@@ -17,7 +17,8 @@ import { fileURLToPath } from 'node:url';
 import { CANDIDATES, ATMOSPHERE, PALETTE_VISUAL } from './catalog.js';
 import { describeFontPack, FONT_PACK } from './fonts.js';
 import { FRAME_KINDS, frameForLead } from './frames.js';
-import { ICON_NAMES } from './icons.js';
+import { ICON_FAMILIES, ICON_NAMES } from './icons.js';
+import { LUCIDE_ICON_NAMES } from './iconpacks.js';
 import { MOTIF_FAMILIES, motifFamilyForEmotion } from './motifs.js';
 import { hasApiKey } from './jev.js';
 import { IMAGE_PRESETS, describeImageService, resolveImageService } from './images.js';
@@ -592,6 +593,9 @@ async function handleApi(req: http.IncomingMessage, res: http.ServerResponse, ur
         motifFamilies: [...MOTIF_FAMILIES],
         frames: [...FRAME_KINDS],
         icons: [...ICON_NAMES],
+        /** The vendored Lucide family, and the families a page may choose from. */
+        lucideIcons: [...LUCIDE_ICON_NAMES],
+        iconFamilies: [...ICON_FAMILIES],
         motifByEmotion: Object.fromEntries(
           ['awe', 'serenity', 'delight', 'tension', 'nostalgia', 'mystery', 'trust', 'energy', 'intimacy', 'optimism'].map(
             (e) => [e, motifFamilyForEmotion(e)],

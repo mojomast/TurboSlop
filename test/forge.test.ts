@@ -816,6 +816,16 @@ await test('icons are used sparingly and never as the only carrier of meaning', 
   // Every icon carries no title: decorative, with the text doing the work.
   const svgs = [...html.matchAll(/<svg[^>]*class="icon"[^>]*>/g)].map((m) => m[0]!);
   for (const s of svgs) assert.ok(/aria-hidden="true"/.test(s), `icon not hidden from AT: ${s.slice(0, 80)}`);
+  /* Exactly ONE family per page, and every drawn glyph belongs to it. */
+  const { iconNamesFor, renderIcon } = await import('../src/icons.js');
+  const family = /data-icon-family="([a-z]+)"/.exec(html)?.[1];
+  assert.ok(family === 'turboslop' || family === 'lucide', `page must declare one icon family, got ${family}`);
+  const blocks = [...html.matchAll(/<svg[^>]*class="icon"[\s\S]*?<\/svg>/g)].map((m) => m[0]!);
+  assert.equal(blocks.length, icons, 'icon markup did not round-trip');
+  for (const block of blocks) {
+    const known = iconNamesFor(family).some((name) => block === renderIcon(name, family));
+    assert.ok(known, `a glyph escaped the declared ${family} family: ${block.slice(0, 90)}`);
+  }
 });
 
 /* ================================================================== *

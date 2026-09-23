@@ -454,7 +454,7 @@ await test('pages render identically in structure with or without generated art'
   const withArt: DesignSpec = {
     ...spec,
     assets: [
-      { kind: 'backdrop', slot: 'items-1', source: 'generated', file: 'assets/x/00-backdrop-1.png', alt: 'Abstract backdrop', credit: '', license: '', nativeWidth: 256, nativeHeight: 256, prompt: 'a backdrop', seed: 1, steps: 20, cfg: 3, bytes: 1024, seconds: 2 },
+      { kind: 'backdrop', slot: 'hero', source: 'generated', file: 'assets/x/00-backdrop-1.png', alt: 'Abstract backdrop', credit: '', license: '', nativeWidth: 256, nativeHeight: 256, prompt: 'a backdrop', seed: 1, steps: 20, cfg: 3, bytes: 1024, seconds: 2 },
       { kind: 'motif', slot: 'items-2', source: 'generated', file: 'assets/x/01-motif-2.png', alt: 'Motif', credit: '', license: '', nativeWidth: 256, nativeHeight: 256, prompt: 'a motif', seed: 2, steps: 20, cfg: 3, bytes: 1024, seconds: 2 },
     ],
   };
@@ -466,10 +466,50 @@ await test('pages render identically in structure with or without generated art'
   assert.ok(html.includes('assets/x/01-motif-2.png'), 'motif asset not used in a plate');
   assert.ok(html.includes('assets/x/00-backdrop-1.png'), 'backdrop not used as hero art');
   assert.ok(/hero-art[^>]*aria-hidden="true"/.test(html), 'the decorative backdrop must be hidden from assistive tech');
+
+  /* Legacy specs predate slot ids: their backdrop assets carry no slot and are
+     still resolved by kind, exactly like the plate resolver's fallback. */
+  const legacy: DesignSpec = {
+    ...spec,
+    assets: [
+      { kind: 'backdrop', slot: '', source: 'generated', file: 'assets/x/00-legacy-backdrop.png', alt: 'Legacy backdrop', credit: '', license: '', nativeWidth: 256, nativeHeight: 256, prompt: 'a backdrop', seed: 3, steps: 20, cfg: 3, bytes: 1024, seconds: 2 },
+    ],
+  };
+  const legacyHtml = renderHtml(legacy);
+  assert.ok(legacyHtml.includes('assets/x/00-legacy-backdrop.png'), 'a slot-less legacy backdrop must still fill the hero');
+  assert.ok(/hero-art[^>]*aria-hidden="true"/.test(legacyHtml), 'legacy hero art stays decorative');
+});
+
+await test('a SUPPLIED image in a texture hero slot renders as the hero atmosphere', async () => {
+  /* Regression: the atmosphere layer used to be built from generated
+     `kind: 'backdrop'` assets only, so a user-supplied hero image was written,
+     reported by placement verification as unmatched, and never drawn. */
+  const r = await decideWithFallback('A calm spa landing page', { offline: true });
+  const { spec } = compose('A calm spa landing page', r);
+  const axes = spec.decisions.map((d) => ({ axis: d.axis, picked: d.picked, confidence: d.confidence }));
+  spec.content = fallbackContent('A calm spa landing page', axes);
+
+  const { BLUEPRINTS, imageSlotsFor } = await import('../src/blueprint.js');
+  const tex = BLUEPRINTS.find((bp) => imageSlotsFor(bp).some((s) => s.id === 'hero' && s.scale === 'texture'));
+  assert.ok(tex, 'expected at least one catalog blueprint with a texture hero slot');
+  spec.blueprint = tex.id;
+
+  const withUser: DesignSpec = {
+    ...spec,
+    assets: [
+      { kind: 'surface', slot: 'hero', source: 'user', file: 'assets/x/00-user-hero.png', alt: 'Brand photograph', credit: 'Studio', license: 'CC0', nativeWidth: 1200, nativeHeight: 675, prompt: '', seed: 0, steps: 0, cfg: 0, bytes: 2048, seconds: 0 },
+    ],
+  };
+  const html = renderHtml(withUser);
+  assert.ok(html.includes('data-slot="hero"'), 'the supplied hero must own the hero slot in the markup');
+  assert.ok(html.includes('assets/x/00-user-hero.png'), 'the supplied hero file is not referenced');
+  assert.ok(html.includes('width="1200" height="675"'), 'the real intrinsic size must be in the markup');
+  assert.ok(/hero-art[^>]*aria-hidden="true"/.test(html), 'the atmosphere layer stays decorative');
 });
 
 /* ---- end to end with a mocked service ---- */
-await test('generateAssets submits, polls, downloads and persists', async () => {  const tmp = await import('node:fs/promises').then((m) => m.mkdtemp('/tmp/forge-img-'));
+await test('generateAssets submits, polls, downloads and persists', async () => {
+  const tmp = await import('node:fs/promises').then((m) => m.mkdtemp('/tmp/forge-img-'));
   let submitted = 0;
   mockFetch((url) => {
     if (url.endsWith('/api/generate')) {

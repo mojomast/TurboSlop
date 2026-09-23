@@ -60,11 +60,11 @@
   ok    a product demonstration is wrapped in a real frame
   ok    art-directed treatments degrade rather than hide text
   ok    icons are used sparingly and never as the only carrier of meaning
-        -> deepseek-flash wrote "Moinho" — We stone-mill every grain before sunrise, then bake it hard.
+        -> deepseek-flash wrote "Moinho" — We grind the grain in the morning and bake it before noon.
   ok    live writing (deepseek/deepseek-flash (key from DEEPSEEK_API_KEY))
-        -> emotion=mystery(1.00) composition=gallery-first(1.00) effects=cinematic-depth(0.60) palette=void-violet(0.99) typography=editorial-serif(0.82) layout=editorial-asymmetric(0.54) motion=glacial(0.95) density=balanced(0.00)
+        -> emotion=mystery(1.00) composition=gallery-first(1.00) effects=cinematic-depth(0.57) palette=void-violet(0.99) typography=editorial-serif(0.82) layout=editorial-asymmetric(0.53) motion=glacial(0.94) density=balanced(0.00)
   ok    live Jev decision
-        -> design by jev-1.13.0, content "GRIDLOCK" by deepseek-flash, 9344ms total
+        -> design by jev-1.13.0, content "Roundhouse" by deepseek-flash, 8995ms total
   ok    both halves compose: Jev designs, the writer writes
 
 all 58 checks passed
@@ -95,11 +95,12 @@ all 58 checks passed
   ok    presets resolve correctly and overrides win
   ok    guidance 1 is labelled as a non-equivalent shortcut
   ok    pages render identically in structure with or without generated art
+  ok    a SUPPLIED image in a texture hero slot renders as the hero atmosphere
   ok    generateAssets submits, polls, downloads and persists
   ok    a flat frame is rejected, not rendered, and the slot keeps its plate
   ok    generateAssets discards a flat frame and persists nothing for it
 
-all 26 checks passed
+all 27 checks passed
 
 
 === turboslop / zip ===
@@ -184,8 +185,16 @@ all 24 checks passed
   ok    size adds width/height; leaving it out keeps the icon scalable
   ok    an unknown icon name throws
   ok    the icon licence records original MIT work
+  ok    both families parse every declared glyph
+  ok    both families declare and render the same 24-grid outline profile
+  ok    no glyph in any family carries scripts, events or external references
+  ok    the Lucide licence document names the family, the file and the ISC notice
+  ok    every icon role has curated candidates that resolve per family
+  ok    every iconsFor result is deterministic per seed and resolves in its family
+  ok    both families are reachable and a page never mixes them
+  ok    a renamed or unknown glyph is rejected by validation
 
-all 31 checks passed
+all 39 checks passed
 
 
 === TurboSlop / fonts ===
@@ -293,15 +302,15 @@ all 13 checks passed
   info  software seed 42: statement-panel~f51a96034/noir-lime/stacked/plain | image-mosaic~f5233d054/arctic-cyan/outline/shaped | product-demo~f51bd2714/arctic-cyan/stacked/cutout | data-calculator/arctic-cyan/caps/plain | catalogue-gallery~f51dad164/noir-lime/stacked/textwrap | statement-display~f519f76b4/arctic-cyan/stacked/plain
   info  software seed 97: statement-panel~f305bb0a4/noir-lime/stacked/plain | image-mosaic~f30e620c4/arctic-cyan/outline/shaped | product-demo/noir-lime/stacked/cutout | catalogue-rail/arctic-cyan/stacked/textwrap | data-calculator/arctic-cyan/caps/plain | statement-display~f3051c724/arctic-cyan/stacked/plain
   ok    festival, ceramics-shop and software produce different COMPLETE sets across seeds
-  info  LIVE festival (live jev-1.13.0, 316ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE festival (live jev-1.13.0, 316ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE festival (live jev-1.13.0, 316ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE shop (live jev-1.13.0, 245ms) seed 11: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE shop (live jev-1.13.0, 245ms) seed 42: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE shop (live jev-1.13.0, 245ms) seed 97: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE software (live jev-1.13.0, 276ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE software (live jev-1.13.0, 276ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE software (live jev-1.13.0, 276ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE festival (live jev-1.13.0, 359ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE festival (live jev-1.13.0, 359ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE festival (live jev-1.13.0, 359ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE shop (live jev-1.13.0, 229ms) seed 11: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE shop (live jev-1.13.0, 229ms) seed 42: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE shop (live jev-1.13.0, 229ms) seed 97: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE software (live jev-1.13.0, 283ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE software (live jev-1.13.0, 283ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE software (live jev-1.13.0, 283ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
   ok    a LIVE Jev decision also yields sets that meet every diversity target
 
 all 22 checks passed

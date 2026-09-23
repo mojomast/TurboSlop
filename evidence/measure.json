@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-09-23T02:44:15.596Z",
+ "generatedAt": "2026-09-23T03:10:58.007Z",
  "viewports": {
   "DESKTOP": {
    "width": 1440,
@@ -1133,30 +1133,30 @@
       "id": "schedule",
       "block": "schedule:table",
       "top": 726,
-      "height": 392
+      "height": 439
      },
      {
       "id": "gallery",
       "block": "gallery:mosaic",
-      "top": 1119,
+      "top": 1166,
       "height": 1178
      },
      {
       "id": "quote",
       "block": "quote:band",
-      "top": 2297,
+      "top": 2344,
       "height": 500
      },
      {
       "id": "pricing",
       "block": "pricing:tiers",
-      "top": 2797,
-      "height": 269
+      "top": 2844,
+      "height": 287
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 3066,
+      "top": 3131,
       "height": 275
      }
     ],
@@ -1238,30 +1238,30 @@
       "id": "schedule",
       "block": "schedule:table",
       "top": 407,
-      "height": 428
+      "height": 478
      },
      {
       "id": "gallery",
       "block": "gallery:mosaic",
-      "top": 834,
+      "top": 885,
       "height": 1633
      },
      {
       "id": "quote",
       "block": "quote:band",
-      "top": 2467,
+      "top": 2517,
       "height": 413
      },
      {
       "id": "pricing",
       "block": "pricing:tiers",
-      "top": 2880,
-      "height": 485
+      "top": 2930,
+      "height": 540
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 3365,
+      "top": 3470,
       "height": 348
      }
     ],
@@ -1579,24 +1579,24 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 2615,
-      "height": 668
+      "height": 741
      },
      {
       "id": "about",
       "block": "about:rail-text",
-      "top": 3282,
+      "top": 3356,
       "height": 504
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 3786,
+      "top": 3860,
       "height": 444
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 4230,
+      "top": 4304,
       "height": 467
      }
     ],
@@ -1702,24 +1702,24 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 4545,
-      "height": 650
+      "height": 724
      },
      {
       "id": "about",
       "block": "about:rail-text",
-      "top": 5195,
+      "top": 5269,
       "height": 814
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 6009,
+      "top": 6082,
       "height": 840
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 6849,
+      "top": 6922,
       "height": 556
      }
     ],
@@ -2462,30 +2462,30 @@
       "id": "schedule",
       "block": "schedule:table",
       "top": 411,
-      "height": 633
+      "height": 670
      },
      {
       "id": "gallery",
       "block": "gallery:mosaic",
-      "top": 1044,
+      "top": 1081,
       "height": 1319
      },
      {
       "id": "pricing",
       "block": "pricing:tiers",
-      "top": 2363,
-      "height": 408
+      "top": 2400,
+      "height": 424
      },
      {
       "id": "quote",
       "block": "quote:inline",
-      "top": 2772,
+      "top": 2825,
       "height": 501
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 3273,
+      "top": 3326,
       "height": 444
      }
     ],
@@ -2573,30 +2573,30 @@
       "id": "schedule",
       "block": "schedule:table",
       "top": 446,
-      "height": 641
+      "height": 682
      },
      {
       "id": "gallery",
       "block": "gallery:mosaic",
-      "top": 1087,
+      "top": 1128,
       "height": 1807
      },
      {
       "id": "pricing",
       "block": "pricing:tiers",
-      "top": 2894,
-      "height": 628
+      "top": 2935,
+      "height": 676
      },
      {
       "id": "quote",
       "block": "quote:inline",
-      "top": 3522,
+      "top": 3610,
       "height": 402
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 3924,
+      "top": 4012,
       "height": 501
      }
     ],
@@ -2924,12 +2924,12 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 2328,
-      "height": 371
+      "height": 435
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 2699,
+      "top": 2763,
       "height": 256
      }
     ],
@@ -3041,12 +3041,12 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 4052,
-      "height": 357
+      "height": 421
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 4409,
+      "top": 4473,
       "height": 304
      }
     ],
@@ -3165,7 +3165,7 @@
       "id": "pricing",
       "block": "pricing:table",
       "top": 4678,
-      "height": 599
+      "height": 658
      }
     ],
     "sectionOrder": [
@@ -3278,7 +3278,7 @@
       "id": "pricing",
       "block": "pricing:table",
       "top": 5498,
-      "height": 736
+      "height": 796
      }
     ],
     "sectionOrder": [
@@ -3736,30 +3736,30 @@
       "id": "schedule",
       "block": "schedule:table",
       "top": 688,
-      "height": 633
+      "height": 670
      },
      {
       "id": "gallery",
       "block": "gallery:mosaic",
-      "top": 1321,
+      "top": 1358,
       "height": 1319
      },
      {
       "id": "quote",
       "block": "quote:band",
-      "top": 2640,
+      "top": 2677,
       "height": 681
      },
      {
       "id": "pricing",
       "block": "pricing:table",
-      "top": 3321,
-      "height": 573
+      "top": 3358,
+      "height": 625
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 3894,
+      "top": 3983,
       "height": 444
      }
     ],
@@ -3843,30 +3843,30 @@
       "id": "schedule",
       "block": "schedule:table",
       "top": 724,
-      "height": 641
+      "height": 682
      },
      {
       "id": "gallery",
       "block": "gallery:mosaic",
-      "top": 1365,
+      "top": 1406,
       "height": 1807
      },
      {
       "id": "quote",
       "block": "quote:band",
-      "top": 3172,
+      "top": 3213,
       "height": 598
      },
      {
       "id": "pricing",
       "block": "pricing:table",
-      "top": 3770,
-      "height": 591
+      "top": 3810,
+      "height": 643
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 4361,
+      "top": 4453,
       "height": 501
      }
     ],
@@ -4407,12 +4407,12 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 2541,
-      "height": 371
+      "height": 435
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 2913,
+      "top": 2977,
       "height": 256
      }
     ],
@@ -4522,12 +4522,12 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 4115,
-      "height": 357
+      "height": 421
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 4472,
+      "top": 4536,
       "height": 304
      }
     ],
@@ -5222,12 +5222,12 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 2479,
-      "height": 464
+      "height": 525
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 2943,
+      "top": 3003,
       "height": 321
      }
     ],
@@ -5339,12 +5339,12 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 4193,
-      "height": 452
+      "height": 512
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 4644,
+      "top": 4705,
       "height": 325
      }
     ],
@@ -5440,30 +5440,30 @@
       "id": "pricing",
       "block": "pricing:table",
       "top": 557,
-      "height": 419
+      "height": 471
      },
      {
       "id": "features",
       "block": "features:rows",
-      "top": 976,
+      "top": 1028,
       "height": 491
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 1467,
-      "height": 468
+      "top": 1519,
+      "height": 532
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 1935,
+      "top": 2051,
       "height": 323
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 2257,
+      "top": 2373,
       "height": 322
      }
     ],
@@ -5554,30 +5554,30 @@
       "id": "pricing",
       "block": "pricing:table",
       "top": 474,
-      "height": 448
+      "height": 500
      },
      {
       "id": "features",
       "block": "features:rows",
-      "top": 922,
+      "top": 974,
       "height": 683
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 1605,
-      "height": 454
+      "top": 1657,
+      "height": 518
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 2059,
+      "top": 2175,
       "height": 374
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 2433,
+      "top": 2549,
       "height": 615
      }
     ],
@@ -6551,24 +6551,24 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 1726,
-      "height": 464
+      "height": 525
      },
      {
       "id": "features",
       "block": "features:cards",
-      "top": 2190,
+      "top": 2251,
       "height": 377
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 2567,
+      "top": 2627,
       "height": 319
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 2886,
+      "top": 2946,
       "height": 321
      }
     ],
@@ -6667,24 +6667,24 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 2593,
-      "height": 452
+      "height": 512
      },
      {
       "id": "features",
       "block": "features:cards",
-      "top": 3045,
+      "top": 3105,
       "height": 805
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 3849,
+      "top": 3910,
       "height": 604
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 4454,
+      "top": 4514,
       "height": 325
      }
     ],
@@ -6792,24 +6792,24 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 1271,
-      "height": 369
+      "height": 433
      },
      {
       "id": "contact",
       "block": "contact:split",
-      "top": 1640,
+      "top": 1704,
       "height": 254
      },
      {
       "id": "features",
       "block": "features:deflist",
-      "top": 1894,
+      "top": 1958,
       "height": 326
      },
      {
       "id": "quote",
       "block": "quote:band",
-      "top": 2220,
+      "top": 2284,
       "height": 487
      }
     ],
@@ -6909,24 +6909,24 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 1447,
-      "height": 355
+      "height": 419
      },
      {
       "id": "contact",
       "block": "contact:split",
-      "top": 1802,
+      "top": 1866,
       "height": 301
      },
      {
       "id": "features",
       "block": "features:deflist",
-      "top": 2103,
+      "top": 2167,
       "height": 472
      },
      {
       "id": "quote",
       "block": "quote:band",
-      "top": 2574,
+      "top": 2638,
       "height": 399
      }
     ],
@@ -7234,24 +7234,24 @@
       "id": "pricing",
       "block": "pricing:table",
       "top": 300,
-      "height": 445
+      "height": 505
      },
      {
       "id": "schedule",
       "block": "schedule:table",
-      "top": 745,
-      "height": 494
+      "top": 805,
+      "height": 539
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 1239,
+      "top": 1344,
       "height": 347
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 1586,
+      "top": 1691,
       "height": 498
      }
     ],
@@ -7324,24 +7324,24 @@
       "id": "pricing",
       "block": "pricing:table",
       "top": 291,
-      "height": 507
+      "height": 567
      },
      {
       "id": "schedule",
       "block": "schedule:table",
-      "top": 798,
-      "height": 526
+      "top": 858,
+      "height": 575
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 1324,
+      "top": 1433,
       "height": 428
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 1752,
+      "top": 1861,
       "height": 481
      }
     ],
@@ -8056,12 +8056,12 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 2921,
-      "height": 639
+      "height": 703
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 3560,
+      "top": 3624,
       "height": 445
      }
     ],
@@ -8170,12 +8170,12 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 5095,
-      "height": 622
+      "height": 686
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 5718,
+      "top": 5782,
       "height": 499
      }
     ],
@@ -8267,30 +8267,30 @@
       "id": "pricing",
       "block": "pricing:table",
       "top": 1473,
-      "height": 350
+      "height": 410
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 1824,
+      "top": 1883,
       "height": 293
      },
      {
       "id": "features",
       "block": "features:rows",
-      "top": 2116,
+      "top": 2176,
       "height": 468
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 2585,
-      "height": 394
+      "top": 2644,
+      "height": 467
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 2978,
+      "top": 3111,
       "height": 273
      }
     ],
@@ -8379,30 +8379,30 @@
       "id": "pricing",
       "block": "pricing:table",
       "top": 867,
-      "height": 391
+      "height": 450
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 1258,
+      "top": 1317,
       "height": 562
      },
      {
       "id": "features",
       "block": "features:rows",
-      "top": 1819,
+      "top": 1879,
       "height": 774
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 2593,
-      "height": 378
+      "top": 2653,
+      "height": 451
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 2971,
+      "top": 3104,
       "height": 345
      }
     ],
@@ -8498,24 +8498,24 @@
       "id": "pricing",
       "block": "pricing:tiers",
       "top": 489,
-      "height": 309
+      "height": 325
      },
      {
       "id": "schedule",
       "block": "schedule:table",
-      "top": 798,
-      "height": 468
+      "top": 814,
+      "height": 507
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 1266,
+      "top": 1321,
       "height": 471
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 1737,
+      "top": 1792,
       "height": 326
      }
     ],
@@ -8600,24 +8600,24 @@
       "id": "pricing",
       "block": "pricing:tiers",
       "top": 431,
-      "height": 483
+      "height": 531
      },
      {
       "id": "schedule",
       "block": "schedule:table",
-      "top": 914,
-      "height": 483
+      "top": 962,
+      "height": 531
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 1397,
+      "top": 1494,
       "height": 456
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 1853,
+      "top": 1950,
       "height": 378
      }
     ],
@@ -9121,7 +9121,7 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 2938,
-      "height": 498
+      "height": 572
      }
     ],
     "sectionOrder": [
@@ -9234,7 +9234,7 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 3714,
-      "height": 481
+      "height": 555
      }
     ],
     "sectionOrder": [
@@ -9338,18 +9338,18 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 2640,
-      "height": 663
+      "height": 737
      },
      {
       "id": "items",
       "block": "items:table",
-      "top": 3303,
+      "top": 3377,
       "height": 842
      },
      {
       "id": "contact",
       "block": "contact:split",
-      "top": 4145,
+      "top": 4219,
       "height": 462
      }
     ],
@@ -9444,18 +9444,18 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 2519,
-      "height": 647
+      "height": 721
      },
      {
       "id": "items",
       "block": "items:table",
-      "top": 3166,
+      "top": 3240,
       "height": 1041
      },
      {
       "id": "contact",
       "block": "contact:split",
-      "top": 4207,
+      "top": 4281,
       "height": 549
      }
     ],
@@ -9739,24 +9739,24 @@
       "id": "pricing",
       "block": "pricing:tiers",
       "top": 341,
-      "height": 269
+      "height": 287
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 610,
+      "top": 628,
       "height": 396
      },
      {
       "id": "schedule",
       "block": "schedule:agenda",
-      "top": 1006,
-      "height": 728
+      "top": 1024,
+      "height": 820
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 1734,
+      "top": 1844,
       "height": 275
      }
     ],
@@ -9846,24 +9846,24 @@
       "id": "pricing",
       "block": "pricing:tiers",
       "top": 328,
-      "height": 485
+      "height": 540
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 813,
+      "top": 868,
       "height": 379
      },
      {
       "id": "schedule",
       "block": "schedule:agenda",
-      "top": 1192,
-      "height": 678
+      "top": 1247,
+      "height": 770
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 1870,
+      "top": 2018,
       "height": 348
      }
     ],
@@ -10380,24 +10380,24 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 1869,
-      "height": 498
+      "height": 572
      },
      {
       "id": "features",
       "block": "features:cards",
-      "top": 2367,
+      "top": 2441,
       "height": 548
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 2916,
+      "top": 2989,
       "height": 351
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 3266,
+      "top": 3340,
       "height": 347
      }
     ],
@@ -10496,24 +10496,24 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 2754,
-      "height": 481
+      "height": 555
      },
      {
       "id": "features",
       "block": "features:cards",
-      "top": 3234,
+      "top": 3308,
       "height": 1165
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 4399,
+      "top": 4473,
       "height": 669
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 5068,
+      "top": 5142,
       "height": 428
      }
     ],
@@ -10609,36 +10609,36 @@
       "id": "pricing",
       "block": "pricing:table",
       "top": 644,
-      "height": 350
+      "height": 410
      },
      {
       "id": "features",
       "block": "features:rows",
-      "top": 995,
+      "top": 1054,
       "height": 468
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 1463,
-      "height": 394
+      "top": 1523,
+      "height": 467
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 1856,
+      "top": 1990,
       "height": 273
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 2129,
+      "top": 2263,
       "height": 293
      },
      {
       "id": "quote",
       "block": "quote:inline",
-      "top": 2422,
+      "top": 2555,
       "height": 336
      }
     ],
@@ -10732,36 +10732,36 @@
       "id": "pricing",
       "block": "pricing:table",
       "top": 481,
-      "height": 391
+      "height": 450
      },
      {
       "id": "features",
       "block": "features:rows",
-      "top": 872,
+      "top": 932,
       "height": 774
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 1646,
-      "height": 378
+      "top": 1706,
+      "height": 451
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 2024,
+      "top": 2157,
       "height": 345
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 2369,
+      "top": 2502,
       "height": 562
      },
      {
       "id": "quote",
       "block": "quote:inline",
-      "top": 2930,
+      "top": 3064,
       "height": 266
      }
     ],
@@ -11727,12 +11727,12 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 2549,
-      "height": 366
+      "height": 426
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 2915,
+      "top": 2975,
       "height": 252
      }
     ],
@@ -11842,12 +11842,12 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 3867,
-      "height": 353
+      "height": 414
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 4220,
+      "top": 4281,
       "height": 255
      }
     ],
@@ -12161,30 +12161,30 @@
       "id": "pricing",
       "block": "pricing:table",
       "top": 805,
-      "height": 594
+      "height": 654
      },
      {
       "id": "features",
       "block": "features:rows",
-      "top": 1399,
+      "top": 1458,
       "height": 651
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 2050,
-      "height": 663
+      "top": 2110,
+      "height": 737
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 2713,
+      "top": 2846,
       "height": 439
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 3152,
+      "top": 3286,
       "height": 462
      }
     ],
@@ -12269,30 +12269,30 @@
       "id": "pricing",
       "block": "pricing:table",
       "top": 605,
-      "height": 733
+      "height": 793
      },
      {
       "id": "features",
       "block": "features:rows",
-      "top": 1339,
+      "top": 1398,
       "height": 1034
      },
      {
       "id": "faq",
       "block": "faq:accordion",
-      "top": 2373,
-      "height": 647
+      "top": 2433,
+      "height": 721
      },
      {
       "id": "stats",
       "block": "stats:row",
-      "top": 3020,
+      "top": 3154,
       "height": 837
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 3858,
+      "top": 3991,
       "height": 549
      }
     ],
@@ -12404,12 +12404,12 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 4716,
-      "height": 668
+      "height": 741
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 5384,
+      "top": 5457,
       "height": 467
      }
     ],
@@ -12526,12 +12526,12 @@
       "id": "faq",
       "block": "faq:accordion",
       "top": 7228,
-      "height": 650
+      "height": 724
      },
      {
       "id": "contact",
       "block": "contact:form",
-      "top": 7878,
+      "top": 7951,
       "height": 556
      }
     ],

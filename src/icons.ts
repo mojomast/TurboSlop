@@ -1,21 +1,37 @@
 /**
- * TurboSlop — icon set.
+ * TurboSlop — icon families.
  *
- * ORIGINAL WORK. Every glyph below is a simple geometric line drawing made by
- * this project, specifically for TurboSlop. None of it is copied, traced or
- * derived from a known icon library. Released under the repository's MIT
- * licence (see LICENSE); `ICON_LICENSE` records the attribution so the repo can
- * never ship unattributed third-party art.
+ * Two families share ONE house wrapper:
+ *   - `turboslop` — ORIGINAL WORK. Every glyph is a simple geometric line
+ *     drawing made by this project, specifically for TurboSlop. None of it is
+ *     copied, traced or derived from a known icon library. Released under the
+ *     repository's MIT licence (see LICENSE); `ICON_LICENSE` records the
+ *     attribution so the repo can never ship unattributed third-party art.
+ *   - `lucide` — 69 curated outline glyphs vendored from Lucide (ISC) at a
+ *     pinned commit. The geometry is generated data in `src/iconpacks.ts`; the
+ *     verbatim upstream licence travels in `public/icons/LICENSES.md`.
  *
- * FAMILY RULE — one consistent stroke family:
+ * FAMILY RULE — one consistent stroke family, identical for both:
  *   - 24 x 24 viewBox, drawn on a 1 unit grid with a comfortable inner margin
  *   - a single stroke width of 1.6 for every icon (no weight variation)
  *   - `stroke-linecap="round"` and `stroke-linejoin="round"` everywhere
  *   - outlines only: `fill="none"` on the root, no filled shapes mixed in
  *   - colour is always `stroke="currentColor"`, so an icon inherits its context
- * The consistency test in test/assets.test.ts asserts the shared stroke width,
- * caps/joins and viewBox so a future edit cannot quietly break the family.
+ * `ICON_PROFILES` states that rule as data; the consistency test in
+ * test/assets.test.ts asserts it per family, so a future edit cannot quietly
+ * break one family while the other still renders.
+ *
+ * A page uses exactly ONE family (the visual blueprint chooses it): an icon
+ * vocabulary is a voice, and mixing two voices on one page reads as an accident.
  */
+
+import {
+  LUCIDE_GLYPHS,
+  LUCIDE_ICON_NAMES,
+  LUCIDE_COMMIT,
+  LUCIDE_SOURCE,
+  type LucideIconName,
+} from './iconpacks.js';
 
 export const ICON_NAMES = [
   'arrow-right',
@@ -43,19 +59,102 @@ export const ICON_NAMES = [
 ] as const;
 export type IconName = (typeof ICON_NAMES)[number];
 
-/** The one stroke width shared by every icon in the family. */
+/** The families a page may draw from. Exactly one per page. */
+export const ICON_FAMILIES = ['turboslop', 'lucide'] as const;
+export type IconFamily = (typeof ICON_FAMILIES)[number];
+
+/** The one stroke width shared by every icon in every family. */
 const ICON_STROKE = 1.6;
 /** The grid every icon is drawn on. */
 const ICON_GRID = 24;
+
+export interface IconLicense {
+  /** Human-facing family name. */
+  name: string;
+  /** SPDX identifier the artwork travels under. */
+  spdx: string;
+  /**
+   * Plain statement of where the art came from — and, for original work, that
+   * it WAS original. Never a paraphrase of the licence itself.
+   */
+  origin: string;
+  /** Where the verbatim licence text lives, when one is vendored. */
+  licenseFile?: string;
+  /** Upstream commit, for third-party families fetched from a repository. */
+  commit?: string;
+  /** Upstream source page, for third-party families. */
+  source?: string;
+}
 
 /**
  * Original line icons by the TurboSlop project. `spdx: 'MIT'` matches the
  * repository licence; `origin` states plainly that these were drawn here.
  */
-export const ICON_LICENSE = {
+export const ICON_LICENSE: IconLicense = {
   name: 'TurboSlop icon set',
   spdx: 'MIT',
   origin: 'Original geometric line icons drawn for the TurboSlop project; not derived from any third-party icon library.',
+  licenseFile: 'LICENSE',
+};
+
+/**
+ * The vendored third-party family. Lucide's outlined icons sit closest to the
+ * house voice; the geometry below was normalised, never redrawn, and the ISC
+ * notice (plus the MIT notice for Feather-derived glyphs) is reproduced
+ * verbatim in the licence document.
+ */
+export const LUCIDE_LICENSE: IconLicense = {
+  name: 'Lucide',
+  spdx: 'ISC',
+  origin:
+    'Outline glyphs vendored verbatim in shape from Lucide; presentation was stripped and every glyph re-emitted through the house wrapper.',
+  licenseFile: 'public/icons/LICENSES.md',
+  commit: LUCIDE_COMMIT,
+  source: LUCIDE_SOURCE,
+};
+
+/** Every family's licence record, keyed by family. */
+export const ICON_LICENSES: Record<IconFamily, IconLicense> = {
+  turboslop: ICON_LICENSE,
+  lucide: LUCIDE_LICENSE,
+};
+
+/**
+ * The drawing profile of a family. Both families currently share the same
+ * numbers — that is the point of the wrapper — but the profile is data so a
+ * future family cannot silently change stroke, grid or cap style.
+ */
+export interface IconFamilyProfile {
+  /** The square viewBox grid. */
+  grid: number;
+  /** The one stroke width in the family. */
+  stroke: number;
+  linecap: 'round';
+  linejoin: 'round';
+  fill: 'none';
+  color: 'currentColor';
+  license: IconLicense;
+}
+
+export const ICON_PROFILES: Record<IconFamily, IconFamilyProfile> = {
+  turboslop: {
+    grid: ICON_GRID,
+    stroke: ICON_STROKE,
+    linecap: 'round',
+    linejoin: 'round',
+    fill: 'none',
+    color: 'currentColor',
+    license: ICON_LICENSE,
+  },
+  lucide: {
+    grid: ICON_GRID,
+    stroke: ICON_STROKE,
+    linecap: 'round',
+    linejoin: 'round',
+    fill: 'none',
+    color: 'currentColor',
+    license: LUCIDE_LICENSE,
+  },
 };
 
 /**
@@ -94,23 +193,150 @@ export function hasIcon(name: string): name is IconName {
   return Object.prototype.hasOwnProperty.call(ICONS, name);
 }
 
+/** The names a family can draw, in declaration order. */
+export function iconNamesFor(family: IconFamily): readonly string[] {
+  return family === 'turboslop' ? ICON_NAMES : LUCIDE_ICON_NAMES;
+}
+
+/** True when `name` resolves in `family`. The selection layer relies on this. */
+export function hasIconIn(family: IconFamily, name: string): boolean {
+  return family === 'turboslop'
+    ? hasIcon(name)
+    : Object.prototype.hasOwnProperty.call(LUCIDE_GLYPHS, name);
+}
+
+/** Inner geometry for one glyph, or `undefined` when it is not in the family. */
+function glyphBody(family: IconFamily, name: string): string | undefined {
+  if (family === 'turboslop') return hasIcon(name) ? ICONS[name] : undefined;
+  if (!Object.prototype.hasOwnProperty.call(LUCIDE_GLYPHS, name)) return undefined;
+  return LUCIDE_GLYPHS[name as LucideIconName].body;
+}
+
+/* ------------------------------------------------------------------ *
+ * Roles — what an icon MEANS where it is drawn
+ *
+ * A block asks for a role ("the email route", "the price is included"), never
+ * for a specific glyph: that is what lets a page choose its own vocabulary
+ * without any block knowing which family is on the page. The candidates are
+ * curated 2-3 per role, and the visual blueprint picks exactly one per seed.
+ * ------------------------------------------------------------------ */
+export const ICON_ROLES = [
+  'contact-email',
+  'contact-phone',
+  'contact-address',
+  'schedule-date',
+  'schedule-time',
+  'pricing-included',
+  'faq-answer',
+  'gallery-link',
+  'nav-cta',
+] as const;
+export type IconRole = (typeof ICON_ROLES)[number];
+
+const ROLE_SET: ReadonlySet<string> = new Set(ICON_ROLES);
+
+function isIconRole(value: string): value is IconRole {
+  return ROLE_SET.has(value);
+}
+
+/** Original family: the role IS the glyph name. */
+const TURBOSLOP_ROLE_GLYPHS: Record<IconRole, readonly string[]> = {
+  'contact-email': ['mail'],
+  'contact-phone': ['phone'],
+  'contact-address': ['map-pin'],
+  'schedule-date': ['calendar'],
+  'schedule-time': ['clock'],
+  'pricing-included': ['check'],
+  'faq-answer': ['info'],
+  'gallery-link': ['arrow-up-right'],
+  'nav-cta': ['arrow-right'],
+};
+
+/** Lucide: derived from the generated allowlist, so the fetch script stays the
+ *  single source of truth for which glyph can carry which meaning. */
+const roleGlyphs: Record<IconRole, string[]> = {
+  'contact-email': [],
+  'contact-phone': [],
+  'contact-address': [],
+  'schedule-date': [],
+  'schedule-time': [],
+  'pricing-included': [],
+  'faq-answer': [],
+  'gallery-link': [],
+  'nav-cta': [],
+};
+for (const name of LUCIDE_ICON_NAMES) {
+  for (const role of LUCIDE_GLYPHS[name].roles) {
+    if (isIconRole(role)) roleGlyphs[role].push(name);
+  }
+}
+const LUCIDE_ROLE_GLYPHS: Record<IconRole, readonly string[]> = roleGlyphs;
+
+/** Candidate glyphs per family and role. */
+export const ICON_ROLE_GLYPHS: Record<IconFamily, Record<IconRole, readonly string[]>> = {
+  turboslop: TURBOSLOP_ROLE_GLYPHS,
+  lucide: LUCIDE_ROLE_GLYPHS,
+};
+
+/**
+ * The chosen glyph for one role, or null when the page's allowlist dropped it.
+ * Resolution is by the role's own candidate order, which is why the selection
+ * layer can store nothing but the plain name list on the blueprint.
+ */
+export function resolveIconRole(
+  family: IconFamily,
+  role: IconRole,
+  allowed: readonly string[],
+): string | null {
+  for (const candidate of ICON_ROLE_GLYPHS[family][role]) {
+    if (allowed.includes(candidate)) return candidate;
+  }
+  return null;
+}
+
+/* ------------------------------------------------------------------ *
+ * Rendering
+ * ------------------------------------------------------------------ */
 function esc(s: string): string {
   return s.replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!,
   );
 }
 
+export interface IconRenderOptions {
+  size?: number;
+  title?: string;
+  className?: string;
+}
+
 /**
  * Render one standalone `<svg>`. Without a `title` the icon is decorative and
  * hidden from assistive tech; with one it becomes a labelled `role="img"`.
+ *
+ * Call as `renderIcon(name)` / `renderIcon(name, { size })` for the original
+ * family, or `renderIcon(name, family, { size })` when the visual blueprint
+ * chose a family. Both spellings emit the SAME wrapper: a page's icons must be
+ * indistinguishable in stroke, caps, grid and colour whatever the vocabulary.
  */
+export function renderIcon(name: string, family?: IconFamily, opts?: IconRenderOptions): string;
+export function renderIcon(name: string, opts?: IconRenderOptions): string;
 export function renderIcon(
-  name: IconName,
-  opts: { size?: number; title?: string; className?: string } = {},
+  name: string,
+  familyOrOpts?: IconFamily | IconRenderOptions,
+  maybeOpts: IconRenderOptions = {},
 ): string {
-  const body = ICONS[name];
+  const family: IconFamily = typeof familyOrOpts === 'string' ? familyOrOpts : 'turboslop';
+  const opts = typeof familyOrOpts === 'string' ? maybeOpts : (familyOrOpts ?? {});
+  const profile = ICON_PROFILES[family];
+  if (!profile) {
+    throw new Error(`Unknown icon family: ${String(family)}. Expected one of ${ICON_FAMILIES.join(', ')}.`);
+  }
+
+  const body = glyphBody(family, name);
   if (typeof body !== 'string') {
-    throw new Error(`Unknown icon: ${String(name)}. Expected one of ${ICON_NAMES.join(', ')}.`);
+    throw new Error(
+      `Unknown icon: ${String(name)} in family ${family}. Expected one of ${iconNamesFor(family).join(', ')}.`,
+    );
   }
 
   const size = opts.size;
@@ -130,8 +356,8 @@ export function renderIcon(
   const classAttr = cls ? ` class="${esc(cls)}"` : '';
 
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${ICON_GRID} ${ICON_GRID}"${classAttr}${dims}` +
-    ` fill="none" stroke="currentColor" stroke-width="${ICON_STROKE}" stroke-linecap="round"` +
-    ` stroke-linejoin="round" focusable="false"${a11y}${body}</svg>`
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${profile.grid} ${profile.grid}"${classAttr}${dims}` +
+    ` fill="${profile.fill}" stroke="${profile.color}" stroke-width="${profile.stroke}" stroke-linecap="${profile.linecap}"` +
+    ` stroke-linejoin="${profile.linejoin}" focusable="false"${a11y}${body}</svg>`
   );
 }

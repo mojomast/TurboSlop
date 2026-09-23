@@ -16,12 +16,36 @@ import {
   type FrameKind,
 } from '../src/frames.js';
 import {
+  ICON_FAMILIES,
   ICON_LICENSE,
+  ICON_LICENSES,
   ICON_NAMES,
+  ICON_PROFILES,
+  ICON_ROLES,
+  ICON_ROLE_GLYPHS,
+  LUCIDE_LICENSE,
   hasIcon,
+  hasIconIn,
+  iconNamesFor,
   renderIcon,
+  resolveIconRole,
+  type IconFamily,
   type IconName,
 } from '../src/icons.js';
+import {
+  LUCIDE_GLYPHS,
+  LUCIDE_ICON_NAMES,
+  LUCIDE_COMMIT,
+} from '../src/iconpacks.js';
+import { BLUEPRINT_BY_ID } from '../src/blueprint.js';
+import {
+  MAX_ICONS,
+  iconsFor,
+  validateVisualBlueprint,
+  visualBlueprintFor,
+} from '../src/visual.js';
+import { readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { LEADS } from '../src/blueprint.js';
 import { EMOTIONS } from '../src/catalog.js';
 
@@ -305,6 +329,188 @@ await test('the icon licence records original MIT work', () => {
   assert.ok(ICON_LICENSE.name.length > 0, 'licence name missing');
   assert.ok(/original/i.test(ICON_LICENSE.origin), 'origin must state originality');
   assert.ok(/TurboSlop/i.test(ICON_LICENSE.origin), 'origin must name the project');
+});
+
+/* ================================================================== *
+ * Icons — the vendored Lucide family
+ * ================================================================== */
+await test('both families parse every declared glyph', () => {
+  for (const family of ICON_FAMILIES) {
+    const names = iconNamesFor(family);
+    assert.ok(names.length > 0, `${family} declares no glyphs`);
+    for (const name of names) {
+      const svg = renderIcon(name, family);
+      assert.ok(svg.startsWith('<svg'), `${family}/${name} does not start with <svg`);
+      assert.ok(svg.endsWith('</svg>'), `${family}/${name} does not end with </svg>`);
+    }
+  }
+  assert.ok(LUCIDE_ICON_NAMES.length >= 60, `expected a larger second vocabulary, got ${LUCIDE_ICON_NAMES.length}`);
+  assert.ok(LUCIDE_ICON_NAMES.length <= 80, `allowlist grew past its curation budget: ${LUCIDE_ICON_NAMES.length}`);
+});
+
+await test('both families declare and render the same 24-grid outline profile', () => {
+  for (const family of ICON_FAMILIES) {
+    const p = ICON_PROFILES[family];
+    assert.equal(p.grid, 24, `${family} grid`);
+    assert.equal(p.stroke, 1.6, `${family} stroke`);
+    assert.equal(p.linecap, 'round', `${family} linecap`);
+    assert.equal(p.linejoin, 'round', `${family} linejoin`);
+    assert.equal(p.fill, 'none', `${family} fill`);
+    assert.equal(p.color, 'currentColor', `${family} colour`);
+    for (const name of iconNamesFor(family)) {
+      const svg = renderIcon(name, family);
+      assert.equal(/viewBox="([^"]+)"/.exec(svg)?.[1], '0 0 24 24', `${family}/${name} viewBox`);
+      assert.ok(svg.includes('stroke-width="1.6"'), `${family}/${name} stroke width`);
+      assert.ok(svg.includes('stroke-linecap="round"'), `${family}/${name} cap`);
+      assert.ok(svg.includes('stroke-linejoin="round"'), `${family}/${name} join`);
+      assert.ok(svg.includes('fill="none"'), `${family}/${name} not an outline`);
+      assert.ok(svg.includes('stroke="currentColor"'), `${family}/${name} not currentColor`);
+      assert.ok(svg.includes('focusable="false"'), `${family}/${name} focusable`);
+      assert.ok(svg.includes('aria-hidden="true"'), `${family}/${name} not decorative by default`);
+      assert.ok(!svg.includes('undefined') && !svg.includes('NaN'), `${family}/${name} leaked undefined/NaN`);
+    }
+  }
+  assert.equal(new Set(LUCIDE_ICON_NAMES).size, LUCIDE_ICON_NAMES.length, 'duplicate Lucide glyph name');
+});
+
+await test('no glyph in any family carries scripts, events or external references', () => {
+  const sources: string[] = [];
+  for (const family of ICON_FAMILIES) {
+    for (const name of iconNamesFor(family)) sources.push(renderIcon(name, family));
+  }
+  for (const name of LUCIDE_ICON_NAMES) sources.push(LUCIDE_GLYPHS[name].body);
+  for (const source of sources) {
+    assert.ok(!/<(script|style|use|defs|image|mask|clipPath|foreignObject)/i.test(source), `forbidden element in ${source.slice(0, 60)}`);
+    assert.ok(!/\son[a-z]+\s*=/i.test(source), `event handler in ${source.slice(0, 60)}`);
+    assert.ok(!/[\s"']href\s*=|\sxlink:href\s*=/.test(source), `external ref in ${source.slice(0, 60)}`);
+    assert.ok(!/url\s*\(/i.test(source), `url() in ${source.slice(0, 60)}`);
+    assert.ok(!/javascript:/i.test(source), `javascript: in ${source.slice(0, 60)}`);
+    assert.ok(!/NaN|Infinity/.test(source), `non-finite value in ${source.slice(0, 60)}`);
+  }
+});
+
+await test('the Lucide licence document names the family, the file and the ISC notice', async () => {
+  const md = await readFile(fileURLToPath(new URL('../public/icons/LICENSES.md', import.meta.url)), 'utf8');
+  assert.ok(/ISC License/.test(md), 'verbatim ISC text missing');
+  assert.ok(/Permission to use, copy, modify, and\/or distribute this software/.test(md), 'ISC grant missing');
+  assert.ok(md.includes(LUCIDE_COMMIT), 'pinned commit missing');
+  assert.ok(md.includes('lucide-icons/lucide'), 'source URL missing');
+  assert.ok(md.includes('src/iconpacks.ts'), 'generated data file not named');
+  assert.ok(md.includes('Lucide'), 'family not named');
+  for (const name of LUCIDE_ICON_NAMES) {
+    assert.ok(md.includes(`\`${name}\``), `licence document omits glyph ${name}`);
+  }
+  assert.equal(LUCIDE_LICENSE.spdx, 'ISC');
+  assert.equal(LUCIDE_LICENSE.licenseFile, 'public/icons/LICENSES.md');
+  assert.equal(LUCIDE_LICENSE.commit, LUCIDE_COMMIT);
+  assert.ok(/Lucide/i.test(LUCIDE_LICENSE.origin), 'licence origin must name Lucide');
+  for (const family of ICON_FAMILIES) {
+    assert.equal(ICON_LICENSES[family].spdx, ICON_PROFILES[family].license.spdx, `${family} licence drift`);
+  }
+});
+
+await test('every icon role has curated candidates that resolve per family', () => {
+  for (const family of ICON_FAMILIES) {
+    const names = iconNamesFor(family);
+    for (const role of ICON_ROLES) {
+      const candidates = ICON_ROLE_GLYPHS[family][role];
+      assert.ok(candidates.length >= 1, `${family}/${role} has no candidates`);
+      for (const c of candidates) {
+        assert.ok(hasIconIn(family, c), `${family}/${role} candidate ${c} does not resolve`);
+        assert.ok(names.includes(c), `${family}/${role} candidate ${c} is not declared`);
+      }
+      assert.ok(resolveIconRole(family, role, names), `${family}/${role} does not resolve`);
+    }
+    // The vendored family is the one with a real choice per meaning.
+    if (family === 'lucide') {
+      for (const role of ICON_ROLES) {
+        const n = ICON_ROLE_GLYPHS[family][role].length;
+        assert.ok(n >= 2 && n <= 3, `lucide/${role} has ${n} candidates; expected 2-3`);
+      }
+    }
+    assert.equal(resolveIconRole(family, 'contact-email', []), null, `${family} must draw nothing with an empty allowlist`);
+  }
+  // The generated plan may only use roles this module declares.
+  for (const name of LUCIDE_ICON_NAMES) {
+    for (const role of LUCIDE_GLYPHS[name].roles) {
+      assert.ok((ICON_ROLES as readonly string[]).includes(role), `${name} declares unknown role ${role}`);
+    }
+  }
+});
+
+await test('every iconsFor result is deterministic per seed and resolves in its family', () => {
+  const blueprints = Object.values(BLUEPRINT_BY_ID);
+  assert.ok(blueprints.length > 0, 'no blueprints to test');
+  for (const bp of blueprints) {
+    for (let seed = 1; seed <= 40; seed++) {
+      const a = iconsFor(bp, seed);
+      const b = iconsFor(bp, seed);
+      assert.deepEqual(a, b, `iconsFor(${bp.id}, ${seed}) is not deterministic`);
+      assert.ok(ICON_FAMILIES.includes(a.family), `iconsFor(${bp.id}, ${seed}) unknown family ${a.family}`);
+      assert.ok(a.icons.length <= MAX_ICONS, `iconsFor(${bp.id}, ${seed}) has ${a.icons.length} icons`);
+      assert.equal(new Set(a.icons).size, a.icons.length, `iconsFor(${bp.id}, ${seed}) repeats a glyph`);
+      for (const name of a.icons) {
+        assert.ok(hasIconIn(a.family, name), `iconsFor(${bp.id}, ${seed}): ${name} is not in ${a.family}`);
+      }
+    }
+  }
+});
+
+await test('both families are reachable and a page never mixes them', () => {
+  const bp = BLUEPRINT_BY_ID['catalogue-gallery']!;
+  const seen = new Set<string>();
+  for (let seed = 1; seed <= 120; seed++) {
+    const selection = iconsFor(bp, seed);
+    seen.add(selection.family);
+    const other = ICON_FAMILIES.find((f) => f !== selection.family)!;
+    for (const name of selection.icons) {
+      assert.ok(hasIconIn(selection.family, name), `${seed}: ${name} not in chosen ${selection.family}`);
+      if (!hasIconIn(other, name)) {
+        assert.throws(() => renderIcon(name, other), /Unknown icon/, `${seed}: ${name} must not render in ${other}`);
+      }
+    }
+    const vb = visualBlueprintFor({
+      blueprint: bp,
+      typefaceId: 'grotesk-tight',
+      emotion: 'serenity',
+      density: 'balanced',
+      seed,
+      accent: '#5f7263',
+      ground: '#f7f4ee',
+    });
+    assert.deepEqual(validateVisualBlueprint(vb), [], `seed ${seed}: derived blueprint invalid`);
+    assert.equal(vb.iconFamily, selection.family, `seed ${seed}: blueprint and selection disagree`);
+    for (const name of vb.icons) assert.ok(hasIconIn(vb.iconFamily, name), `seed ${seed}: ${name} foreign`);
+  }
+  assert.deepEqual([...seen].sort(), [...ICON_FAMILIES].sort(), 'both families must be reachable across seeds');
+});
+
+await test('a renamed or unknown glyph is rejected by validation', () => {
+  const bp = BLUEPRINT_BY_ID['catalogue-gallery']!;
+  const vb = visualBlueprintFor({
+    blueprint: bp,
+    typefaceId: 'grotesk-tight',
+    emotion: 'serenity',
+    density: 'balanced',
+    seed: 7,
+    accent: '#5f7263',
+    ground: '#f7f4ee',
+  });
+  assert.deepEqual(validateVisualBlueprint(vb), [], 'the baseline blueprint must be valid');
+
+  const renamed = { ...vb, icons: [...vb.icons, 'telephone-fax'] };
+  assert.ok(validateVisualBlueprint(renamed).some((i) => i.rule === 'icon'), 'a renamed glyph must be rejected');
+
+  const foreign = vb.iconFamily === 'lucide' ? 'close' : 'at-sign';
+  assert.ok(!hasIconIn(vb.iconFamily, foreign), `${foreign} should be foreign to ${vb.iconFamily}`);
+  const crossFamily = { ...vb, icons: [foreign] };
+  assert.ok(validateVisualBlueprint(crossFamily).some((i) => i.rule === 'icon'), `${foreign} must not cross families`);
+
+  const unknownFamily = { ...vb, iconFamily: 'material' as IconFamily };
+  assert.ok(validateVisualBlueprint(unknownFamily).some((i) => i.rule === 'icon-family'), 'an unknown family must be rejected');
+
+  const tooMany = { ...vb, icons: [...vb.icons, ...iconNamesFor(vb.iconFamily)].slice(0, MAX_ICONS + 1) };
+  assert.ok(validateVisualBlueprint(tooMany).some((i) => i.rule === 'icon-count'), 'the six-icon cap must be enforced');
 });
 
 console.log(

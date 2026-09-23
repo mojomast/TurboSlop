@@ -162,8 +162,10 @@ The UI, sessions, CLI and exports all go through `planAssets` /
 The blueprint's structure is data: unique stable section ids, navigation
 labels matched to their targets, honest contact handling, CTAs only where an
 anchor exists, and `data-slot` markers on every plate. Fonts are bundled OFL
-faces with licences and make no remote request. Frames, motifs and icons are
-rendered in code from palette tokens.
+faces with licences and make no remote request. Frames and motifs are
+rendered in code from palette tokens; icons come from two vendored families —
+the original set and Lucide (ISC, pinned commit) — and a page draws exactly
+one family, chosen by its seed.
 
 ### 2.8 Sessions — `sessions.ts`
 
@@ -238,7 +240,7 @@ per-batch seed, per-direction seed, and the history snapshot keys
 
 ## 5. Testing and evidence
 
-`npm test` runs 13 suites — 268 checks passed, 0 failed, 0 skipped when credentials are
+`npm test` runs 13 suites — 277 checks passed, 0 failed, 0 skipped when credentials are
 present (the live Jev / writer halves run); without keys those same checks skip with the
 reason in their name. See `evidence/tables.md` §8 for the generated counts. Evidence is
 produced by:

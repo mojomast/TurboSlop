@@ -22,7 +22,13 @@
  */
 import type { Blueprint, Lead, ModuleId } from './blueprint.js';
 import { FRAME_KINDS, frameForLead, type FrameKind } from './frames.js';
-import { ICON_NAMES, type IconName } from './icons.js';
+import {
+  ICON_FAMILIES,
+  ICON_ROLE_GLYPHS,
+  hasIconIn,
+  type IconFamily,
+  type IconRole,
+} from './icons.js';
 import {
   MOTIF_FAMILIES,
   generateMotif,
@@ -111,7 +117,17 @@ export interface VisualBlueprint {
   imageTreatment: ImageTreatment;
   /** Frames this direction may use, in order of preference. */
   frames: FrameKind[];
-  icons: IconName[];
+  /**
+   * The ONE icon family every icon on this page is drawn from. Icons are a
+   * voice: mixing two vocabularies on one page reads as an accident.
+   */
+  iconFamily: IconFamily;
+  /**
+   * The resolved glyph allowlist for this page — at most `MAX_ICONS` names,
+   * every one of them present in `iconFamily`. A block draws an icon only when
+   * its role resolves here; the name list is the page's whole vocabulary.
+   */
+  icons: string[];
   sections: Record<string, SectionRecipe>;
 }
 
@@ -326,18 +342,65 @@ function motifRoleFor(lead: Lead, index: number, seed: number): MotifRole {
 /**
  * A small, consistent icon set for the page.
  *
- * Icons are only chosen where they MEAN something (contact routes, a download,
- * an external link), and the set is small so one page never mixes families.
+ * Icons are only chosen where they MEAN something (contact routes, a schedule,
+ * a price, an external link), and the set is small so one page never mixes
+ * families. The seed decides, deterministically:
+ *
+ *   1. the ONE family the page draws from (`turboslop` or `lucide`);
+ *   2. per role, ONE glyph out of the 2-3 curated candidates that carry that
+ *      meaning (see ICON_ROLE_GLYPHS in src/icons.ts).
+ *
+ * The result is an allowlist: a block asks for a role, and `resolveIconRole`
+ * finds the chosen glyph. Every name in the result resolves in the chosen
+ * family — `validateVisualBlueprint` enforces that, so a renamed or invented
+ * glyph is rejected rather than silently drawing nothing.
  */
-function iconsFor(bp: Blueprint): IconName[] {
-  const out: IconName[] = [];
-  if (bp.sections.some((s) => s.module === 'contact')) out.push('mail', 'phone', 'map-pin');
-  if (bp.sections.some((s) => s.module === 'schedule')) out.push('calendar', 'clock');
-  if (bp.sections.some((s) => s.module === 'pricing')) out.push('check');
-  if (bp.sections.some((s) => s.module === 'faq')) out.push('info');
-  if (bp.sections.some((s) => s.module === 'gallery')) out.push('arrow-up-right');
-  if (bp.nav === 'bar-cta' || bp.footer === 'cta-band') out.push('arrow-right');
-  return [...new Set(out)].slice(0, 6);
+export const MAX_ICONS = 6;
+
+export interface IconSelection {
+  /** The one family every chosen glyph belongs to. */
+  family: IconFamily;
+  /** Chosen glyph names, all resolvable in `family`, in role order. */
+  icons: string[];
+}
+
+/** A tiny deterministic hash: same seed + salt, same pick. */
+function iconHash(seed: number, salt: string): number {
+  let h = (Math.imul(seed >>> 0, 2654435761) + 0x9e3779b9) >>> 0;
+  for (let i = 0; i < salt.length; i++) {
+    h = (Math.imul(h ^ salt.charCodeAt(i), 2246822519) + (h >>> 13)) >>> 0;
+  }
+  h ^= h >>> 16;
+  return h >>> 0;
+}
+
+/**
+ * The roles the page's blocks may draw, in a stable order. The order matters:
+ * it is the order the six-icon cap slices, so the same blueprint always keeps
+ * the same roles when it has more than six.
+ */
+export function iconRolesFor(bp: Blueprint): IconRole[] {
+  const roles: IconRole[] = [];
+  if (bp.sections.some((s) => s.module === 'contact')) {
+    roles.push('contact-email', 'contact-phone', 'contact-address');
+  }
+  if (bp.sections.some((s) => s.module === 'schedule')) roles.push('schedule-date', 'schedule-time');
+  if (bp.sections.some((s) => s.module === 'pricing')) roles.push('pricing-included');
+  if (bp.sections.some((s) => s.module === 'faq')) roles.push('faq-answer');
+  if (bp.sections.some((s) => s.module === 'gallery')) roles.push('gallery-link');
+  if (bp.nav === 'bar-cta' || bp.footer === 'cta-band') roles.push('nav-cta');
+  return roles;
+}
+
+export function iconsFor(bp: Blueprint, seed: number): IconSelection {
+  const family = ICON_FAMILIES[iconHash(seed, 'icon-family') % ICON_FAMILIES.length]!;
+  const chosen: string[] = [];
+  for (const role of iconRolesFor(bp)) {
+    const candidates = ICON_ROLE_GLYPHS[family][role];
+    const pick = candidates[iconHash(seed, role) % candidates.length]!;
+    if (!chosen.includes(pick)) chosen.push(pick);
+  }
+  return { family, icons: chosen.slice(0, MAX_ICONS) };
 }
 
 export interface VisualInput {
@@ -366,6 +429,7 @@ export function visualBlueprintFor(input: VisualInput): VisualBlueprint {
 
   const family = motifFamilyForEmotion(emotion);
   const motifSeed = (seed * 1103515245 + 12345) >>> 0;
+  const iconSelection = iconsFor(bp, seed);
 
   return {
     seed,
@@ -379,7 +443,8 @@ export function visualBlueprintFor(input: VisualInput): VisualBlueprint {
     },
     imageTreatment: treatmentFor(bp.lead, emotion, bp.imageSlots > 0),
     frames: [frameForLead(bp.lead, emotion), 'plain'],
-    icons: iconsFor(bp),
+    iconFamily: iconSelection.family,
+    icons: iconSelection.icons,
     sections,
   };
 }
@@ -432,9 +497,16 @@ export function validateVisualBlueprint(vb: VisualBlueprint): VisualIssue[] {
   }
   // Any frame named must exist.
   for (const f of vb.frames) if (!FRAME_KINDS.includes(f)) add('frame', `unknown frame ${f}`);
-  // Icons must exist, and the set must stay small (one consistent family).
-  for (const i of vb.icons) if (!ICON_NAMES.includes(i)) add('icon', `unknown icon ${i}`);
-  if (vb.icons.length > 6) add('icon-count', `${vb.icons.length} icons is more than one consistent family`);
+  // Icons must exist IN THE CHOSEN FAMILY, and the set must stay small
+  // (one consistent family, one voice per page).
+  if (!ICON_FAMILIES.includes(vb.iconFamily)) {
+    add('icon-family', `unknown icon family ${String(vb.iconFamily)}`);
+  }
+  for (const i of vb.icons) {
+    if (!hasIconIn(vb.iconFamily, i)) add('icon', `unknown ${vb.iconFamily} icon ${i}`);
+  }
+  if (vb.icons.length > MAX_ICONS) add('icon-count', `${vb.icons.length} icons is more than one consistent family`);
+  if (new Set(vb.icons).size !== vb.icons.length) add('icon-duplicate', 'the icon allowlist repeats a glyph');
 
   // Section recipes must be internally coherent.
   for (const [module, r] of Object.entries(vb.sections)) {

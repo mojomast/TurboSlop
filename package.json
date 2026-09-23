@@ -29,6 +29,7 @@
     "matrix": "tsx scripts/render-matrix.ts",
     "sheet-shot": "tsx scripts/sheet-shot.ts",
     "fonts": "tsx scripts/fetch-fonts.ts",
+    "icons": "tsx scripts/fetch-icons.ts",
     "curate": "tsx scripts/curate.ts"
   },
   "dependencies": {
