@@ -60,6 +60,21 @@ interface Raw {
   sessions: SessionRow[];
   styleProbe: { slug: string; note: string }[];
   fixture: Record<string, unknown> | null;
+  live?: {
+    capturedAt: string;
+    note: string;
+    environment: { jev: string; writer: string; image: string };
+    decision: { status: string; reason?: string; model?: string; latencyMs?: number; inputTokens?: number; outputTokens?: number; estimatedUsd?: number };
+    diversity: {
+      brief: string; seed: number; model: string; decideMs: number; met: boolean;
+      targets: Record<string, number>; achieved: Record<string, number>;
+      shortfall: { target: string; wanted: number; got: number; reason: string }[];
+      directions: { blueprint: string; palette: string; construction: string; treatment: string }[];
+    }[];
+    diversityReason?: string;
+    writer: { status: string; reason?: string; model?: string; latencyMs?: number; inputTokens?: number; outputTokens?: number; estimatedUsd?: number; brand?: string };
+    image: Record<string, unknown> & { status: string; reason?: string; error?: string };
+  } | null;
   wallMs: number;
 }
 interface Measured {
@@ -241,8 +256,16 @@ async function main(): Promise<void> {
     say(`- fixture did not run: ${JSON.stringify(raw.fixture)}`);
   }
   say('');
-  say('Live-service image evidence: **none captured in this environment** (no image service is configured here);');
-  say('the fixture above is a local HTTP stand-in that speaks the same API and counts every request.');
+  if (raw.live?.image.status === 'live') {
+    say(`Live-service image evidence is captured in **tables §10** against \`${String(raw.live.image.service)}\`.`);
+  } else if (raw.live?.image.status === 'skipped') {
+    say(`Live-service image evidence: **skipped** — ${String(raw.live.image.reason)} (§10).`);
+  } else if (raw.live) {
+    say(`Live-service image evidence: **${raw.live.image.status}** — ${String(raw.live.image.reason ?? raw.live.image.error)} (§10).`);
+  } else {
+    say('Live-service image evidence: **not captured** (the run used `--no-live`).');
+  }
+  say('The fixture above is a local HTTP stand-in that speaks the same API and counts every request.');
   say('');
 
   /* ===================== 7. Calibration ===================== */
@@ -286,11 +309,20 @@ async function main(): Promise<void> {
     const totalPassed = passes.reduce((n, p) => n + p.n, 0) + failLines.reduce((n, p) => n + p.passed, 0);
     const totalSkipped = passes.reduce((n, p) => n + p.skipped, 0);
     const totalFailed = failLines.reduce((n, p) => n + p.failed, 0);
+    /* Skip reasons come from the output itself: explicit SKIP lines plus the
+       suites' self-describing names. With credentials present there are none —
+       which is exactly why they are parsed, not asserted. */
+    const skipReasons = [
+      ...[...tests.matchAll(/^\s*#?\s*SKIP\s+(.+)$/gm)].map((m) => m[1]!.trim()),
+      ...[...tests.matchAll(/^\s*#?\s*ok\s+\d+\s*-\s*(.+)$/gm)]
+        .map((m) => m[1]!.trim())
+        .filter((n) => n.includes('SKIPPED')),
+    ];
     say('| status | checks |');
     say('|---|---|');
     say(`| **passed** | ${totalPassed} |`);
     say(`| **failed** | ${totalFailed} |`);
-    say(`| **skipped** | ${totalSkipped} (live-Jev diversity check: no TYPESAFE_API_KEY in this environment) |`);
+    say(`| **skipped** | ${totalSkipped}${skipReasons.length ? ` — ${skipReasons.join(' · ')}` : ' (no suite skipped: live checks ran)'} |`);
     say(`| suite headers seen | ${suites.length} |`);
     say('');
     say('Per-suite: ' + passes.map((p) => `${p.n}${p.skipped ? ` (+${p.skipped} skipped)` : ''}`).join(' · '));
@@ -321,6 +353,99 @@ async function main(): Promise<void> {
     say('_zip-unicode.txt not found._');
   }
   say('');
+
+  /* ===================== 10. Live services ============================ */
+  say('## 10. Live-service evidence (real Jev, real writer, real image service)');
+  say('');
+  if (!raw.live) {
+    say('_not captured — the run used `--no-live`._');
+    say('');
+  } else {
+    const lv = raw.live;
+    say(`Captured ${lv.capturedAt}. ${lv.note}`);
+    say('');
+    say('| service | how it resolved |');
+    say('|---|---|');
+    say(`| Jev (decision) | ${lv.environment.jev} |`);
+    say(`| writer (copy) | ${lv.environment.writer} |`);
+    say(`| image service | ${lv.environment.image} |`);
+    say('');
+
+    say('### Decision and writer');
+    say('');
+    say('| call | status | model | latency | tokens (in/out) | cost | detail |');
+    say('|---|---|---|---|---|---|---|');
+    const d = lv.decision;
+    say(
+      `| decision | **${d.status}** | ${d.model ?? '—'} | ${d.latencyMs !== undefined ? `${d.latencyMs} ms` : '—'} | — | — | ${d.reason ?? 'one decision call per set'} |`,
+    );
+    const w = lv.writer;
+    say(
+      `| inventory write | **${w.status}** | ${w.model ?? '—'} | ${w.latencyMs !== undefined ? `${w.latencyMs} ms` : '—'} | ` +
+        `${w.inputTokens ?? '—'}/${w.outputTokens ?? '—'} | ${w.estimatedUsd !== undefined ? `$${w.estimatedUsd.toFixed(6)}` : '—'} | ` +
+        `${w.brand ? `brand "${w.brand}"` : w.reason ?? '—'} |`,
+    );
+    say('');
+
+    say('### Diversity under a live decision');
+    say('');
+    if (lv.diversity.length) {
+      say('| brief | seed | model | decide | compositions | constructions | treatments | grayscale-distinct | min separation | met |');
+      say('|---|---|---|---|---|---|---|---|---|---|');
+      for (const r of lv.diversity) {
+        say(
+          `| ${r.brief} | ${r.seed} | ${r.model} | ${r.decideMs} ms | ` +
+            `${r.achieved.compositions}/${r.targets.compositions} | ${r.achieved.constructions}/${r.targets.constructions} | ` +
+            `${r.achieved.treatments}/${r.targets.treatments} | ${r.achieved.grayscaleDistinct}/${r.targets.grayscaleDistinct} | ` +
+            `${r.achieved.minSeparation} | ${r.met ? '**yes**' : 'NO'} |`,
+        );
+      }
+      const met = lv.diversity.filter((r) => r.met).length;
+      say('');
+      say(`**Targets met in ${met}/${lv.diversity.length} live sets** — the same targets, against the real service's answer rather than the offline control.`);
+      const shorts = lv.diversity.flatMap((r) => r.shortfall.map((s) => `${r.brief} s${r.seed}: ${s.target} ${s.got}/${s.wanted} (${s.reason})`));
+      if (shorts.length) {
+        say('');
+        say('Shortfalls, with reasons (never padded):');
+        for (const s of shorts) say(`- ${s}`);
+      }
+      const models = [...new Set(lv.diversity.map((r) => r.model))];
+      const times = lv.diversity.map((r) => r.decideMs);
+      say('');
+      say(`Decision latency across ${times.length} live calls: ${Math.min(...times)}–${Math.max(...times)} ms (${models.join(', ')}).`);
+    } else {
+      const why = lv.diversityReason ?? `skipped — ${lv.decision.reason ?? 'no reason recorded'}`;
+      say(`_${why}_`);
+    }
+    say('');
+
+    say('### Image workflow against the real service');
+    say('');
+    const im = lv.image;
+    if (im.status === 'live') {
+      say(`- **service**: \`${String(im.service)}\``);
+      say(`- direction \`${String(im.direction)}\` · blueprint \`${String(im.blueprint)}\``);
+      say(`- renderable slots: ${(im.renderableSlots as string[]).join(', ')}`);
+      say(`- supplied slot: \`${String(im.suppliedSlot)}\` → **${String(im.requestedImages)} images requested** (count = 2)`);
+      say(
+        `- jobs that appeared on the service: **${im.newJobsObservedOnService === null || im.newJobsObservedOnService === undefined ? 'not observed' : String(im.newJobsObservedOnService)}** — ${String(im.observationNote ?? '')}`,
+      );
+      say(`- assets on the page: ${String(im.assetsOnPage)} — ${JSON.stringify(im.assetSource)}`);
+      const placement = im.placement as { ok: boolean; checked: number; issues: unknown[] } | undefined;
+      if (placement) say(`- placement verification: ok=${placement.ok}, checked=${placement.checked}, issues=${placement.issues.length}`);
+      say(`- wall time in the image step: ${String(im.imageMs)} ms`);
+      say(`- zip integrity test: ${String(im.zipTestOk)}; entries: ${(im.zipEntries as string[]).length}`);
+      for (const n of (im.notes as string[] | undefined) ?? []) say(`- note: ${n}`);
+    } else if (im.status === 'skipped') {
+      say(`- **skipped** — ${im.reason}`);
+    } else {
+      say(`- **${im.status}** — ${String(im.error ?? im.reason)}`);
+    }
+    say('');
+    say('The controlled fixture in §6 remains the request-counting control; this section is the same workflow');
+    say('against the service the environment actually provides.');
+    say('');
+  }
 
   const target = path.join(dir, 'tables.md');
   await writeFile(target, out.join('\n'), 'utf8');

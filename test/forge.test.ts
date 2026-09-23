@@ -855,24 +855,28 @@ await test(`live Jev decision${hasKey ? '' : ' (SKIPPED — no TYPESAFE_API_KEY)
   console.log(`        -> ${spec.decisions.map((d) => `${d.axis}=${d.picked}(${d.confidence.toFixed(2)})`).join(' ')}`);
 });
 
-await test('both halves compose: Jev designs, the writer writes (SKIPPED without both)', async () => {
-  if (!hasKey || !llm) return;
-  const brief = 'An esports tournament site for a fighting-game league. Loud, fast, competitive.';
-  const r = await decideWithFallback(brief, { preference: 'live' });
-  const { spec } = compose(brief, r);
-  const axes = spec.decisions.map((d) => ({ axis: d.axis, picked: d.picked, confidence: d.confidence }));
-  const w = await writeContent(brief, spec, { config: llm, fallback: fallbackContent(brief, axes) });
-  spec.content = w.content;
+const bothReady = Boolean(hasKey && llm);
+await test(
+  `both halves compose: Jev designs, the writer writes${bothReady ? '' : ' (SKIPPED without both)'}`,
+  async () => {
+    if (!bothReady) return;
+    const brief = 'An esports tournament site for a fighting-game league. Loud, fast, competitive.';
+    const r = await decideWithFallback(brief, { preference: 'live' });
+    const { spec } = compose(brief, r);
+    const axes = spec.decisions.map((d) => ({ axis: d.axis, picked: d.picked, confidence: d.confidence }));
+    const w = await writeContent(brief, spec, { config: llm, fallback: fallbackContent(brief, axes) });
+    spec.content = w.content;
 
-  const html = renderHtml(spec);
-  assert.equal(spec.meta.decider, 'live');
-  assert.ok(html.startsWith('<!DOCTYPE html>'));
-  assert.ok(!html.includes('ATELIER NULL'));
-  console.log(
-    `        -> design by ${spec.meta.model}, content "${w.content.brand}" by ${w.model}, ` +
-      `${spec.meta.latencyMs + w.latencyMs}ms total`,
-  );
-});
+    const html = renderHtml(spec);
+    assert.equal(spec.meta.decider, 'live');
+    assert.ok(html.startsWith('<!DOCTYPE html>'));
+    assert.ok(!html.includes('ATELIER NULL'));
+    console.log(
+      `        -> design by ${spec.meta.model}, content "${w.content.brand}" by ${w.model}, ` +
+        `${spec.meta.latencyMs + w.latencyMs}ms total`,
+    );
+  },
+);
 
 console.log(`\n${failed ? `FAILURES: ${failed}, passed: ${passed}` : `all ${passed} checks passed`}\n`);
 process.exit(failed ? 1 : 0);

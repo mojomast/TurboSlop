@@ -231,13 +231,15 @@ per-batch seed, per-direction seed, and the history snapshot keys
 
 ## 5. Testing and evidence
 
-`npm test` runs 13 offline suites (261 checks passed, 0 failed, 1 environment skip); see
-`evidence/tables.md` §8 for the generated counts. Evidence is produced by:
+`npm test` runs 13 suites — 262 checks passed, 0 failed, 0 skipped when credentials are
+present (the live Jev / writer halves run); without keys those same checks skip with the
+reason in their name. See `evidence/tables.md` §8 for the generated counts. Evidence is
+produced by:
 
 ```bash
 npm test 2>&1 | tee evidence/tests.txt
 npx tsx scripts/zip-unicode-check.ts | tee evidence/zip-unicode.txt
-npx tsx scripts/evidence.ts --out evidence        # sessions + fixture + browser measurement
+npx tsx scripts/evidence.ts --out evidence        # corpus + fixture + live phase + browser measurement
 npx tsx scripts/calibrate.ts --evidence evidence  # fingerprint vs rendered geometry
 npx tsx scripts/report.ts --evidence evidence     # evidence/tables.md
 ```
@@ -246,4 +248,7 @@ npx tsx scripts/report.ts --evidence evidence     # evidence/tables.md
 390×844 and records section geometry, image use and upscale factors, overflow,
 duplicate ids, broken anchors and first-screen shapes. The image-evidence run
 uses a **controlled local fixture** of the image-service API and labels itself
-as such — there is no live-service claim without a live service.
+as such; the evidence run's **live phase** (tables §10) additionally talks to
+the real services the environment provides — Jev, the writer and the image
+service — and records either what happened or the reason it could not run.
+There is no live-service claim without a live service.

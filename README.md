@@ -7,7 +7,7 @@
 A brief goes in. A designed, written and illustrated page comes out — in about a second,
 for a fraction of a cent, with every decision typed, scored and reproducible.
 
-[![tests](https://img.shields.io/badge/tests-261%20passed%20%C2%B7%201%20skipped-3fb950?style=flat-square)](#testing)
+[![tests](https://img.shields.io/badge/tests-262%20passed%20%C2%B7%200%20skipped-3fb950?style=flat-square)](#testing)
 [![node](https://img.shields.io/badge/node-%E2%89%A520-3fb950?style=flat-square)](https://nodejs.org)
 [![deps](https://img.shields.io/badge/runtime%20deps-1%20(zod)-3fb950?style=flat-square)](#why-so-few-dependencies)
 [![typescript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square)](tsconfig.json)
@@ -452,9 +452,14 @@ platform's secret store. `.gitignore` covers `.env*`, `*.key`, `*.pem`.
 ## Testing
 
 ```bash
-npm test         # 12 offline suites — no keys, no network, no GPU
+npm test         # 13 suites — offline by design; with credentials the live halves run too
 npm run typecheck
 ```
+
+Every suite is offline by construction except the ones that say otherwise: with `TYPESAFE_API_KEY`
+and an LLM key present, the live Jev/writer checks and the live-decided diversity set run against
+the real services; without them they skip **with the reason in the test name**. Nothing is folded
+together — passed, failed and skipped are reported separately.
 
 The authoritative counts (**passed / failed / skipped**, per suite and total) are *generated*
 from the captured run rather than hand-maintained: see
@@ -463,7 +468,7 @@ from the captured run rather than hand-maintained: see
 
 | Suite | Covers |
 |---|---|
-| `test/forge.test.ts` | decision composition, composite scoring, confidence gates, catalog drift, blueprint + visual-blueprint validation, fingerprint uniqueness, anchors, hero recipes, typographic recipes, treatments, icons, renderer, modern-CSS emission |
+| `test/forge.test.ts` | decision composition, composite scoring, confidence gates, catalog drift, blueprint + visual-blueprint validation, fingerprint uniqueness, anchors, hero recipes, typographic recipes, treatments, icons, renderer, modern-CSS emission, **plus the live writer, live Jev decision and their composition** (auto-skip with a reason when unconfigured) |
 | `test/images.test.ts` | payload validation, path-traversal refusal, URL allowlist, PNG magic bytes, **foreign-job filtering**, busy/429 backoff, ambiguous submissions |
 | `test/zip.test.ts` | CRC-32 vectors, real `unzip` round-trips (incl. Unicode names), DEFLATE vs STORE, traversal rejection, header-safe download filenames |
 | `test/motifs.test.ts` | deterministic seeded motifs, element budgets, density, data-URI encoding |
@@ -471,14 +476,17 @@ from the captured run rather than hand-maintained: see
 | `test/fonts.test.ts` | every bundled file exists and is a real woff2, licences present, only used faces emitted |
 | `test/session.test.ts` | selection makes no model call, previews are labelled, ids unique, anchors resolve, finalize writes a real design |
 | `test/slots.test.ts` | slot derivation, texture-vs-native rule, prompt budgets, slot-scoped resolution, supplied-beats-generated |
-| `test/diversity.test.ts` | the explore targets on all seven baseline briefs across seeds, near-duplicate rejection, bounded search, project-scoped history, reproducibility |
+| `test/diversity.test.ts` | the explore targets on all seven baseline briefs across seeds, near-duplicate rejection, bounded search, project-scoped history, reproducibility, **and the same targets under a live Jev decision** (skips with the reason when no key) |
 | `test/locks.test.ts` | locks bound to explicit values and source cards, blueprint/composition locks applied, invalid/incompatible locks explained, immutable previous batches |
 | `test/revision.test.ts` | copy-only revision preserves the resolved visual spec; visual edits touch only named axes; no re-decision |
 | `test/assetplan.test.ts` | zero slots ⇒ zero asset-service requests (controlled fixture), supplied images suppress generation, placement verification, ZIP carries assets + fonts + licences |
 
 Verification evidence (measured pages, screenshots, calibration, generated tables) lives in
 [`evidence/`](evidence/); the ZIP writer is additionally verified with Python's `zipfile` — an
-independent implementation — and with busybox, see `evidence/zip-unicode.txt`.
+independent implementation — and with busybox, see `evidence/zip-unicode.txt`. When the
+services are configured, the evidence run also records a **live pass** — real Jev decisions,
+a real writer call and a real image batch — in [`evidence/tables.md`](evidence/tables.md) §10;
+when they are not, that section says so with the reason instead of vanishing.
 
 ---
 
@@ -523,7 +531,7 @@ docs/             research, CSS reference, layout-diversity findings, implementa
 scripts/          measurement, evidence generation, calibration, report tables, ZIP check, font fetch
 baseline/         the measured BEFORE-state: 33 screenshots, specs, structure, timings
 after/            the measured AFTER-state, plus the matched comparison in FINDINGS.md
-evidence/         the CURRENT corpus: raw.json, measure.json, calibration, tests, generated tables
+evidence/         the CURRENT corpus: raw.json (fixture + live-service block), measure.json, calibration, tests, tables
 ARCHITECTURE.md   how the layers fit together — start here
 ```
 

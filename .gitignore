@@ -39,5 +39,18 @@ evidence/work/
 evidence/pages/
 evidence/pages-images/
 evidence/fixture-uploads/
+evidence/live-work/
+evidence/live-uploads/
 evidence/fixture-export.zip
 evidence/*.zip
+
+# The full per-direction screenshot dump regenerates with the corpus; only the
+# representative shots cited in docs/IMPLEMENTATION-REPORT.md §5 are committed.
+evidence/shots/*
+!evidence/shots/festival-s42-d0-desktop.png
+!evidence/shots/festival-s42-d0-mobile.png
+!evidence/shots/shop-s42-d2-desktop.png
+!evidence/shots/shop-s42-d2-mobile.png
+!evidence/shots/shop-s42-d2-full.png
+!evidence/shots/software-s42-d1-desktop.png
+!evidence/shots/software-s42-d1-mobile.png

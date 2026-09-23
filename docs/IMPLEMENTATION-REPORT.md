@@ -2,12 +2,19 @@
 
 **Starting SHA:** `1193968a05257c5f1a53a37ddeb0e1ea063ca53e` (the reviewed revision — checked first: no later commits existed, so every finding below was still live)
 **Implementation SHA:** `7ef1374ac44c5a6b086fd53e8b188e2302e3c3a6`
+**Live-evidence pass:** starts at `0b20860c710cb79dee07b6991e5e7a6c5cc13c9d` — credentials became
+available in the environment, so the live halves of the suites, the UI journeys and a new live
+evidence phase were run and the counts below were regenerated.
 *(this document lands in the follow-up documentation commit that immediately follows it)*
 **Branch:** `main`, pushed normally to `origin/main`.
-**Environment:** node v22.23.1 · **no API keys on this machine** — Jev, the writer and the image
-service are all absent, so the evidence is the *offline control* the baseline itself used:
-local decider + specimen inventory + a **controlled local fixture** for the image service,
-labelled as fixture wherever it appears. Live-service checks exist and skip with a reason.
+**Environment:** node v22.23.1 · credentials present (`TYPESAFE_API_KEY` for Jev,
+`DEEPSEEK_API_KEY` for the writer, a configured image service), sourced from
+`~/.config/atelier-null/{jev,llm}.env`. The **corpus** still runs the offline control the
+baseline itself used — local decider + specimen inventory + a **controlled local fixture** for
+the image service — so it reproduces byte-for-byte from the same inputs; a separate **live
+phase** (`scripts/evidence.ts`, tables §10) records real Jev decisions, a real writer call and a
+real image batch, or the reason it could not. Every test, journey and table below was produced
+with those credentials present: **262 passed · 0 failed · 0 skipped**.
 
 Every table quoted here is generated from the raw evidence by
 `scripts/report.ts` → [`evidence/tables.md`](../evidence/tables.md). Nothing below is
@@ -27,8 +34,9 @@ npm test 2>&1 | tee evidence/tests.txt
 # the Unicode ZIP filename investigation — evidence/zip-unicode.txt
 npx tsx scripts/zip-unicode-check.ts | tee evidence/zip-unicode.txt
 
-# the corpus: 3 briefs x 3 seeds x 6 directions + style probe + fixture run,
-# then live-browser measurement of every page at 1440x900 and 390x844
+# the corpus: 3 briefs x 3 seeds x 6 directions + style probe + fixture run + the LIVE phase
+# (Jev / writer / image service — each part skipped with a reason if unconfigured; --no-live
+#  drops it), then live-browser measurement of every page at 1440x900 and 390x844
 npx tsx scripts/evidence.ts --out evidence          # (adds shots with default flags)
 
 # fingerprint distance vs rendered geometry — evidence/calibration.json/.txt
@@ -59,7 +67,9 @@ npx tsx /tmp/opencode/ui-upload.mts
    (festival / ceramics-shop / software, three seeds each): **6 compositions per set against a
    target of 4, 3–5 headline constructions against 3, 4 visual treatments against 3, and 6 of 6
    directions distinct in grayscale — 9/9 sets meet every target**
-   ([tables §1](../evidence/tables.md)). Across the 54 directions: 49 distinct blueprints,
+   ([tables §1](../evidence/tables.md)). **The same 9/9 holds when the decision is made by the
+   real Jev service** (jev-1.13.0, 561–3154 ms per decision —
+   [tables §10](../evidence/tables.md)). Across the 54 directions: 49 distinct blueprints,
    5 headline constructions, 4 treatments, **54 distinct fingerprint keys** (§3).
    Direction 1 is always the strongest best-fit option; the rest are purposeful alternatives
    with their separation reported as a measured distance, never as "% perceptual uniqueness".
@@ -117,7 +127,7 @@ Full per-set table, complete direction listings and shortfall columns: [`evidenc
 | selection / locks / regeneration | **0 model calls** — verified both by test and by counting API calls during the UI journey |
 | finalize | 0 (reuses the shared inventory) or **1** writer call for final copy; surfaced as `modelCalls` in the job timings |
 | revision | **0–1** writer call, never a re-decision |
-| end-to-end per set | 87–113 ms (decide 0–1 ms · inventory 0 ms offline · local render 4–8 ms) |
+| end-to-end per set | 91–119 ms (decide 0–1 ms · inventory 0 ms offline · local render 5–8 ms); the whole evidence run 30,021 ms |
 | candidate search | bounded: 2,394 candidates (57 structures × ≤48 styling combos, cap 2,400) → 795–1,344 after de-duplication, history and content filters |
 | image requests for the preview set | **0** (previews never generate images) |
 
@@ -137,7 +147,20 @@ From [`evidence/tables.md`](../evidence/tables.md) §6: one direction with **5 r
 **1 supplied** → **exactly 2 requests** to the fixture service (count = 2), **3 assets on the
 page** (user `hero` with `CC0` + 1×1 dimensions, generated `gallery-1`, `gallery-2` at 256×256),
 placement verification `ok=true, checked=3, issues=0`, ZIP integrity test passed with 13 entries
-including `fonts/LICENSES.md`. Live-service evidence: **none — no service is configured here.**
+including `fonts/LICENSES.md`.
+
+### Live services — same workflow, real Jev / writer / image service ([tables §10](../evidence/tables.md))
+
+Captured with the keys in the environment (§1). Jev resolved to `jev-1.13.0` and answered each
+of 9 decisions in **561–3154 ms**; the writer is `deepseek-flash` (**9480 ms**, 955/1666 tokens,
+$0.001143, brand "Blokpunt"). Diversity under the live decision: **9/9 sets meet every target**
+(6/4 compositions, 4–5/3 constructions, 4/3 treatments, 6/4 grayscale, minimum separation
+0.4166–0.5752). The image workflow ran against `https://kimi.tailec998.ts.net:4363`: direction
+`dir_4565d30a` (blueprint `event-festival`), 5 renderable slots, `hero` supplied → 2 requested,
+**2 new job ids observed** on the service between the pre-run and post-run `/api/status`
+snapshots, 3 assets on the page (user `CC0` 1×1 + `gallery-1` 256×256 in 6.62 s, `gallery-2`
+256×256 in 0.8 s), placement `ok=true, checked=3, issues=0`, image step 8087 ms, ZIP integrity
+passed with 13 entries.
 
 ### Similarity calibration ([`evidence/calibration.json`](../evidence/calibration.json))
 
@@ -167,11 +190,15 @@ Generated from `evidence/tests.txt` (tables §8):
 
 | status | checks |
 |---|---|
-| **passed** | **261** |
+| **passed** | **262** |
 | **failed** | **0** |
-| **skipped** | **1** (`live-Jev diversity — no TYPESAFE_API_KEY`); the forge suite's three live-Jev/writer checks also self-skip inside a passing suite |
+| **skipped** | **0** — every environment-gated check ran (live Jev, live writer), and the forge
+suite's three live halves report `SKIPPED` only when the key really is absent |
 
-13 suites: 58 · 24 · 11 · 23 · 31 · 19 · 22 · 13 · 19 (+1 skipped) · 14 · 8 · 13 · 6.
+13 suites: 58 · 24 · 11 · 23 · 31 · 19 · 22 · 13 · 20 · 14 · 8 · 13 · 6. The suites that
+previously self-skipped now genuinely run: `diversity` gained the live-Jev check (19 → 20) and
+`revision` (8) pins `FORGE_LLM_PROVIDER=__offline_test__` so an ambient key can never turn its
+byte-identical assertion into a network call.
 `npm run typecheck` is clean over `src/`, `test/` **and** `scripts/` (the `DOM.Iterable` lib
 gap that hid script errors is closed).
 
@@ -181,7 +208,7 @@ gap that hid script errors is closed).
 
 | finding | fix | evidence |
 |---|---|---|
-| saved six-direction set used one look throughout | resolved-design fingerprints + coverage-bounded selection + blueprint variation + direction seeds | tables §1–§3; `test/diversity.test.ts` (19 checks) |
+| saved six-direction set used one look throughout | resolved-design fingerprints + coverage-bounded selection + blueprint variation + direction seeds | tables §1–§3, §10 (9/9 under the live service); `test/diversity.test.ts` (20 checks) |
 | blueprint distance described as perceptual uniqueness | distances are weighted feature distances; rationale text reports "separation 0.xx from the closest earlier direction"; calibration measured against geometry | `src/fingerprint.ts`, `evidence/calibration.json`, report/README wording |
 | no cross-session novelty | project-scoped history applied to batches **and** single-design runs, snapshotted before selection | `test/diversity.test.ts` history tests; `src/history.ts` |
 | iframes at card width × 15rem | fixed 1440×900 / 390×844 with scale-to-fit, resize affects scale only | `test/viewport.test.ts` (6/6) |
@@ -199,7 +226,10 @@ gap that hid script errors is closed).
 | unsupported content / empty galleries / dead CTAs | empty-state notes for gallery/schedule/pricing/faq, contact-guarded hero CTAs, missing-content diagnostics per card | anchors/diagnostics tests; cards show amber diagnostics when content is missing |
 | fonts + licences in ZIP **and** single-file export | `fonts/LICENSES.md` in the ZIP; licence text embedded as a comment in the self-contained page (asserted) | `test/assetplan.test.ts` export test |
 | Unicode ZIP filename failure | archive valid under Info-ZIP (both locales), Python and busybox; `?` glyphs are console display; the one real failure is `ERR_INVALID_CHAR` for non-latin1 response headers — slugs are ASCII and `contentDisposition()` RFC-6266-encodes regardless | `evidence/zip-unicode.txt`, `scripts/zip-unicode-check.ts`, `test/zip.test.ts` header test |
-| "281 checks" and stale listings | every count now generated from `evidence/tests.txt`; LAYOUT-DIVERSITY rewritten (fingerprints section, suites table, limitations); README badge = 261 passed · 1 skipped | `evidence/tables.md` §8; `docs/LAYOUT-DIVERSITY.md` |
+| "281 checks" and stale listings | every count now generated from `evidence/tests.txt`; LAYOUT-DIVERSITY rewritten (fingerprints section, suites table, limitations); README badge = 262 passed · 0 skipped | `evidence/tables.md` §8; `docs/LAYOUT-DIVERSITY.md` |
+| the diversity suite hardcoded its live-Jev skip, so a key would have changed the meaning of a green run | replaced with a real conditional check: 3 briefs × 3 seeds under Jev, asserting the same targets as the offline control | `test/diversity.test.ts` (20/20, including the live check) |
+| an ambient `DEEPSEEK_API_KEY` could turn `revision`'s offline byte-identity assertion into a network call | the suite pins `FORGE_LLM_PROVIDER=__offline_test__` for its duration and restores the previous value in teardown | `test/revision.test.ts` (8/8) |
+| no live evidence of the real services anywhere in the report | `runLive()` phase: decision, 9 live-decided diversity sets, writer call, image run with a pre/post `/api/status` job-id diff, ZIP check — recorded as `status + reason` per part | tables §10; `evidence/raw.json` `live` block |
 
 ---
 
@@ -216,6 +246,7 @@ Committed evidence (paths relative to the repo root):
 | `evidence/shots/shop-s42-d2-full.png` | representative full page |
 | `docs/screenshots/contact-sheet-desktop.png` | the real control surface, desktop viewports |
 | `docs/screenshots/contact-sheet-mobile.png` | the same set in mobile viewports |
+| `docs/screenshots/contact-sheet-selected.png` | a selected direction in the sheet (journey step) |
 | `docs/screenshots/direction-expand.png` | expanded first-screen comparison |
 | `docs/screenshots/directions-locks-regenerated.png` | locks + regenerated batch (all cards holding the locked layout) |
 | `docs/screenshots/image-slots-upload.png` | upload → slot assignment UI |
@@ -227,22 +258,25 @@ Committed evidence (paths relative to the repo root):
 
 | # | requirement | evidence |
 |---|---|---|
-| 1 | diversity as an enforced property | `src/fingerprint.ts`, `src/directions.ts` (bounded search, near-dup rejection, coverage targets, shortfall reasons), `src/blueprint.ts` (`varyBlueprint`/`resolveBlueprint`), `src/history.ts` · `test/diversity.test.ts` (19) · tables §1–§3, §7 (calibration) · 9/9 sets, 54/54 fingerprint keys |
+| 1 | diversity as an enforced property | `src/fingerprint.ts`, `src/directions.ts` (bounded search, near-dup rejection, coverage targets, shortfall reasons), `src/blueprint.ts` (`varyBlueprint`/`resolveBlueprint`), `src/history.ts` · `test/diversity.test.ts` (20, incl. live Jev) · tables §1–§3, §7 (calibration), §10 (live) · 9/9 offline **and** 9/9 live sets, 54/54 fingerprint keys |
 | 2 | accurate previews, fast generation | `public/index.html` viewport engine · `test/viewport.test.ts` (6) · journey checks (metrics separation, 0 model calls on regenerate) · tables §5 |
 | 3 | trustworthy selection/locks/regeneration/revision | `src/sessions.ts`, `src/revise.ts` · `test/locks.test.ts` (14), `test/revision.test.ts` (8) · journey (30/30), API smoke (§1 commands) |
-| 4 | complete image workflow | `src/assetplan.ts`, `POST /api/uploads`, placement verification · `test/assetplan.test.ts` (13, fixture) · tables §6 · upload journey (6/6) |
+| 4 | complete image workflow | `src/assetplan.ts`, `POST /api/uploads`, placement verification · `test/assetplan.test.ts` (13, fixture) · tables §6 (controlled fixture) **and §10 (live service: 2 new jobs, 3 assets, 0 issues)** · upload journey (6/6) |
 | 5 | CSS / typography / assets | `src/visual.ts` (`TYPO_COMPAT`, width/wrap/hierarchy), `src/styles.ts`, `src/layout.ts`, frames in gallery, direction-seeded motifs, licence-embedded export · geometry table (§5 above: 0 overflow, 0 dup, 0 broken) |
-| 6 | verify journeys, reconcile evidence | all of §1's commands; `evidence/` raw JSON → `tables.md`; screenshots §5; passed/failed/skipped reported separately (261/0/1) |
-| 7 | deliver | `ARCHITECTURE.md`, this report, commits `98c1482` + `7ef1374` (+ docs commit) pushed to `origin/main` |
+| 6 | verify journeys, reconcile evidence | all of §1's commands; `evidence/` raw JSON → `tables.md`; screenshots §5; passed/failed/skipped reported separately (262/0/0) |
+| 7 | deliver | `ARCHITECTURE.md`, this report, commits `98c1482` + `7ef1374` + `0b20860` (+ docs commits) pushed to `origin/main`; this live-evidence commit follows it |
 
 ---
 
 ## 7. Remaining limitations
 
-1. **No live-service image evidence and no live Jev/writer run** — no keys exist on this
-   machine. The image evidence is a controlled fixture that counts every request; the live
-   paths are environment-gated tests that skip with a reason (the 1 skipped check + 3 in-suite
-   self-skips). Capturing live evidence needs only the keys and the same commands.
+1. **Live evidence is one machine's snapshot, not an SLA.** §10 was captured with this
+   environment's keys: 9 Jev decisions (561–3154 ms), one `deepseek-flash` inventory write
+   (9480 ms, $0.001143) and one image run (8087 ms, 2 jobs). Latencies, costs and job ids will
+   differ on any other run; the offline corpus remains the reproducible control, and
+   `--no-live` reproduces it byte-for-byte without touching the network. Anything that could
+   not run is recorded in §10 with its `status + reason` rather than omitted — there are no
+   silent gaps.
 2. **Palette spread is bounded by the decision distribution**: 3 of 11 palettes across 54
    offline directions (the local decider's marginals are peaked and four sets ran dark). The
    enforced targets are composition/construction/treatment/grayscale separation, which all pass;

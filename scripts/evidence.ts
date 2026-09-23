@@ -7,7 +7,8 @@
  *
  *   evidence/
  *     raw.json         sessions, direction sets, diversity reports, inventory
- *                      hashes, metrics (model calls + timings), fixture run
+ *                      hashes, metrics (model calls + timings), fixture run,
+ *                      and the live-service block (below)
  *     measure.json     live-browser geometry for every preview at 1440×900 and
  *                      390×844 (section geometry, images, overflow, duplicate
  *                      ids, broken anchors, h1 size/lines)
@@ -18,14 +19,18 @@
  *
  * Scope: the three briefs the review names — festival, ceramics-shop and
  * software — across three seeds, plus the CONTROLLED IMAGE-SERVICE FIXTURE
- * run (labelled: fixture evidence, not live-service evidence).
+ * run (labelled: fixture evidence, not live-service evidence), plus the LIVE
+ * phase below.
  *
- * Everything runs offline: local decider, no writer, no network. The same
- * command reproduces the same evidence from the same inputs.
+ * The corpus runs offline: local decider, no writer, no network. The same
+ * command reproduces the same corpus from the same inputs. The live phase is
+ * the deliberate exception — it talks to the real services the environment
+ * provides and records what happened, or records WHY it could not (missing
+ * key, no endpoint) instead of quietly omitting the row.
  *
  * Usage:
  *   npx tsx scripts/evidence.ts --out evidence
- *   npx tsx scripts/evidence.ts --out /tmp/ev --no-measure --no-fixture
+ *   npx tsx scripts/evidence.ts --out /tmp/ev --no-measure --no-fixture --no-live
  */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
@@ -48,6 +53,7 @@ interface Cli {
   measure: boolean;
   fixture: boolean;
   shots: boolean;
+  live: boolean;
 }
 
 function parseArgs(argv: string[]): Cli {
@@ -58,6 +64,7 @@ function parseArgs(argv: string[]): Cli {
     measure: true,
     fixture: true,
     shots: true,
+    live: true,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -67,6 +74,7 @@ function parseArgs(argv: string[]): Cli {
     else if (a === '--no-measure') cli.measure = false;
     else if (a === '--no-fixture') cli.fixture = false;
     else if (a === '--no-shots') cli.shots = false;
+    else if (a === '--no-live') cli.live = false;
   }
   return cli;
 }
@@ -131,8 +139,288 @@ async function startFixture(): Promise<{ port: number; generateCalls: number; pr
 }
 
 /* ------------------------------------------------------------------ *
- * Main
+ * Live-service evidence (Jev, the writer, the image service)
+ *
+ * The corpus above is deliberately offline so it reproduces byte-for-byte.
+ * This phase is the opposite: it talks to whatever real services the
+ * environment provides and records exactly what happened. Every part is
+ * environment-gated and, when a credential or endpoint is missing, is recorded
+ * as `skipped` WITH THE REASON rather than dropped — so the same command runs
+ * anywhere and never claims evidence it did not capture.
+ *
+ * It uses its own project (`evidence-live`) and its own working directory, so
+ * it can never perturb the history the offline corpus is measured against.
  * ------------------------------------------------------------------ */
+type LiveStatus = 'live' | 'skipped' | 'fallback' | 'error';
+
+interface LiveBlock {
+  capturedAt: string;
+  note: string;
+  environment: { jev: string; writer: string; image: string };
+  decision: { status: LiveStatus; reason?: string; model?: string; latencyMs?: number; inputTokens?: number; outputTokens?: number; estimatedUsd?: number };
+  /** One row per live-decided direction set — the same targets, under Jev. */
+  diversity: {
+    brief: string;
+    seed: number;
+    model: string;
+    decideMs: number;
+    met: boolean;
+    targets: Record<string, number>;
+    achieved: Record<string, number>;
+    shortfall: { target: string; wanted: number; got: number; reason: string }[];
+    directions: { blueprint: string; palette: string; construction: string; treatment: string }[];
+  }[];
+  diversityReason?: string;
+  writer: { status: LiveStatus; reason?: string; model?: string; latencyMs?: number; inputTokens?: number; outputTokens?: number; estimatedUsd?: number; brand?: string };
+  image: {
+    status: LiveStatus;
+    reason?: string;
+    service?: string;
+    direction?: string;
+    blueprint?: string;
+    renderableSlots?: string[];
+    suppliedSlot?: string;
+    requestedImages?: number;
+    newJobsObservedOnService?: number | null;
+    observationNote?: string;
+    assetsOnPage?: number;
+    assetSource?: { slot: string; source: string; license: string; size: string; bytes?: number; seconds?: number }[];
+    placement?: { ok: boolean; checked: number; issues: unknown[] };
+    imageMs?: number;
+    zipTestOk?: boolean;
+    zipEntries?: string[];
+    notes?: string[];
+    error?: string;
+  };
+}
+
+/** Snapshot the service's job ids (null when the status endpoint is unreachable). */
+async function serviceJobIds(service: { baseUrl: string; origin: string; timeoutMs: number }): Promise<Set<string> | null> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), service.timeoutMs);
+  try {
+    const res = await fetch(`${service.baseUrl}/api/status`, {
+      headers: { Origin: service.origin },
+      signal: controller.signal,
+    });
+    if (!res.ok) return null;
+    const json = (await res.json()) as { jobs?: { id?: string }[] };
+    return new Set((json.jobs ?? []).map((j) => j.id).filter((x): x is string => Boolean(x)));
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function runLive(outAbs: string, cli: Cli, publicDir: string): Promise<LiveBlock> {
+  const { hasApiKey } = await import('../src/jev.js');
+  const { resolveLlm, describeLlm } = await import('../src/llm.js');
+  const { resolveImageService, describeImageService } = await import('../src/images.js');
+  const { writeContent } = await import('../src/writer.js');
+  const { fallbackContent } = await import('../src/content.js');
+  const { compose } = await import('../src/compose.js');
+  const { decideWithFallback } = await import('../src/decider.js');
+
+  const liveDir = path.join(outAbs, 'live-work');
+  await rm(liveDir, { recursive: true, force: true });
+  await mkdir(liveDir, { recursive: true });
+
+  const hasJev = hasApiKey();
+  const llm = resolveLlm();
+  const imageService = resolveImageService();
+
+  const block: LiveBlock = {
+    capturedAt: new Date().toISOString(),
+    note: 'real services in this environment; each part that could not run says why',
+    environment: {
+      jev: hasJev ? 'TYPESAFE_API_KEY present' : 'absent — no TYPESAFE_API_KEY',
+      writer: describeLlm(llm),
+      image: describeImageService(imageService),
+    },
+    decision: { status: 'skipped', reason: 'no TYPESAFE_API_KEY — the offline corpus used the local decider instead' },
+    diversity: [],
+    writer: { status: 'skipped', reason: 'no writer configured (set DEEPSEEK_API_KEY or FORGE_LLM_BASE_URL/MODEL/KEY)' },
+    image: { status: 'skipped', reason: describeImageService(null) },
+  };
+
+  const prevProject = process.env.FORGE_PROJECT;
+  process.env.FORGE_PROJECT = 'evidence-live';
+  try {
+    /* ---- live decision + diversity under Jev -------------------------- */
+    if (hasJev) {
+      try {
+        /* The three briefs the report names — always, so the live table and
+           the offline table are measured on the same inputs. */
+        const liveBriefs = ['festival', 'shop', 'software'] as const;
+        for (const name of liveBriefs) {
+          for (const seed of cli.seeds) {
+            const session = await createSession(liveDir, publicDir, {
+              brief: BRIEFS[name]!,
+              decider: 'live',
+              seed,
+              explore: 1,
+              count: 6,
+              noWriter: true,
+            });
+            block.diversity.push({
+              brief: name,
+              seed,
+              model: session.decision.model,
+              decideMs: session.decision.latencyMs,
+              met: session.diversity.met,
+              targets: session.diversity.targets as unknown as Record<string, number>,
+              achieved: session.diversity.achieved as unknown as Record<string, number>,
+              shortfall: session.diversity.shortfall.map((s) => ({ target: s.target, wanted: s.wanted, got: s.got, reason: s.reason })),
+              directions: session.directions.map((d) => ({
+                blueprint: d.blueprint,
+                palette: d.palette,
+                construction: d.features.construction,
+                treatment: d.features.treatment,
+              })),
+            });
+          }
+        }
+        const first = block.diversity[0];
+        block.decision = first
+          ? { status: 'live', model: first.model, latencyMs: first.decideMs }
+          : { status: 'error', reason: 'live decision produced no sets' };
+      } catch (err) {
+        block.decision = { status: 'error', reason: err instanceof Error ? err.message : String(err) };
+        block.diversityReason = `live direction sets could not be built: ${block.decision.reason}`;
+        block.diversity = [];
+      }
+    }
+
+    /* ---- live writer -------------------------------------------------- */
+    if (llm) {
+      try {
+        const brief = BRIEFS.festival!;
+        const decided = await decideWithFallback(brief, { preference: hasJev ? 'live' : 'local' });
+        const { spec } = compose(brief, decided);
+        const axes = spec.decisions.map((d) => ({ axis: d.axis, picked: d.picked, confidence: d.confidence }));
+        const w = await writeContent(brief, spec, { fallback: fallbackContent(brief, axes) });
+        const { writerCost } = await import('../src/pricing.js');
+        block.writer =
+          w.source === 'llm'
+            ? {
+                status: 'live',
+                model: w.model,
+                latencyMs: w.latencyMs,
+                inputTokens: w.inputTokens,
+                outputTokens: w.outputTokens,
+                estimatedUsd: writerCost(w.inputTokens, w.outputTokens),
+                brand: w.content.brand,
+              }
+            : { status: 'fallback', reason: w.fallbackReason ?? 'the writer returned no usable content', model: w.model };
+      } catch (err) {
+        block.writer = { status: 'error', reason: err instanceof Error ? err.message : String(err) };
+      }
+    }
+
+    /* ---- live image run ----------------------------------------------- */
+    if (imageService) {
+      const before = await serviceJobIds(imageService);
+      const started = Date.now();
+      try {
+        const session = await createSession(liveDir, publicDir, {
+          brief: BRIEFS.festival!,
+          decider: hasJev ? 'live' : 'local',
+          seed: 4242,
+          explore: 1,
+          count: 6,
+          noWriter: true,
+        });
+        const idx = Math.max(0, session.directions.findIndex((d) => d.imageSlots.length > 0));
+        const chosen = session.directions[idx]!;
+        const uploadDir = path.join(outAbs, 'live-uploads');
+        await mkdir(uploadDir, { recursive: true });
+        const suppliedFile = path.join(uploadDir, 'supplied-hero.png');
+        await writeFile(suppliedFile, PNG_1PX);
+        const suppliedSlot = chosen.imageSlots[0]?.id;
+
+        const result = await finalizeSession(liveDir, session, 'live-final', {
+          index: idx,
+          finalCopy: false,
+          images: { enabled: true, count: 2, preset: 'turbo' },
+          ...(suppliedSlot
+            ? { userImages: [{ slot: suppliedSlot, path: suppliedFile, alt: 'Supplied photo', credit: 'live fixture upload', license: 'CC0' }] }
+            : {}),
+          userImageRoot: uploadDir,
+        });
+
+        let zipEntries: string[] = [];
+        let zipTestOk = false;
+        try {
+          const { buildZip } = await import('../src/export.js');
+          const zip = await buildZip(liveDir, 'live-final');
+          const zipPath = path.join(outAbs, 'live-export.zip');
+          await writeFile(zipPath, zip);
+          const list = spawnSync('unzip', ['-Z1', zipPath], { encoding: 'utf8' });
+          zipEntries = list.status === 0 ? list.stdout.split('\n').filter(Boolean) : [];
+          const testRun = spawnSync('unzip', ['-t', zipPath], { encoding: 'utf8' });
+          zipTestOk = testRun.status === 0 || /zipfile is empty/.test(testRun.stderr ?? '');
+        } catch (err) {
+          zipEntries = [`zip build failed: ${err instanceof Error ? err.message : String(err)}`];
+        }
+
+        const after = await serviceJobIds(imageService);
+        const newJobs = before && after ? [...after].filter((id) => !before.has(id)).length : null;
+
+        block.image = {
+          status: 'live',
+          service: describeImageService(imageService),
+          direction: chosen.id,
+          blueprint: chosen.blueprint,
+          renderableSlots: chosen.imageSlots.map((s) => s.id),
+          suppliedSlot,
+          requestedImages: 2,
+          newJobsObservedOnService: newJobs,
+          observationNote:
+            newJobs === null
+              ? 'the status endpoint could not be snapshotted, so requests are reported as requested, not observed'
+              : 'jobs that appeared on the service between the pre-run and post-run status snapshots',
+          assetsOnPage: result.spec.assets.length,
+          assetSource: result.spec.assets.map((a) => ({
+            slot: a.slot,
+            source: a.source,
+            license: a.license,
+            size: `${a.nativeWidth}x${a.nativeHeight}`,
+            ...(a.bytes !== undefined ? { bytes: a.bytes } : {}),
+            ...(a.seconds !== undefined ? { seconds: a.seconds } : {}),
+          })),
+          placement: { ok: result.placement.ok, checked: result.placement.checked, issues: result.placement.issues },
+          imageMs: result.assetMs,
+          zipTestOk,
+          zipEntries,
+          notes: result.notes,
+        };
+        console.log(
+          `  live     image: ${chosen.blueprint} → ${result.spec.assets.length} assets, ` +
+            `${newJobs ?? '?'} new job(s) on the service, ${Date.now() - started} ms wall`,
+        );
+      } catch (err) {
+        block.image = {
+          status: 'error',
+          service: describeImageService(imageService),
+          error: err instanceof Error ? err.message : String(err),
+          imageMs: Date.now() - started,
+        };
+      }
+    }
+  } finally {
+    if (prevProject === undefined) delete process.env.FORGE_PROJECT;
+    else process.env.FORGE_PROJECT = prevProject;
+  }
+
+  console.log(
+    `  live     jev=${block.decision.status} writer=${block.writer.status} image=${block.image.status} ` +
+      `(${block.diversity.length} live sets)`,
+  );
+  return block;
+}
+
+
 async function main(): Promise<void> {
   const cli = parseArgs(process.argv.slice(2));
   const outAbs = path.resolve(cli.out);
@@ -383,7 +671,10 @@ async function main(): Promise<void> {
     }
   }
 
-  /* ---- 3. Raw evidence file ------------------------------------------ */
+  /* ---- 3. Live-service evidence (real Jev / writer / image service) --- */
+  const live = cli.live ? await runLive(outAbs, cli, publicDir) : null;
+
+  /* ---- 4. Raw evidence file ------------------------------------------ */
   const raw = {
     generatedAt: new Date().toISOString(),
     node: process.version,
@@ -403,6 +694,7 @@ async function main(): Promise<void> {
     pageMap,
     styleProbe,
     fixture,
+    live,
     wallMs: Date.now() - wallStart,
   };
   await writeFile(path.join(outAbs, 'raw.json'), JSON.stringify(raw, null, 1), 'utf8');

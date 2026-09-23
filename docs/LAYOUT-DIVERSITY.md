@@ -238,24 +238,29 @@ Thinking mode is off by default (see [`JEV-RESEARCH.md`](JEV-RESEARCH.md)); the 
 and dominates.
 
 The current evidence corpus (`evidence/tables.md` §5) runs the **offline control** — local
-decider, specimen inventory: 1 model call per six-direction set, ~90–115 ms end to end per set,
-4–9 ms of that spent rendering all six previews locally. Candidate search is bounded at 2,394
+decider, specimen inventory: 1 model call per six-direction set, ~91–119 ms end to end per set,
+5–8 ms of that spent rendering all six previews locally. Candidate search is bounded at 2,394
 candidates per set. The second (inventory) call is the one that appears when a writer is
-configured; it is never paid per direction.
+configured; it is never paid per direction. The same two calls measured **live**
+(`evidence/tables.md` §10): Jev answered in 561–3,154 ms per decision (9 calls), and the shared
+inventory write took 9,480 ms for 955 in / 1,666 out tokens — $0.00114 on `deepseek-flash`.
 
 ---
 
 ## 6. Tests
 
-Run `npm test` — 13 offline suites, no keys, no network, no GPU. The generated
+Run `npm test` — 13 suites, offline by construction. The generated
 counts (passed / failed / skipped per suite) live in
 [`evidence/tables.md`](../evidence/tables.md) §8, produced from
 `evidence/tests.txt` by `scripts/report.ts`, so the number quoted here can
-never drift from the suite again.
+never drift from the suite again. **262 checks passed, 0 failed, 0 skipped**
+in this environment, where the credentials for the live halves are present;
+without them those checks skip *with the reason in the test name* rather than
+disappearing.
 
 | Suite | Protects |
 |---|---|
-| `forge.test.ts` | decision composition, composite scoring, confidence gates, catalog drift, blueprint + visual-blueprint validation, fingerprint uniqueness, every blueprint renders with resolving anchors, unique ids, the three hero recipes, typographic recipes, treatments, icons |
+| `forge.test.ts` | decision composition, composite scoring, confidence gates, catalog drift, blueprint + visual-blueprint validation, fingerprint uniqueness, every blueprint renders with resolving anchors, unique ids, the three hero recipes, typographic recipes, treatments, icons — **plus the live writer, the live Jev decision and their composition**, which skip with a reason when unconfigured |
 | `images.test.ts` | payload validation, path-traversal refusal, PNG magic bytes, foreign-job filtering, busy/429 backoff |
 | `zip.test.ts` | CRC-32 vectors, real `unzip` round-trips (incl. Unicode names), DEFLATE vs STORE, traversal rejection, header-safe download filenames |
 | `motifs.test.ts` | determinism, element budgets, density, data-URI encoding |
@@ -263,7 +268,7 @@ never drift from the suite again.
 | `fonts.test.ts` | every bundled file exists and is a real woff2, licences present, only used faces emitted |
 | `session.test.ts` | selection performs no model call and leaves the decision byte-identical; previews labelled, ids unique, anchors resolve; finalize writes a real design |
 | `slots.test.ts` | slot derivation, the texture-vs-native rule, prompt budgets, header parsing, traversal refusal, slot-scoped resolution, supplied-beats-generated |
-| `diversity.test.ts` | the explore targets on all seven baseline briefs across seeds, near-duplicate rejection, bounded search, project-scoped history, reproducibility from inputs + seed + snapshot |
+| `diversity.test.ts` | the explore targets on all seven baseline briefs across seeds, near-duplicate rejection, bounded search, project-scoped history, reproducibility from inputs + seed + snapshot, **and the same targets under a live Jev decision** (9 live sets; skips with the reason when no key) |
 | `locks.test.ts` | locks bound to explicit values and source cards, blueprint/composition locks applied, invalid and incompatible locks explained, immutable previous batches |
 | `revision.test.ts` | copy-only revision preserves the resolved visual spec (the `data-metrics` → `story-origin` regression), visual edits touch only named axes, no re-decision |
 | `assetplan.test.ts` | zero slots ⇒ zero asset-service requests (controlled fixture), supplied images suppress generation, slot ownership by rendered variant, placement verification, ZIP export carries assets + fonts + licences |
@@ -278,25 +283,32 @@ preservation, and the header-safe download filename check.
 
 ## 7. Remaining limitations
 
-1. **No live-service image batch in this environment.** Slot-aware planning, the zero-slot rule,
-   supplied-image precedence and placement verification are proven against a *controlled local
-   fixture* of the image-service API (every request counted) and by tests; the fixture is
-   labelled as fixture evidence wherever it appears, and a live-service batch still needs a
-   configured service to capture.
+1. **Live image evidence is one service, not a survey.** The live batch in
+   `evidence/tables.md` §10 ran against the image service this environment provides (a CPU
+   host): a direction with 5 renderable slots, **1 supplied → 2 requests** and **2 new jobs
+   observed on the service**, 3 assets on the page, placement `ok, 3 checked, 0 issues`, image
+   step 8,087 ms, ZIP 13 entries and `unzip -t` clean. The controlled fixture remains the
+   request-counting control and the offline corpus stays offline so it reproduces
+   byte-for-byte; a different provider's queueing, pricing and failure modes are unmeasured.
 2. **A single best-fit run still converges across repeats.** By design: direction 1 is the page
    the brief most wants. The diversity lives in the SET — six directions spanning six
    compositions, 3–4 headline constructions and 3–4 treatments, several distinct in grayscale
    (`evidence/tables.md` §1) — and choosing among them is what the contact sheet is for.
 3. **Palette spread is bounded by the decision distribution.** The offline local decider's
-   marginals are peaked, so 54 directions used 3 of 11 palettes. Structure, typography and
-   treatment are what the enforced targets move; hue diversity moves when the distributions do
-   (live Jev returns a full distribution per axis to spread across).
+   marginals are peaked, so 54 directions used 3 of 11 palettes; the live-decided 54 used 4
+   (`electric-acid` 18, `steel-signal` 18, `bone-terracotta` 17, `sage-mist` 1). Structure,
+   typography and treatment are what the enforced targets move; hue diversity moves when the
+   distributions do — Jev returns a full distribution per axis, but it is peaked too.
 4. **Third-party image search is not implemented**, deliberately — user-supplied local images are
    the supported path, and a licensed search that cannot verify its licences would be worse than
    none.
 5. **The visual blueprint is derived, not decided.** It is deterministic, validated and now
    seed-varied per direction, but the model has no say in it. Whether it should is an open
    question, not an oversight.
-6. **Live Jev and live writer paths are environment-gated.** This machine has no keys, so those
-   checks skip with a reason; everything else runs against the local decider and the specimen
-   inventory, which is the control the baseline itself used.
+6. **Live Jev and live writer paths are environment-gated, and they ran here.** With
+   `TYPESAFE_API_KEY` and an LLM key present, `test/diversity.test.ts` checks the targets
+   against nine live-decided sets (all met) and `test/forge.test.ts` runs the writer, the
+   decision and their composition — 262 passed / 0 failed / 0 skipped. On a machine without
+   credentials those same checks skip *with the reason in the test name*, the offline corpus is
+   unchanged, and `scripts/evidence.ts` records why its live phase did not run instead of
+   dropping the rows.

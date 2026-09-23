@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-09-23T00:57:34.205Z",
+ "generatedAt": "2026-09-23T01:24:52.244Z",
  "method": "within-brief pairs only (the content inventory is fixed per brief), fingerprint distance from raw.json vs measured geometry (section heights, hero height, h1 size, first-screen shape) from measure.json",
  "thresholds": {
   "NEAR_DUPLICATE": 0.06,

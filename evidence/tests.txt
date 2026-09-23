@@ -60,9 +60,12 @@
   ok    a product demonstration is wrapped in a real frame
   ok    art-directed treatments degrade rather than hide text
   ok    icons are used sparingly and never as the only carrier of meaning
-  ok    live writing (SKIPPED — no LLM configured)
-  ok    live Jev decision (SKIPPED — no TYPESAFE_API_KEY)
-  ok    both halves compose: Jev designs, the writer writes (SKIPPED without both)
+        -> deepseek-flash wrote "Padaria Crua" — We grind the wheat before the sun hits the cobbles.
+  ok    live writing (deepseek/deepseek-flash (key from DEEPSEEK_API_KEY))
+        -> emotion=mystery(1.00) composition=gallery-first(1.00) effects=cinematic-depth(0.61) palette=void-violet(0.99) typography=editorial-serif(0.80) layout=editorial-asymmetric(0.61) motion=glacial(0.94) density=balanced(0.00)
+  ok    live Jev decision
+        -> design by jev-1.13.0, content "GRIDLOCK" by deepseek-flash, 9149ms total
+  ok    both halves compose: Jev designs, the writer writes
 
 all 58 checks passed
 
@@ -284,9 +287,18 @@ all 13 checks passed
   info  software seed 42: statement-panel~f51a96034/noir-lime/stacked/plain | image-mosaic~f5233d054/arctic-cyan/outline/shaped | product-demo~f51bd2714/arctic-cyan/stacked/cutout | data-calculator/arctic-cyan/caps/plain | catalogue-gallery~f51dad164/noir-lime/stacked/textwrap | statement-display~f519f76b4/arctic-cyan/stacked/plain
   info  software seed 97: statement-panel~f305bb0a4/noir-lime/stacked/plain | image-mosaic~f30e620c4/arctic-cyan/outline/shaped | product-demo/noir-lime/stacked/cutout | catalogue-rail/arctic-cyan/stacked/textwrap | data-calculator/arctic-cyan/caps/plain | statement-display~f3051c724/arctic-cyan/stacked/plain
   ok    festival, ceramics-shop and software produce different COMPLETE sets across seeds
-  SKIP  live-Jev diversity — no TYPESAFE_API_KEY — the local decider is the offline control
+  info  LIVE festival (live jev-1.13.0, 390ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE festival (live jev-1.13.0, 390ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE festival (live jev-1.13.0, 390ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE shop (live jev-1.13.0, 233ms) seed 11: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE shop (live jev-1.13.0, 233ms) seed 42: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE shop (live jev-1.13.0, 233ms) seed 97: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE software (live jev-1.13.0, 234ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE software (live jev-1.13.0, 234ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE software (live jev-1.13.0, 234ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  ok    a LIVE Jev decision also yields sets that meet every diversity target
 
-all 19 checks passed, 1 skipped
+all 20 checks passed
 
 
 === TurboSlop — locks, regeneration, batch versions ===

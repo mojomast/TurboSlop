@@ -43,6 +43,17 @@ async function test(name: string, fn: () => Promise<void> | void): Promise<void>
 
 console.log('\n=== TurboSlop — scoped revision ===\n');
 
+/* This suite is OFFLINE BY CONSTRUCTION — "no writer, no network" is part of
+   every assertion below (a copy revision must spend zero model calls and say
+   so). Credentials in the ambient environment must not be able to turn an
+   offline assertion into a DeepSeek call, so the writer is pinned off for this
+   process: an unknown provider makes resolveLlm() return null, exactly as an
+   unconfigured machine does. ReviseOptions has no writer switch of its own —
+   `finalCopy: false` is a different, user-visible setting ("switched off"),
+   not "no writer configured", and the note this suite asserts is the latter. */
+const pinnedProvider = process.env.FORGE_LLM_PROVIDER;
+process.env.FORGE_LLM_PROVIDER = '__offline_test__';
+
 const PUBLIC_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 const BRIEF = 'An API for satellite imagery pricing. Docs-first, high volume, enterprise SLAs.';
 const outDir = await mkdtemp(path.join(tmpdir(), 'turboslop-revise-'));
@@ -216,6 +227,8 @@ await test('the session records revisions without losing its batches or versions
 
 if (originalProject === undefined) delete process.env.FORGE_PROJECT;
 else process.env.FORGE_PROJECT = originalProject;
+if (pinnedProvider === undefined) delete process.env.FORGE_LLM_PROVIDER;
+else process.env.FORGE_LLM_PROVIDER = pinnedProvider;
 await rm(outDir, { recursive: true, force: true });
 
 console.log(failed ? `\n=== ${failed} FAILED, ${passed} passed ===\n` : `\nall ${passed} checks passed\n`);

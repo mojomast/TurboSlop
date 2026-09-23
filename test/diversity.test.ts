@@ -87,13 +87,25 @@ interface Built {
   distributions: Distributions;
   wantsDark: boolean;
   availableModules: Set<ModuleId>;
+  /** Which decider produced these inputs — printed with live evidence. */
+  kind: 'local' | 'live';
+  model: string;
+  latencyMs: number;
 }
 const cache = new Map<string, Built>();
 
-async function inputsFor(brief: string): Promise<Built> {
-  const hit = cache.get(brief);
+/**
+ * Decision inputs for a brief.
+ *
+ * `local` is the offline control this suite is built on; `live` is real Jev and
+ * is only reachable when TYPESAFE_API_KEY is present — the same targets must
+ * hold under it, which is the last check below.
+ */
+async function inputsFor(brief: string, preference: 'local' | 'live' = 'local'): Promise<Built> {
+  const cacheKey = `${preference}:${brief}`;
+  const hit = cache.get(cacheKey);
   if (hit) return hit;
-  const decided = await decideWithFallback(brief, { preference: 'local' });
+  const decided = await decideWithFallback(brief, { preference });
   const distributions: Distributions = {};
   for (const [id, ans] of Object.entries(decided.response.answers)) {
     if (ans.type === 'choice') distributions[id as keyof Distributions] = ans.probabilities;
@@ -110,13 +122,22 @@ async function inputsFor(brief: string): Promise<Built> {
     distributions,
     wantsDark,
     availableModules: availableModulesOf(fallbackContent(brief, axes)),
+    kind: decided.kind,
+    model: decided.response.model,
+    latencyMs: decided.latencyMs,
   };
-  cache.set(brief, built);
+  cache.set(cacheKey, built);
   return built;
 }
 
-async function build(brief: string, seed: number, explore: number, history?: DesignFeatures[]): Promise<BuildResult> {
-  const input = await inputsFor(brief);
+async function build(
+  brief: string,
+  seed: number,
+  explore: number,
+  history?: DesignFeatures[],
+  preference: 'local' | 'live' = 'local',
+): Promise<BuildResult> {
+  const input = await inputsFor(brief, preference);
   return buildDirections({
     brief: input.brief,
     distributions: input.distributions,
@@ -416,7 +437,48 @@ await test('festival, ceramics-shop and software produce different COMPLETE sets
   }
 });
 
-void skip('live-Jev diversity', 'no TYPESAFE_API_KEY — the local decider is the offline control');
+/* ================================================================== *
+ * 7. The same targets under a LIVE Jev decision
+ *
+ * The offline control above proves the selector enforces the targets against
+ * the local decider's distributions. This proves the targets are not an
+ * artefact of those distributions: the real service's answer goes through the
+ * identical selector and must clear the identical bar. It needs a key, so it
+ * skips with the reason when there is none — never silently, never counted as
+ * a pass.
+ * ================================================================== */
+const hasJevKey = Boolean(process.env.TYPESAFE_API_KEY?.trim());
+
+if (!hasJevKey) {
+  skip('live-Jev diversity', 'no TYPESAFE_API_KEY — the local decider is the offline control');
+} else {
+  await test('a LIVE Jev decision also yields sets that meet every diversity target', async () => {
+    for (const [name, brief] of BRIEFS.filter(([n]) => NAMED.includes(n))) {
+      const inputs = await inputsFor(brief, 'live');
+      assert.equal(inputs.kind, 'live', `${name}: expected a live decision, got ${inputs.kind}`);
+      assert.match(inputs.model, /^jev/i, `${name}: live decision must come from a Jev model, got ${inputs.model}`);
+      for (const seed of [11, 42, 97]) {
+        const built = await build(brief, seed, 1, undefined, 'live');
+        const { achieved, targets, met, shortfall } = built.report;
+        const where =
+          `${name} (live ${inputs.model}, ${inputs.latencyMs}ms) seed ${seed}: ` +
+          `compositions ${achieved.compositions}/${targets.compositions}, ` +
+          `constructions ${achieved.constructions}/${targets.constructions}, ` +
+          `treatments ${achieved.treatments}/${targets.treatments}, ` +
+          `grayscale ${achieved.grayscaleDistinct}/${targets.grayscaleDistinct}`;
+        assert.equal(achieved.directions, 6, `${where} — expected six directions`);
+        assert.ok(achieved.compositions >= 4, `${where} — need ≥4 distinct compositions`);
+        assert.ok(achieved.constructions >= 3, `${where} — need ≥3 headline constructions`);
+        assert.ok(achieved.treatments >= 3, `${where} — need ≥3 visual treatments`);
+        assert.ok(achieved.grayscaleDistinct >= 3, `${where} — need ≥3 grayscale-distinct members`);
+        assert.ok(achieved.minSeparation >= MIN_SEPARATION, `${where} — min separation ${achieved.minSeparation}`);
+        assert.equal(met, shortfall.length === 0, `${where} — met flag and shortfall list disagree`);
+        for (const s of shortfall) assert.ok(s.reason?.length > 10, `${where} — shortfall ${s.target} has no real reason`);
+        console.log(`  info  LIVE ${where} — met=${met}`);
+      }
+    }
+  });
+}
 
 console.log(
   failed
