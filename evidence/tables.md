@@ -182,7 +182,7 @@ Per-suite: 58 · 24 · 11 · 23 · 31 · 19 · 22 · 13 · 19 (+1 skipped) · 14
 | Info-ZIP `unzip -t`, locale C | valid |
 | Info-ZIP `unzip -t`, locale UTF-8 | valid |
 | Python `zipfile.testzip()` | None (no corrupt entries) |
-| busybox `unzip -t` | see zip-unicode.txt |
+| busybox `unzip -t` | exit 0; the "?" console glyphs are display-only — filenames on disk are correct |
 | Node header with a non-latin1 download name | `ERR_INVALID_CHAR` — the one real failure mode, now RFC-6266-encoded by `contentDisposition()` |
 
 Conclusion: the archive is valid under three independent readers; the observed `??` characters

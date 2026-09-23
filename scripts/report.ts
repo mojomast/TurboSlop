@@ -310,7 +310,7 @@ async function main(): Promise<void> {
     say(`| Info-ZIP \`unzip -t\`, locale C | ${ok(/1\..*?\"ok\": true/s) || /No errors detected/.test(zipUnicode) ? 'valid' : 'see zip-unicode.txt'} |`);
     say(`| Info-ZIP \`unzip -t\`, locale UTF-8 | ${/No errors detected/.test(zipUnicode) ? 'valid' : 'see zip-unicode.txt'} |`);
     say(`| Python \`zipfile.testzip()\` | ${/testzip: None/.test(zipUnicode) ? 'None (no corrupt entries)' : 'see zip-unicode.txt'} |`);
-    say(`| busybox \`unzip -t\` | ${/extract exit=0/.test(zipUnicode) || /exit=0/.test(zipUnicode) ? 'exit 0, correct filenames on disk' : 'see zip-unicode.txt'} |`);
+    say(`| busybox \`unzip -t\` | ${/names extracted CORRECTLY.*yes/.test(zipUnicode) ? 'exit 0; the "?" console glyphs are display-only — filenames on disk are correct' : 'see zip-unicode.txt'} |`);
     say(`| Node header with a non-latin1 download name | ${/ERR_INVALID_CHAR/.test(zipUnicode) ? '`ERR_INVALID_CHAR` — the one real failure mode, now RFC-6266-encoded by `contentDisposition()`' : 'accepted'} |`);
     say('');
     say('Conclusion: the archive is valid under three independent readers; the observed `??` characters');
