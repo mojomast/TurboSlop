@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-09-23T01:24:16.042Z",
+ "generatedAt": "2026-09-23T02:44:15.596Z",
  "viewports": {
   "DESKTOP": {
    "width": 1440,
@@ -752,24 +752,24 @@
       "id": "items",
       "block": "items:gallery",
       "top": 471,
-      "height": 1700
+      "height": 2030
      },
      {
       "id": "about",
       "block": "about:rail-text",
-      "top": 2171,
+      "top": 2501,
       "height": 339
      },
      {
       "id": "features",
       "block": "features:pills",
-      "top": 2510,
+      "top": 2840,
       "height": 223
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 2733,
+      "top": 3063,
       "height": 327
      }
     ],
@@ -851,24 +851,24 @@
       "id": "items",
       "block": "items:gallery",
       "top": 409,
-      "height": 1998
+      "height": 2038
      },
      {
       "id": "about",
       "block": "about:rail-text",
-      "top": 2408,
+      "top": 2447,
       "height": 573
      },
      {
       "id": "features",
       "block": "features:pills",
-      "top": 2980,
+      "top": 3020,
       "height": 279
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 3260,
+      "top": 3300,
       "height": 379
      }
     ],
@@ -1824,24 +1824,24 @@
       "id": "gallery",
       "block": "gallery:mosaic",
       "top": 1285,
-      "height": 762
+      "height": 924
      },
      {
       "id": "items",
       "block": "items:editorial-index",
-      "top": 2046,
+      "top": 2209,
       "height": 381
      },
      {
       "id": "contact",
       "block": "contact:split",
-      "top": 2427,
+      "top": 2590,
       "height": 256
      },
      {
       "id": "quote",
       "block": "quote:band",
-      "top": 2683,
+      "top": 2846,
       "height": 489
      }
     ],
@@ -1931,24 +1931,24 @@
       "id": "gallery",
       "block": "gallery:mosaic",
       "top": 1290,
-      "height": 1234
+      "height": 1348
      },
      {
       "id": "items",
       "block": "items:editorial-index",
-      "top": 2524,
+      "top": 2639,
       "height": 685
      },
      {
       "id": "contact",
       "block": "contact:split",
-      "top": 3209,
+      "top": 3323,
       "height": 304
      },
      {
       "id": "quote",
       "block": "quote:band",
-      "top": 3513,
+      "top": 3627,
       "height": 400
      }
     ],
@@ -3141,30 +3141,30 @@
       "id": "items",
       "block": "items:gallery",
       "top": 698,
-      "height": 1984
+      "height": 2345
      },
      {
       "id": "about",
       "block": "about:rail-text",
-      "top": 2682,
+      "top": 3042,
       "height": 504
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 3186,
+      "top": 3546,
       "height": 467
      },
      {
       "id": "features",
       "block": "features:rows",
-      "top": 3653,
+      "top": 4013,
       "height": 665
      },
      {
       "id": "pricing",
       "block": "pricing:table",
-      "top": 4317,
+      "top": 4678,
       "height": 599
      }
     ],
@@ -3254,30 +3254,30 @@
       "id": "items",
       "block": "items:gallery",
       "top": 599,
-      "height": 2454
+      "height": 2482
      },
      {
       "id": "about",
       "block": "about:rail-text",
-      "top": 3053,
+      "top": 3082,
       "height": 814
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 3867,
+      "top": 3895,
       "height": 556
      },
      {
       "id": "features",
       "block": "features:rows",
-      "top": 4422,
+      "top": 4451,
       "height": 1047
      },
      {
       "id": "pricing",
       "block": "pricing:table",
-      "top": 5470,
+      "top": 5498,
       "height": 736
      }
     ],
@@ -5002,24 +5002,24 @@
       "id": "gallery",
       "block": "gallery:strip",
       "top": 740,
-      "height": 279
+      "height": 454
      },
      {
       "id": "items",
       "block": "items:list",
-      "top": 1019,
+      "top": 1195,
       "height": 444
      },
      {
       "id": "features",
       "block": "features:deflist",
-      "top": 1464,
+      "top": 1639,
       "height": 329
      },
      {
       "id": "contact",
       "block": "contact:split",
-      "top": 1792,
+      "top": 1968,
       "height": 256
      }
     ],
@@ -5100,24 +5100,24 @@
       "id": "gallery",
       "block": "gallery:strip",
       "top": 418,
-      "height": 203
+      "height": 380
      },
      {
       "id": "items",
       "block": "items:list",
-      "top": 620,
+      "top": 798,
       "height": 461
      },
      {
       "id": "features",
       "block": "features:deflist",
-      "top": 1081,
+      "top": 1259,
       "height": 504
      },
      {
       "id": "contact",
       "block": "contact:split",
-      "top": 1586,
+      "top": 1763,
       "height": 304
      }
     ],
@@ -5913,7 +5913,7 @@
       "id": "gallery",
       "block": "gallery:mosaic",
       "top": 3716,
-      "height": 558
+      "height": 727
      }
     ],
     "sectionOrder": [
@@ -6018,7 +6018,7 @@
       "id": "gallery",
       "block": "gallery:mosaic",
       "top": 2443,
-      "height": 1079
+      "height": 1195
      }
     ],
     "sectionOrder": [
@@ -6323,30 +6323,30 @@
       "id": "gallery",
       "block": "gallery:strip",
       "top": 332,
-      "height": 279
+      "height": 454
      },
      {
       "id": "process",
       "block": "process:timeline",
-      "top": 611,
+      "top": 787,
       "height": 1547
      },
      {
       "id": "about",
       "block": "about:letter",
-      "top": 2158,
+      "top": 2334,
       "height": 206
      },
      {
       "id": "quote",
       "block": "quote:inline",
-      "top": 2365,
+      "top": 2540,
       "height": 353
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 2718,
+      "top": 2893,
       "height": 256
      }
     ],
@@ -6433,30 +6433,30 @@
       "id": "gallery",
       "block": "gallery:strip",
       "top": 288,
-      "height": 203
+      "height": 380
      },
      {
       "id": "process",
       "block": "process:timeline",
-      "top": 490,
+      "top": 668,
       "height": 522
      },
      {
       "id": "about",
       "block": "about:letter",
-      "top": 1012,
+      "top": 1189,
       "height": 393
      },
      {
       "id": "quote",
       "block": "quote:inline",
-      "top": 1405,
+      "top": 1583,
       "height": 255
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 1660,
+      "top": 1837,
       "height": 304
      }
     ],
@@ -7030,18 +7030,18 @@
       "id": "gallery",
       "block": "gallery:mosaic",
       "top": 2282,
-      "height": 915
+      "height": 1080
      },
      {
       "id": "items",
       "block": "items:editorial-index",
-      "top": 3197,
+      "top": 3361,
       "height": 571
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 3768,
+      "top": 3932,
       "height": 445
      }
     ],
@@ -7137,18 +7137,18 @@
       "id": "gallery",
       "block": "gallery:mosaic",
       "top": 2346,
-      "height": 1431
+      "height": 1533
      },
      {
       "id": "items",
       "block": "items:editorial-index",
-      "top": 3777,
+      "top": 3879,
       "height": 1064
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 4841,
+      "top": 4943,
       "height": 499
      }
     ],
@@ -7618,24 +7618,24 @@
       "id": "gallery",
       "block": "gallery:strip",
       "top": 713,
-      "height": 279
+      "height": 454
      },
      {
       "id": "quote",
       "block": "quote:inline",
-      "top": 992,
+      "top": 1167,
       "height": 353
      },
      {
       "id": "about",
       "block": "about:letter",
-      "top": 1345,
+      "top": 1521,
       "height": 206
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 1551,
+      "top": 1727,
       "height": 256
      }
     ],
@@ -7716,24 +7716,24 @@
       "id": "gallery",
       "block": "gallery:strip",
       "top": 412,
-      "height": 203
+      "height": 380
      },
      {
       "id": "quote",
       "block": "quote:inline",
-      "top": 615,
+      "top": 792,
       "height": 255
      },
      {
       "id": "about",
       "block": "about:letter",
-      "top": 869,
+      "top": 1047,
       "height": 393
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 1263,
+      "top": 1440,
       "height": 304
      }
     ],
@@ -7830,18 +7830,18 @@
       "id": "gallery",
       "block": "gallery:mosaic",
       "top": 1956,
-      "height": 815
+      "height": 979
      },
      {
       "id": "items",
       "block": "items:editorial-index",
-      "top": 2771,
+      "top": 2935,
       "height": 430
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 3201,
+      "top": 3365,
       "height": 321
      }
     ],
@@ -7937,18 +7937,18 @@
       "id": "gallery",
       "block": "gallery:mosaic",
       "top": 1768,
-      "height": 1305
+      "height": 1415
      },
      {
       "id": "items",
       "block": "items:editorial-index",
-      "top": 3073,
+      "top": 3183,
       "height": 807
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 3879,
+      "top": 3989,
       "height": 325
      }
     ],
@@ -9541,24 +9541,24 @@
       "id": "items",
       "block": "items:gallery",
       "top": 881,
-      "height": 1984
+      "height": 2345
      },
      {
       "id": "about",
       "block": "about:rail-text",
-      "top": 2865,
+      "top": 3225,
       "height": 504
      },
      {
       "id": "features",
       "block": "features:pills",
-      "top": 3369,
+      "top": 3729,
       "height": 373
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 3741,
+      "top": 4102,
       "height": 467
      }
     ],
@@ -9636,24 +9636,24 @@
       "id": "items",
       "block": "items:gallery",
       "top": 911,
-      "height": 2454
+      "height": 2482
      },
      {
       "id": "about",
       "block": "about:rail-text",
-      "top": 3364,
+      "top": 3393,
       "height": 814
      },
      {
       "id": "features",
       "block": "features:pills",
-      "top": 4178,
+      "top": 4207,
       "height": 448
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 4626,
+      "top": 4654,
       "height": 556
      }
     ],
@@ -11945,24 +11945,24 @@
       "id": "gallery",
       "block": "gallery:strip",
       "top": 1300,
-      "height": 254
+      "height": 673
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 1554,
+      "top": 1973,
       "height": 275
      },
      {
       "id": "quote",
       "block": "quote:large",
-      "top": 1829,
+      "top": 2248,
       "height": 575
      },
      {
       "id": "process",
       "block": "process:steps",
-      "top": 2404,
+      "top": 2823,
       "height": 1976
      }
     ],
@@ -12055,24 +12055,24 @@
       "id": "gallery",
       "block": "gallery:strip",
       "top": 1230,
-      "height": 218
+      "height": 523
      },
      {
       "id": "contact",
       "block": "contact:email",
-      "top": 1449,
+      "top": 1753,
       "height": 348
      },
      {
       "id": "quote",
       "block": "quote:large",
-      "top": 1797,
+      "top": 2102,
       "height": 314
      },
      {
       "id": "process",
       "block": "process:steps",
-      "top": 2111,
+      "top": 2416,
       "height": 614
      }
     ],

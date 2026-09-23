@@ -7,7 +7,7 @@
 A brief goes in. A designed, written and illustrated page comes out — in about a second,
 for a fraction of a cent, with every decision typed, scored and reproducible.
 
-[![tests](https://img.shields.io/badge/tests-266%20passed%20%C2%B7%200%20skipped-3fb950?style=flat-square)](#testing)
+[![tests](https://img.shields.io/badge/tests-268%20passed%20%C2%B7%200%20skipped-3fb950?style=flat-square)](#testing)
 [![node](https://img.shields.io/badge/node-%E2%89%A520-3fb950?style=flat-square)](https://nodejs.org)
 [![deps](https://img.shields.io/badge/runtime%20deps-1%20(zod)-3fb950?style=flat-square)](#why-so-few-dependencies)
 [![typescript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square)](tsconfig.json)
@@ -157,7 +157,9 @@ including the measured baseline this work started from and the limitations that 
 [`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT.md) for this pass's measurements,
 commands and requirement-to-evidence mapping, and
 [`docs/DYNAMIC-DESIGN-PLAN.md`](docs/DYNAMIC-DESIGN-PLAN.md) for the measured plan to make
-designs procedurally generated rather than catalog-picked.
+designs procedurally generated rather than catalog-picked, and
+[`docs/ASSET-SOURCES.md`](docs/ASSET-SOURCES.md) for the asset/licence register — where the
+fonts, icons, patterns and CSS techniques come from and which are safe to vendor.
 
 ---
 
@@ -512,7 +514,7 @@ src/
   revise.ts       scope classification + catalog-only visual edits for revision
   assetplan.ts    THE asset path: slot ownership, supplied-first, zero-slot rule, placement
   export.ts       ZIP / self-contained / README export builders (shared with tests)
-  motifs.ts       deterministic seeded SVG motifs, five families
+  motifs.ts       deterministic seeded SVG motifs, twelve families
   frames.ts       presentation frames rendered in code (browser, device, ticket, cover…)
   icons.ts        one consistent, original 24x24 line-icon family
   fonts.ts        the bundled OFL variable-font pack

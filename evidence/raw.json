@@ -1,5 +1,5 @@
 {
- "generatedAt": "2026-09-23T01:23:28.858Z",
+ "generatedAt": "2026-09-23T02:43:28.695Z",
  "node": "v22.23.1",
  "selectionVersion": "turboslop/directions@2",
  "command": "npx tsx scripts/evidence.ts --out evidence --seeds 11,42,97 --briefs festival,shop,software",
@@ -43,8 +43,8 @@
   {
    "brief": "festival",
    "seed": 11,
-   "session": "ses_c7f45a84a94441579fc22207",
-   "createdAt": "2026-09-23T01:22:58.944Z",
+   "session": "ses_33d4fa26c7b5434f9bcaef57",
+   "createdAt": "2026-09-23T02:43:06.719Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -54,9 +54,9 @@
    "metrics": {
     "decideMs": 1,
     "inventoryMs": 0,
-    "renderMs": 8,
+    "renderMs": 9,
     "assetsMs": 0,
-    "totalMs": 108,
+    "totalMs": 101,
     "modelCalls": 1,
     "estimateUsd": 0.0000042000000000000004
    },
@@ -88,9 +88,11 @@
     "afterHistory": 1344,
     "afterContent": 1344,
     "historyRelaxed": false,
+    "imageCapableOnly": false,
+    "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 110,
+   "wallMs": 105,
    "directions": [
     {
      "index": 0,
@@ -115,7 +117,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_c7f45a84a94441579fc22207/b0/0.html",
+     "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "display",
@@ -166,7 +168,7 @@
      "tone": "dark",
      "imageSlots": 5,
      "diagnostics": [],
-     "preview": "previews/ses_c7f45a84a94441579fc22207/b0/1.html",
+     "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "media",
@@ -217,7 +219,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_c7f45a84a94441579fc22207/b0/2.html",
+     "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/2.html",
      "features": {
       "lead": "data",
       "hero": "compact",
@@ -268,7 +270,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_c7f45a84a94441579fc22207/b0/3.html",
+     "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/3.html",
      "features": {
       "lead": "product",
       "hero": "product-demo",
@@ -319,7 +321,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_c7f45a84a94441579fc22207/b0/4.html",
+     "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/4.html",
      "features": {
       "lead": "story",
       "hero": "editorial-figure",
@@ -370,7 +372,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_c7f45a84a94441579fc22207/b0/5.html",
+     "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/5.html",
      "features": {
       "lead": "statement",
       "hero": "poster",
@@ -403,8 +405,8 @@
   {
    "brief": "festival",
    "seed": 42,
-   "session": "ses_030d65d072884084b1dca6f3",
-   "createdAt": "2026-09-23T01:22:59.038Z",
+   "session": "ses_8161e01f4ba24219bf50417a",
+   "createdAt": "2026-09-23T02:43:06.817Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -412,11 +414,11 @@
    "inventoryHash": "fdb12a3db362f89e",
    "historyKeys": 6,
    "metrics": {
-    "decideMs": 1,
+    "decideMs": 0,
     "inventoryMs": 0,
-    "renderMs": 6,
+    "renderMs": 5,
     "assetsMs": 0,
-    "totalMs": 91,
+    "totalMs": 94,
     "modelCalls": 1,
     "estimateUsd": 0.0000042000000000000004
    },
@@ -448,9 +450,11 @@
     "afterHistory": 1231,
     "afterContent": 1231,
     "historyRelaxed": false,
+    "imageCapableOnly": false,
+    "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 93,
+   "wallMs": 97,
    "directions": [
     {
      "index": 0,
@@ -475,7 +479,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_030d65d072884084b1dca6f3/b0/0.html",
+     "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "panel",
@@ -526,7 +530,7 @@
      "tone": "dark",
      "imageSlots": 5,
      "diagnostics": [],
-     "preview": "previews/ses_030d65d072884084b1dca6f3/b0/1.html",
+     "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "poster",
@@ -577,7 +581,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_030d65d072884084b1dca6f3/b0/2.html",
+     "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/2.html",
      "features": {
       "lead": "data",
       "hero": "split",
@@ -628,7 +632,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_030d65d072884084b1dca6f3/b0/3.html",
+     "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/3.html",
      "features": {
       "lead": "product",
       "hero": "product-demo",
@@ -679,7 +683,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_030d65d072884084b1dca6f3/b0/4.html",
+     "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/4.html",
      "features": {
       "lead": "catalogue",
       "hero": "compact",
@@ -730,7 +734,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_030d65d072884084b1dca6f3/b0/5.html",
+     "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/5.html",
      "features": {
       "lead": "statement",
       "hero": "compact",
@@ -763,8 +767,8 @@
   {
    "brief": "festival",
    "seed": 97,
-   "session": "ses_bb338f8e9797414c93d656b1",
-   "createdAt": "2026-09-23T01:22:59.136Z",
+   "session": "ses_14e96e7f558e4041a2127693",
+   "createdAt": "2026-09-23T02:43:06.908Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -772,11 +776,11 @@
    "inventoryHash": "fdb12a3db362f89e",
    "historyKeys": 12,
    "metrics": {
-    "decideMs": 1,
+    "decideMs": 0,
     "inventoryMs": 0,
-    "renderMs": 6,
+    "renderMs": 4,
     "assetsMs": 0,
-    "totalMs": 95,
+    "totalMs": 87,
     "modelCalls": 1,
     "estimateUsd": 0.0000042000000000000004
    },
@@ -808,9 +812,11 @@
     "afterHistory": 1181,
     "afterContent": 1181,
     "historyRelaxed": false,
+    "imageCapableOnly": false,
+    "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 98,
+   "wallMs": 90,
    "directions": [
     {
      "index": 0,
@@ -835,7 +841,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_bb338f8e9797414c93d656b1/b0/0.html",
+     "preview": "previews/ses_14e96e7f558e4041a2127693/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "panel",
@@ -886,7 +892,7 @@
      "tone": "dark",
      "imageSlots": 5,
      "diagnostics": [],
-     "preview": "previews/ses_bb338f8e9797414c93d656b1/b0/1.html",
+     "preview": "previews/ses_14e96e7f558e4041a2127693/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "display",
@@ -937,7 +943,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_bb338f8e9797414c93d656b1/b0/2.html",
+     "preview": "previews/ses_14e96e7f558e4041a2127693/b0/2.html",
      "features": {
       "lead": "data",
       "hero": "index",
@@ -988,7 +994,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_bb338f8e9797414c93d656b1/b0/3.html",
+     "preview": "previews/ses_14e96e7f558e4041a2127693/b0/3.html",
      "features": {
       "lead": "catalogue",
       "hero": "compact",
@@ -1039,7 +1045,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_bb338f8e9797414c93d656b1/b0/4.html",
+     "preview": "previews/ses_14e96e7f558e4041a2127693/b0/4.html",
      "features": {
       "lead": "product",
       "hero": "split",
@@ -1090,7 +1096,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_bb338f8e9797414c93d656b1/b0/5.html",
+     "preview": "previews/ses_14e96e7f558e4041a2127693/b0/5.html",
      "features": {
       "lead": "statement",
       "hero": "compact",
@@ -1123,8 +1129,8 @@
   {
    "brief": "shop",
    "seed": 11,
-   "session": "ses_012acafaa9534795b4f91233",
-   "createdAt": "2026-09-23T01:22:59.235Z",
+   "session": "ses_c793ef07014a422082d5891a",
+   "createdAt": "2026-09-23T02:43:07.003Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -1134,9 +1140,9 @@
    "metrics": {
     "decideMs": 1,
     "inventoryMs": 0,
-    "renderMs": 7,
+    "renderMs": 6,
     "assetsMs": 0,
-    "totalMs": 96,
+    "totalMs": 92,
     "modelCalls": 1,
     "estimateUsd": 0.000003822
    },
@@ -1168,9 +1174,11 @@
     "afterHistory": 1106,
     "afterContent": 1106,
     "historyRelaxed": false,
+    "imageCapableOnly": false,
+    "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 99,
+   "wallMs": 95,
    "directions": [
     {
      "index": 0,
@@ -1195,7 +1203,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_012acafaa9534795b4f91233/b0/0.html",
+     "preview": "previews/ses_c793ef07014a422082d5891a/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "panel",
@@ -1246,7 +1254,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_012acafaa9534795b4f91233/b0/1.html",
+     "preview": "previews/ses_c793ef07014a422082d5891a/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "media",
@@ -1297,7 +1305,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_012acafaa9534795b4f91233/b0/2.html",
+     "preview": "previews/ses_c793ef07014a422082d5891a/b0/2.html",
      "features": {
       "lead": "product",
       "hero": "product-demo",
@@ -1348,7 +1356,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_012acafaa9534795b4f91233/b0/3.html",
+     "preview": "previews/ses_c793ef07014a422082d5891a/b0/3.html",
      "features": {
       "lead": "data",
       "hero": "compact",
@@ -1399,7 +1407,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_012acafaa9534795b4f91233/b0/4.html",
+     "preview": "previews/ses_c793ef07014a422082d5891a/b0/4.html",
      "features": {
       "lead": "catalogue",
       "hero": "split",
@@ -1450,7 +1458,7 @@
      "tone": "dark",
      "imageSlots": 3,
      "diagnostics": [],
-     "preview": "previews/ses_012acafaa9534795b4f91233/b0/5.html",
+     "preview": "previews/ses_c793ef07014a422082d5891a/b0/5.html",
      "features": {
       "lead": "story",
       "hero": "display",
@@ -1483,8 +1491,8 @@
   {
    "brief": "shop",
    "seed": 42,
-   "session": "ses_816c684ea0f747c1b270cc3f",
-   "createdAt": "2026-09-23T01:22:59.336Z",
+   "session": "ses_b3bb0de920034fe7a1f2df8f",
+   "createdAt": "2026-09-23T02:43:07.103Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -1492,11 +1500,11 @@
    "inventoryHash": "2a6e1dd1c87de736",
    "historyKeys": 24,
    "metrics": {
-    "decideMs": 1,
+    "decideMs": 0,
     "inventoryMs": 0,
-    "renderMs": 5,
+    "renderMs": 6,
     "assetsMs": 0,
-    "totalMs": 99,
+    "totalMs": 97,
     "modelCalls": 1,
     "estimateUsd": 0.000003822
    },
@@ -1528,9 +1536,11 @@
     "afterHistory": 1026,
     "afterContent": 1026,
     "historyRelaxed": false,
+    "imageCapableOnly": false,
+    "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 101,
+   "wallMs": 100,
    "directions": [
     {
      "index": 0,
@@ -1555,7 +1565,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_816c684ea0f747c1b270cc3f/b0/0.html",
+     "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "panel",
@@ -1606,7 +1616,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_816c684ea0f747c1b270cc3f/b0/1.html",
+     "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "poster",
@@ -1657,7 +1667,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_816c684ea0f747c1b270cc3f/b0/2.html",
+     "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/2.html",
      "features": {
       "lead": "product",
       "hero": "compact",
@@ -1708,7 +1718,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_816c684ea0f747c1b270cc3f/b0/3.html",
+     "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/3.html",
      "features": {
       "lead": "data",
       "hero": "compact",
@@ -1759,7 +1769,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_816c684ea0f747c1b270cc3f/b0/4.html",
+     "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/4.html",
      "features": {
       "lead": "story",
       "hero": "editorial-figure",
@@ -1810,7 +1820,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_816c684ea0f747c1b270cc3f/b0/5.html",
+     "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/5.html",
      "features": {
       "lead": "offer",
       "hero": "poster",
@@ -1843,8 +1853,8 @@
   {
    "brief": "shop",
    "seed": 97,
-   "session": "ses_f1de407e5e2e474990333a0a",
-   "createdAt": "2026-09-23T01:22:59.447Z",
+   "session": "ses_d34ffa59f8424451a815c6c6",
+   "createdAt": "2026-09-23T02:43:07.205Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -1852,11 +1862,11 @@
    "inventoryHash": "2a6e1dd1c87de736",
    "historyKeys": 30,
    "metrics": {
-    "decideMs": 1,
+    "decideMs": 0,
     "inventoryMs": 0,
-    "renderMs": 5,
+    "renderMs": 4,
     "assetsMs": 0,
-    "totalMs": 108,
+    "totalMs": 99,
     "modelCalls": 1,
     "estimateUsd": 0.000003822
    },
@@ -1888,9 +1898,11 @@
     "afterHistory": 960,
     "afterContent": 960,
     "historyRelaxed": false,
+    "imageCapableOnly": false,
+    "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 111,
+   "wallMs": 103,
    "directions": [
     {
      "index": 0,
@@ -1915,7 +1927,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_f1de407e5e2e474990333a0a/b0/0.html",
+     "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "compact",
@@ -1966,7 +1978,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_f1de407e5e2e474990333a0a/b0/1.html",
+     "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "media",
@@ -2017,7 +2029,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_f1de407e5e2e474990333a0a/b0/2.html",
+     "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/2.html",
      "features": {
       "lead": "story",
       "hero": "editorial-figure",
@@ -2068,7 +2080,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_f1de407e5e2e474990333a0a/b0/3.html",
+     "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/3.html",
      "features": {
       "lead": "product",
       "hero": "product-demo",
@@ -2119,7 +2131,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_f1de407e5e2e474990333a0a/b0/4.html",
+     "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/4.html",
      "features": {
       "lead": "data",
       "hero": "panel",
@@ -2170,7 +2182,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_f1de407e5e2e474990333a0a/b0/5.html",
+     "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/5.html",
      "features": {
       "lead": "offer",
       "hero": "compact",
@@ -2203,8 +2215,8 @@
   {
    "brief": "software",
    "seed": 11,
-   "session": "ses_e681fcdcca554accabbe433a",
-   "createdAt": "2026-09-23T01:22:59.556Z",
+   "session": "ses_212464e631e845328c411fed",
+   "createdAt": "2026-09-23T02:43:07.316Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -2216,7 +2228,7 @@
     "inventoryMs": 0,
     "renderMs": 6,
     "assetsMs": 0,
-    "totalMs": 106,
+    "totalMs": 107,
     "modelCalls": 1,
     "estimateUsd": 0.0000036960000000000003
    },
@@ -2248,9 +2260,11 @@
     "afterHistory": 916,
     "afterContent": 916,
     "historyRelaxed": false,
+    "imageCapableOnly": false,
+    "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 108,
+   "wallMs": 110,
    "directions": [
     {
      "index": 0,
@@ -2275,7 +2289,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_e681fcdcca554accabbe433a/b0/0.html",
+     "preview": "previews/ses_212464e631e845328c411fed/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "compact",
@@ -2326,7 +2340,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_e681fcdcca554accabbe433a/b0/1.html",
+     "preview": "previews/ses_212464e631e845328c411fed/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "poster",
@@ -2377,7 +2391,7 @@
      "tone": "dark",
      "imageSlots": 1,
      "diagnostics": [],
-     "preview": "previews/ses_e681fcdcca554accabbe433a/b0/2.html",
+     "preview": "previews/ses_212464e631e845328c411fed/b0/2.html",
      "features": {
       "lead": "product",
       "hero": "split",
@@ -2428,7 +2442,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_e681fcdcca554accabbe433a/b0/3.html",
+     "preview": "previews/ses_212464e631e845328c411fed/b0/3.html",
      "features": {
       "lead": "data",
       "hero": "panel",
@@ -2479,7 +2493,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_e681fcdcca554accabbe433a/b0/4.html",
+     "preview": "previews/ses_212464e631e845328c411fed/b0/4.html",
      "features": {
       "lead": "catalogue",
       "hero": "index",
@@ -2530,7 +2544,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_e681fcdcca554accabbe433a/b0/5.html",
+     "preview": "previews/ses_212464e631e845328c411fed/b0/5.html",
      "features": {
       "lead": "offer",
       "hero": "poster",
@@ -2563,8 +2577,8 @@
   {
    "brief": "software",
    "seed": 42,
-   "session": "ses_e8124c068a614994a10cc5ea",
-   "createdAt": "2026-09-23T01:22:59.671Z",
+   "session": "ses_e376458b3a384f7c96cfc6b4",
+   "createdAt": "2026-09-23T02:43:07.432Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -2574,7 +2588,7 @@
    "metrics": {
     "decideMs": 0,
     "inventoryMs": 0,
-    "renderMs": 6,
+    "renderMs": 8,
     "assetsMs": 0,
     "totalMs": 113,
     "modelCalls": 1,
@@ -2608,9 +2622,11 @@
     "afterHistory": 843,
     "afterContent": 843,
     "historyRelaxed": false,
+    "imageCapableOnly": false,
+    "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 116,
+   "wallMs": 117,
    "directions": [
     {
      "index": 0,
@@ -2635,7 +2651,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_e8124c068a614994a10cc5ea/b0/0.html",
+     "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "split",
@@ -2686,7 +2702,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_e8124c068a614994a10cc5ea/b0/1.html",
+     "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "display",
@@ -2737,7 +2753,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_e8124c068a614994a10cc5ea/b0/2.html",
+     "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/2.html",
      "features": {
       "lead": "product",
       "hero": "compact",
@@ -2788,7 +2804,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_e8124c068a614994a10cc5ea/b0/3.html",
+     "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/3.html",
      "features": {
       "lead": "data",
       "hero": "compact",
@@ -2839,7 +2855,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_e8124c068a614994a10cc5ea/b0/4.html",
+     "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/4.html",
      "features": {
       "lead": "catalogue",
       "hero": "index",
@@ -2890,7 +2906,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_e8124c068a614994a10cc5ea/b0/5.html",
+     "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/5.html",
      "features": {
       "lead": "statement",
       "hero": "panel",
@@ -2923,8 +2939,8 @@
   {
    "brief": "software",
    "seed": 97,
-   "session": "ses_f20035ce7a3343b083fe66ec",
-   "createdAt": "2026-09-23T01:22:59.794Z",
+   "session": "ses_bc9a40d07d0d40049bf8559c",
+   "createdAt": "2026-09-23T02:43:07.551Z",
    "selectionVersion": "turboslop/directions@2",
    "project": "evidence",
    "previewLabel": "local specimen copy — no writer configured",
@@ -2934,9 +2950,9 @@
    "metrics": {
     "decideMs": 0,
     "inventoryMs": 0,
-    "renderMs": 8,
+    "renderMs": 7,
     "assetsMs": 0,
-    "totalMs": 119,
+    "totalMs": 115,
     "modelCalls": 1,
     "estimateUsd": 0.0000036960000000000003
    },
@@ -2968,9 +2984,11 @@
     "afterHistory": 795,
     "afterContent": 795,
     "historyRelaxed": false,
+    "imageCapableOnly": false,
+    "leadRestricted": false,
     "stages": 1
    },
-   "wallMs": 123,
+   "wallMs": 119,
    "directions": [
     {
      "index": 0,
@@ -2995,7 +3013,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_f20035ce7a3343b083fe66ec/b0/0.html",
+     "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/0.html",
      "features": {
       "lead": "statement",
       "hero": "poster",
@@ -3046,7 +3064,7 @@
      "tone": "dark",
      "imageSlots": 6,
      "diagnostics": [],
-     "preview": "previews/ses_f20035ce7a3343b083fe66ec/b0/1.html",
+     "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/1.html",
      "features": {
       "lead": "image",
       "hero": "media",
@@ -3097,7 +3115,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_f20035ce7a3343b083fe66ec/b0/2.html",
+     "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/2.html",
      "features": {
       "lead": "product",
       "hero": "split",
@@ -3148,7 +3166,7 @@
      "tone": "dark",
      "imageSlots": 3,
      "diagnostics": [],
-     "preview": "previews/ses_f20035ce7a3343b083fe66ec/b0/3.html",
+     "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/3.html",
      "features": {
       "lead": "story",
       "hero": "split",
@@ -3199,7 +3217,7 @@
      "tone": "dark",
      "imageSlots": 0,
      "diagnostics": [],
-     "preview": "previews/ses_f20035ce7a3343b083fe66ec/b0/4.html",
+     "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/4.html",
      "features": {
       "lead": "data",
       "hero": "compact",
@@ -3250,7 +3268,7 @@
      "tone": "dark",
      "imageSlots": 4,
      "diagnostics": [],
-     "preview": "previews/ses_f20035ce7a3343b083fe66ec/b0/5.html",
+     "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/5.html",
      "features": {
       "lead": "product",
       "hero": "panel",
@@ -3286,379 +3304,379 @@
    "brief": "festival",
    "seed": 11,
    "direction": 0,
-   "session": "ses_c7f45a84a94441579fc22207",
-   "preview": "previews/ses_c7f45a84a94441579fc22207/b0/0.html"
+   "session": "ses_33d4fa26c7b5434f9bcaef57",
+   "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/0.html"
   },
   "festival-s11-d1": {
    "brief": "festival",
    "seed": 11,
    "direction": 1,
-   "session": "ses_c7f45a84a94441579fc22207",
-   "preview": "previews/ses_c7f45a84a94441579fc22207/b0/1.html"
+   "session": "ses_33d4fa26c7b5434f9bcaef57",
+   "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/1.html"
   },
   "festival-s11-d2": {
    "brief": "festival",
    "seed": 11,
    "direction": 2,
-   "session": "ses_c7f45a84a94441579fc22207",
-   "preview": "previews/ses_c7f45a84a94441579fc22207/b0/2.html"
+   "session": "ses_33d4fa26c7b5434f9bcaef57",
+   "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/2.html"
   },
   "festival-s11-d3": {
    "brief": "festival",
    "seed": 11,
    "direction": 3,
-   "session": "ses_c7f45a84a94441579fc22207",
-   "preview": "previews/ses_c7f45a84a94441579fc22207/b0/3.html"
+   "session": "ses_33d4fa26c7b5434f9bcaef57",
+   "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/3.html"
   },
   "festival-s11-d4": {
    "brief": "festival",
    "seed": 11,
    "direction": 4,
-   "session": "ses_c7f45a84a94441579fc22207",
-   "preview": "previews/ses_c7f45a84a94441579fc22207/b0/4.html"
+   "session": "ses_33d4fa26c7b5434f9bcaef57",
+   "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/4.html"
   },
   "festival-s11-d5": {
    "brief": "festival",
    "seed": 11,
    "direction": 5,
-   "session": "ses_c7f45a84a94441579fc22207",
-   "preview": "previews/ses_c7f45a84a94441579fc22207/b0/5.html"
+   "session": "ses_33d4fa26c7b5434f9bcaef57",
+   "preview": "previews/ses_33d4fa26c7b5434f9bcaef57/b0/5.html"
   },
   "festival-s42-d0": {
    "brief": "festival",
    "seed": 42,
    "direction": 0,
-   "session": "ses_030d65d072884084b1dca6f3",
-   "preview": "previews/ses_030d65d072884084b1dca6f3/b0/0.html"
+   "session": "ses_8161e01f4ba24219bf50417a",
+   "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/0.html"
   },
   "festival-s42-d1": {
    "brief": "festival",
    "seed": 42,
    "direction": 1,
-   "session": "ses_030d65d072884084b1dca6f3",
-   "preview": "previews/ses_030d65d072884084b1dca6f3/b0/1.html"
+   "session": "ses_8161e01f4ba24219bf50417a",
+   "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/1.html"
   },
   "festival-s42-d2": {
    "brief": "festival",
    "seed": 42,
    "direction": 2,
-   "session": "ses_030d65d072884084b1dca6f3",
-   "preview": "previews/ses_030d65d072884084b1dca6f3/b0/2.html"
+   "session": "ses_8161e01f4ba24219bf50417a",
+   "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/2.html"
   },
   "festival-s42-d3": {
    "brief": "festival",
    "seed": 42,
    "direction": 3,
-   "session": "ses_030d65d072884084b1dca6f3",
-   "preview": "previews/ses_030d65d072884084b1dca6f3/b0/3.html"
+   "session": "ses_8161e01f4ba24219bf50417a",
+   "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/3.html"
   },
   "festival-s42-d4": {
    "brief": "festival",
    "seed": 42,
    "direction": 4,
-   "session": "ses_030d65d072884084b1dca6f3",
-   "preview": "previews/ses_030d65d072884084b1dca6f3/b0/4.html"
+   "session": "ses_8161e01f4ba24219bf50417a",
+   "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/4.html"
   },
   "festival-s42-d5": {
    "brief": "festival",
    "seed": 42,
    "direction": 5,
-   "session": "ses_030d65d072884084b1dca6f3",
-   "preview": "previews/ses_030d65d072884084b1dca6f3/b0/5.html"
+   "session": "ses_8161e01f4ba24219bf50417a",
+   "preview": "previews/ses_8161e01f4ba24219bf50417a/b0/5.html"
   },
   "festival-s97-d0": {
    "brief": "festival",
    "seed": 97,
    "direction": 0,
-   "session": "ses_bb338f8e9797414c93d656b1",
-   "preview": "previews/ses_bb338f8e9797414c93d656b1/b0/0.html"
+   "session": "ses_14e96e7f558e4041a2127693",
+   "preview": "previews/ses_14e96e7f558e4041a2127693/b0/0.html"
   },
   "festival-s97-d1": {
    "brief": "festival",
    "seed": 97,
    "direction": 1,
-   "session": "ses_bb338f8e9797414c93d656b1",
-   "preview": "previews/ses_bb338f8e9797414c93d656b1/b0/1.html"
+   "session": "ses_14e96e7f558e4041a2127693",
+   "preview": "previews/ses_14e96e7f558e4041a2127693/b0/1.html"
   },
   "festival-s97-d2": {
    "brief": "festival",
    "seed": 97,
    "direction": 2,
-   "session": "ses_bb338f8e9797414c93d656b1",
-   "preview": "previews/ses_bb338f8e9797414c93d656b1/b0/2.html"
+   "session": "ses_14e96e7f558e4041a2127693",
+   "preview": "previews/ses_14e96e7f558e4041a2127693/b0/2.html"
   },
   "festival-s97-d3": {
    "brief": "festival",
    "seed": 97,
    "direction": 3,
-   "session": "ses_bb338f8e9797414c93d656b1",
-   "preview": "previews/ses_bb338f8e9797414c93d656b1/b0/3.html"
+   "session": "ses_14e96e7f558e4041a2127693",
+   "preview": "previews/ses_14e96e7f558e4041a2127693/b0/3.html"
   },
   "festival-s97-d4": {
    "brief": "festival",
    "seed": 97,
    "direction": 4,
-   "session": "ses_bb338f8e9797414c93d656b1",
-   "preview": "previews/ses_bb338f8e9797414c93d656b1/b0/4.html"
+   "session": "ses_14e96e7f558e4041a2127693",
+   "preview": "previews/ses_14e96e7f558e4041a2127693/b0/4.html"
   },
   "festival-s97-d5": {
    "brief": "festival",
    "seed": 97,
    "direction": 5,
-   "session": "ses_bb338f8e9797414c93d656b1",
-   "preview": "previews/ses_bb338f8e9797414c93d656b1/b0/5.html"
+   "session": "ses_14e96e7f558e4041a2127693",
+   "preview": "previews/ses_14e96e7f558e4041a2127693/b0/5.html"
   },
   "shop-s11-d0": {
    "brief": "shop",
    "seed": 11,
    "direction": 0,
-   "session": "ses_012acafaa9534795b4f91233",
-   "preview": "previews/ses_012acafaa9534795b4f91233/b0/0.html"
+   "session": "ses_c793ef07014a422082d5891a",
+   "preview": "previews/ses_c793ef07014a422082d5891a/b0/0.html"
   },
   "shop-s11-d1": {
    "brief": "shop",
    "seed": 11,
    "direction": 1,
-   "session": "ses_012acafaa9534795b4f91233",
-   "preview": "previews/ses_012acafaa9534795b4f91233/b0/1.html"
+   "session": "ses_c793ef07014a422082d5891a",
+   "preview": "previews/ses_c793ef07014a422082d5891a/b0/1.html"
   },
   "shop-s11-d2": {
    "brief": "shop",
    "seed": 11,
    "direction": 2,
-   "session": "ses_012acafaa9534795b4f91233",
-   "preview": "previews/ses_012acafaa9534795b4f91233/b0/2.html"
+   "session": "ses_c793ef07014a422082d5891a",
+   "preview": "previews/ses_c793ef07014a422082d5891a/b0/2.html"
   },
   "shop-s11-d3": {
    "brief": "shop",
    "seed": 11,
    "direction": 3,
-   "session": "ses_012acafaa9534795b4f91233",
-   "preview": "previews/ses_012acafaa9534795b4f91233/b0/3.html"
+   "session": "ses_c793ef07014a422082d5891a",
+   "preview": "previews/ses_c793ef07014a422082d5891a/b0/3.html"
   },
   "shop-s11-d4": {
    "brief": "shop",
    "seed": 11,
    "direction": 4,
-   "session": "ses_012acafaa9534795b4f91233",
-   "preview": "previews/ses_012acafaa9534795b4f91233/b0/4.html"
+   "session": "ses_c793ef07014a422082d5891a",
+   "preview": "previews/ses_c793ef07014a422082d5891a/b0/4.html"
   },
   "shop-s11-d5": {
    "brief": "shop",
    "seed": 11,
    "direction": 5,
-   "session": "ses_012acafaa9534795b4f91233",
-   "preview": "previews/ses_012acafaa9534795b4f91233/b0/5.html"
+   "session": "ses_c793ef07014a422082d5891a",
+   "preview": "previews/ses_c793ef07014a422082d5891a/b0/5.html"
   },
   "shop-s42-d0": {
    "brief": "shop",
    "seed": 42,
    "direction": 0,
-   "session": "ses_816c684ea0f747c1b270cc3f",
-   "preview": "previews/ses_816c684ea0f747c1b270cc3f/b0/0.html"
+   "session": "ses_b3bb0de920034fe7a1f2df8f",
+   "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/0.html"
   },
   "shop-s42-d1": {
    "brief": "shop",
    "seed": 42,
    "direction": 1,
-   "session": "ses_816c684ea0f747c1b270cc3f",
-   "preview": "previews/ses_816c684ea0f747c1b270cc3f/b0/1.html"
+   "session": "ses_b3bb0de920034fe7a1f2df8f",
+   "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/1.html"
   },
   "shop-s42-d2": {
    "brief": "shop",
    "seed": 42,
    "direction": 2,
-   "session": "ses_816c684ea0f747c1b270cc3f",
-   "preview": "previews/ses_816c684ea0f747c1b270cc3f/b0/2.html"
+   "session": "ses_b3bb0de920034fe7a1f2df8f",
+   "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/2.html"
   },
   "shop-s42-d3": {
    "brief": "shop",
    "seed": 42,
    "direction": 3,
-   "session": "ses_816c684ea0f747c1b270cc3f",
-   "preview": "previews/ses_816c684ea0f747c1b270cc3f/b0/3.html"
+   "session": "ses_b3bb0de920034fe7a1f2df8f",
+   "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/3.html"
   },
   "shop-s42-d4": {
    "brief": "shop",
    "seed": 42,
    "direction": 4,
-   "session": "ses_816c684ea0f747c1b270cc3f",
-   "preview": "previews/ses_816c684ea0f747c1b270cc3f/b0/4.html"
+   "session": "ses_b3bb0de920034fe7a1f2df8f",
+   "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/4.html"
   },
   "shop-s42-d5": {
    "brief": "shop",
    "seed": 42,
    "direction": 5,
-   "session": "ses_816c684ea0f747c1b270cc3f",
-   "preview": "previews/ses_816c684ea0f747c1b270cc3f/b0/5.html"
+   "session": "ses_b3bb0de920034fe7a1f2df8f",
+   "preview": "previews/ses_b3bb0de920034fe7a1f2df8f/b0/5.html"
   },
   "shop-s97-d0": {
    "brief": "shop",
    "seed": 97,
    "direction": 0,
-   "session": "ses_f1de407e5e2e474990333a0a",
-   "preview": "previews/ses_f1de407e5e2e474990333a0a/b0/0.html"
+   "session": "ses_d34ffa59f8424451a815c6c6",
+   "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/0.html"
   },
   "shop-s97-d1": {
    "brief": "shop",
    "seed": 97,
    "direction": 1,
-   "session": "ses_f1de407e5e2e474990333a0a",
-   "preview": "previews/ses_f1de407e5e2e474990333a0a/b0/1.html"
+   "session": "ses_d34ffa59f8424451a815c6c6",
+   "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/1.html"
   },
   "shop-s97-d2": {
    "brief": "shop",
    "seed": 97,
    "direction": 2,
-   "session": "ses_f1de407e5e2e474990333a0a",
-   "preview": "previews/ses_f1de407e5e2e474990333a0a/b0/2.html"
+   "session": "ses_d34ffa59f8424451a815c6c6",
+   "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/2.html"
   },
   "shop-s97-d3": {
    "brief": "shop",
    "seed": 97,
    "direction": 3,
-   "session": "ses_f1de407e5e2e474990333a0a",
-   "preview": "previews/ses_f1de407e5e2e474990333a0a/b0/3.html"
+   "session": "ses_d34ffa59f8424451a815c6c6",
+   "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/3.html"
   },
   "shop-s97-d4": {
    "brief": "shop",
    "seed": 97,
    "direction": 4,
-   "session": "ses_f1de407e5e2e474990333a0a",
-   "preview": "previews/ses_f1de407e5e2e474990333a0a/b0/4.html"
+   "session": "ses_d34ffa59f8424451a815c6c6",
+   "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/4.html"
   },
   "shop-s97-d5": {
    "brief": "shop",
    "seed": 97,
    "direction": 5,
-   "session": "ses_f1de407e5e2e474990333a0a",
-   "preview": "previews/ses_f1de407e5e2e474990333a0a/b0/5.html"
+   "session": "ses_d34ffa59f8424451a815c6c6",
+   "preview": "previews/ses_d34ffa59f8424451a815c6c6/b0/5.html"
   },
   "software-s11-d0": {
    "brief": "software",
    "seed": 11,
    "direction": 0,
-   "session": "ses_e681fcdcca554accabbe433a",
-   "preview": "previews/ses_e681fcdcca554accabbe433a/b0/0.html"
+   "session": "ses_212464e631e845328c411fed",
+   "preview": "previews/ses_212464e631e845328c411fed/b0/0.html"
   },
   "software-s11-d1": {
    "brief": "software",
    "seed": 11,
    "direction": 1,
-   "session": "ses_e681fcdcca554accabbe433a",
-   "preview": "previews/ses_e681fcdcca554accabbe433a/b0/1.html"
+   "session": "ses_212464e631e845328c411fed",
+   "preview": "previews/ses_212464e631e845328c411fed/b0/1.html"
   },
   "software-s11-d2": {
    "brief": "software",
    "seed": 11,
    "direction": 2,
-   "session": "ses_e681fcdcca554accabbe433a",
-   "preview": "previews/ses_e681fcdcca554accabbe433a/b0/2.html"
+   "session": "ses_212464e631e845328c411fed",
+   "preview": "previews/ses_212464e631e845328c411fed/b0/2.html"
   },
   "software-s11-d3": {
    "brief": "software",
    "seed": 11,
    "direction": 3,
-   "session": "ses_e681fcdcca554accabbe433a",
-   "preview": "previews/ses_e681fcdcca554accabbe433a/b0/3.html"
+   "session": "ses_212464e631e845328c411fed",
+   "preview": "previews/ses_212464e631e845328c411fed/b0/3.html"
   },
   "software-s11-d4": {
    "brief": "software",
    "seed": 11,
    "direction": 4,
-   "session": "ses_e681fcdcca554accabbe433a",
-   "preview": "previews/ses_e681fcdcca554accabbe433a/b0/4.html"
+   "session": "ses_212464e631e845328c411fed",
+   "preview": "previews/ses_212464e631e845328c411fed/b0/4.html"
   },
   "software-s11-d5": {
    "brief": "software",
    "seed": 11,
    "direction": 5,
-   "session": "ses_e681fcdcca554accabbe433a",
-   "preview": "previews/ses_e681fcdcca554accabbe433a/b0/5.html"
+   "session": "ses_212464e631e845328c411fed",
+   "preview": "previews/ses_212464e631e845328c411fed/b0/5.html"
   },
   "software-s42-d0": {
    "brief": "software",
    "seed": 42,
    "direction": 0,
-   "session": "ses_e8124c068a614994a10cc5ea",
-   "preview": "previews/ses_e8124c068a614994a10cc5ea/b0/0.html"
+   "session": "ses_e376458b3a384f7c96cfc6b4",
+   "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/0.html"
   },
   "software-s42-d1": {
    "brief": "software",
    "seed": 42,
    "direction": 1,
-   "session": "ses_e8124c068a614994a10cc5ea",
-   "preview": "previews/ses_e8124c068a614994a10cc5ea/b0/1.html"
+   "session": "ses_e376458b3a384f7c96cfc6b4",
+   "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/1.html"
   },
   "software-s42-d2": {
    "brief": "software",
    "seed": 42,
    "direction": 2,
-   "session": "ses_e8124c068a614994a10cc5ea",
-   "preview": "previews/ses_e8124c068a614994a10cc5ea/b0/2.html"
+   "session": "ses_e376458b3a384f7c96cfc6b4",
+   "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/2.html"
   },
   "software-s42-d3": {
    "brief": "software",
    "seed": 42,
    "direction": 3,
-   "session": "ses_e8124c068a614994a10cc5ea",
-   "preview": "previews/ses_e8124c068a614994a10cc5ea/b0/3.html"
+   "session": "ses_e376458b3a384f7c96cfc6b4",
+   "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/3.html"
   },
   "software-s42-d4": {
    "brief": "software",
    "seed": 42,
    "direction": 4,
-   "session": "ses_e8124c068a614994a10cc5ea",
-   "preview": "previews/ses_e8124c068a614994a10cc5ea/b0/4.html"
+   "session": "ses_e376458b3a384f7c96cfc6b4",
+   "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/4.html"
   },
   "software-s42-d5": {
    "brief": "software",
    "seed": 42,
    "direction": 5,
-   "session": "ses_e8124c068a614994a10cc5ea",
-   "preview": "previews/ses_e8124c068a614994a10cc5ea/b0/5.html"
+   "session": "ses_e376458b3a384f7c96cfc6b4",
+   "preview": "previews/ses_e376458b3a384f7c96cfc6b4/b0/5.html"
   },
   "software-s97-d0": {
    "brief": "software",
    "seed": 97,
    "direction": 0,
-   "session": "ses_f20035ce7a3343b083fe66ec",
-   "preview": "previews/ses_f20035ce7a3343b083fe66ec/b0/0.html"
+   "session": "ses_bc9a40d07d0d40049bf8559c",
+   "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/0.html"
   },
   "software-s97-d1": {
    "brief": "software",
    "seed": 97,
    "direction": 1,
-   "session": "ses_f20035ce7a3343b083fe66ec",
-   "preview": "previews/ses_f20035ce7a3343b083fe66ec/b0/1.html"
+   "session": "ses_bc9a40d07d0d40049bf8559c",
+   "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/1.html"
   },
   "software-s97-d2": {
    "brief": "software",
    "seed": 97,
    "direction": 2,
-   "session": "ses_f20035ce7a3343b083fe66ec",
-   "preview": "previews/ses_f20035ce7a3343b083fe66ec/b0/2.html"
+   "session": "ses_bc9a40d07d0d40049bf8559c",
+   "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/2.html"
   },
   "software-s97-d3": {
    "brief": "software",
    "seed": 97,
    "direction": 3,
-   "session": "ses_f20035ce7a3343b083fe66ec",
-   "preview": "previews/ses_f20035ce7a3343b083fe66ec/b0/3.html"
+   "session": "ses_bc9a40d07d0d40049bf8559c",
+   "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/3.html"
   },
   "software-s97-d4": {
    "brief": "software",
    "seed": 97,
    "direction": 4,
-   "session": "ses_f20035ce7a3343b083fe66ec",
-   "preview": "previews/ses_f20035ce7a3343b083fe66ec/b0/4.html"
+   "session": "ses_bc9a40d07d0d40049bf8559c",
+   "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/4.html"
   },
   "software-s97-d5": {
    "brief": "software",
    "seed": 97,
    "direction": 5,
-   "session": "ses_f20035ce7a3343b083fe66ec",
-   "preview": "previews/ses_f20035ce7a3343b083fe66ec/b0/5.html"
+   "session": "ses_bc9a40d07d0d40049bf8559c",
+   "preview": "previews/ses_bc9a40d07d0d40049bf8559c/b0/5.html"
   },
   "cal-s0": {
    "brief": "__styleProbe__",
@@ -3851,17 +3869,17 @@
    "issues": []
   },
   "notes": [
-   "generated 2 image(s) for gallery-1, gallery-2 at Turbo (steps 4, guidance 2) in 20ms"
+   "generated 2 image(s) for gallery-1, gallery-2 at Turbo (steps 4, guidance 2) in 21ms"
   ],
-  "imageMs": 20,
+  "imageMs": 21,
   "zipTestOk": true,
   "zipEntries": [
    "index.html",
    "design.spec.json",
    "README.md",
    "assets/fixture-final/00-user-hero.png",
-   "assets/fixture-final/00-gallery-1-2022880208.png",
-   "assets/fixture-final/01-gallery-2-1245976008.png",
+   "assets/fixture-final/00-gallery-1-89382386.png",
+   "assets/fixture-final/01-gallery-2-541601581.png",
    "fonts/LICENSES.md",
    "fonts/archivo-latin-var.woff2",
    "fonts/inter-latin-var.woff2",
@@ -3872,7 +3890,7 @@
   ]
  },
  "live": {
-  "capturedAt": "2026-09-23T01:22:59.990Z",
+  "capturedAt": "2026-09-23T02:43:07.759Z",
   "note": "real services in this environment; each part that could not run says why",
   "environment": {
    "jev": "TYPESAFE_API_KEY present",
@@ -3882,14 +3900,14 @@
   "decision": {
    "status": "live",
    "model": "jev-1.13.0",
-   "latencyMs": 3154
+   "latencyMs": 335
   },
   "diversity": [
    {
     "brief": "festival",
     "seed": 11,
     "model": "jev-1.13.0",
-    "decideMs": 3154,
+    "decideMs": 335,
     "met": true,
     "targets": {
      "directions": 6,
@@ -3904,7 +3922,7 @@
      "constructions": 4,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.5654,
+     "minSeparation": 0.5715,
      "minGrayscaleSeparation": 0.6075
     },
     "shortfall": [],
@@ -3951,7 +3969,7 @@
     "brief": "festival",
     "seed": 42,
     "model": "jev-1.13.0",
-    "decideMs": 983,
+    "decideMs": 189,
     "met": true,
     "targets": {
      "directions": 6,
@@ -3966,8 +3984,8 @@
      "constructions": 4,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.5752,
-     "minGrayscaleSeparation": 0.5933
+     "minSeparation": 0.5824,
+     "minGrayscaleSeparation": 0.6009
     },
     "shortfall": [],
     "directions": [
@@ -3978,13 +3996,13 @@
       "treatment": "plain"
      },
      {
-      "blueprint": "event-festival~f52200974",
+      "blueprint": "event-festival~f52200364",
       "palette": "electric-acid",
       "construction": "outline",
       "treatment": "shaped"
      },
      {
-      "blueprint": "story-profile~f52025f24",
+      "blueprint": "catalogue-rail~f51e4aec4",
       "palette": "electric-acid",
       "construction": "stacked",
       "treatment": "textwrap"
@@ -3996,16 +4014,16 @@
       "treatment": "cutout"
      },
      {
-      "blueprint": "catalogue-rail~f51e4b4d4",
+      "blueprint": "statement-display~f519f76b4",
+      "palette": "electric-acid",
+      "construction": "stacked",
+      "treatment": "plain"
+     },
+     {
+      "blueprint": "story-editorial~f51f875a4",
       "palette": "electric-acid",
       "construction": "broken",
       "treatment": "textwrap"
-     },
-     {
-      "blueprint": "data-metrics~f52479734",
-      "palette": "electric-acid",
-      "construction": "caps",
-      "treatment": "plain"
      }
     ]
    },
@@ -4013,7 +4031,7 @@
     "brief": "festival",
     "seed": 97,
     "model": "jev-1.13.0",
-    "decideMs": 561,
+    "decideMs": 293,
     "met": true,
     "targets": {
      "directions": 6,
@@ -4028,46 +4046,46 @@
      "constructions": 4,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.5577,
-     "minGrayscaleSeparation": 0.5744
+     "minSeparation": 0.5891,
+     "minGrayscaleSeparation": 0.6082
     },
     "shortfall": [],
     "directions": [
      {
-      "blueprint": "event-programme~f30c87064",
+      "blueprint": "event-programme~f30c87674",
       "palette": "electric-acid",
       "construction": "broken",
       "treatment": "plain"
      },
      {
-      "blueprint": "event-festival~f30d259e4",
+      "blueprint": "event-festival~f30d253d4",
       "palette": "electric-acid",
       "construction": "outline",
       "treatment": "shaped"
      },
      {
-      "blueprint": "story-origin",
+      "blueprint": "product-demo",
       "palette": "electric-acid",
       "construction": "stacked",
-      "treatment": "textwrap"
-     },
-     {
-      "blueprint": "product-demo~f306f7174",
-      "palette": "electric-acid",
-      "construction": "caps",
       "treatment": "cutout"
      },
      {
-      "blueprint": "statement-letter~f30659414",
+      "blueprint": "catalogue-rail",
       "palette": "electric-acid",
-      "construction": "stacked",
-      "treatment": "plain"
+      "construction": "caps",
+      "treatment": "textwrap"
      },
      {
-      "blueprint": "catalogue-gallery",
+      "blueprint": "story-origin",
       "palette": "electric-acid",
       "construction": "broken",
       "treatment": "textwrap"
+     },
+     {
+      "blueprint": "statement-panel",
+      "palette": "electric-acid",
+      "construction": "stacked",
+      "treatment": "plain"
      }
     ]
    },
@@ -4075,7 +4093,7 @@
     "brief": "shop",
     "seed": 11,
     "model": "jev-1.13.0",
-    "decideMs": 600,
+    "decideMs": 285,
     "met": true,
     "targets": {
      "directions": 6,
@@ -4090,19 +4108,81 @@
      "constructions": 5,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.4839,
-     "minGrayscaleSeparation": 0.4703
+     "minSeparation": 0.4561,
+     "minGrayscaleSeparation": 0.45
     },
     "shortfall": [],
     "directions": [
      {
-      "blueprint": "statement-display~cc623b5d4",
+      "blueprint": "statement-letter~cc63776a4",
       "palette": "bone-terracotta",
       "construction": "stacked",
       "treatment": "plain"
      },
      {
-      "blueprint": "image-strip~cc6c1ecd4",
+      "blueprint": "image-mosaic~cc6b80964",
+      "palette": "bone-terracotta",
+      "construction": "outline",
+      "treatment": "shaped"
+     },
+     {
+      "blueprint": "product-demo~cc6416024",
+      "palette": "bone-terracotta",
+      "construction": "broken",
+      "treatment": "cutout"
+     },
+     {
+      "blueprint": "catalogue-gallery~cc65f0464",
+      "palette": "bone-terracotta",
+      "construction": "run-on",
+      "treatment": "textwrap"
+     },
+     {
+      "blueprint": "data-calculator",
+      "palette": "bone-terracotta",
+      "construction": "caps",
+      "treatment": "plain"
+     },
+     {
+      "blueprint": "event-ticketing",
+      "palette": "bone-terracotta",
+      "construction": "outline",
+      "treatment": "plain"
+     }
+    ]
+   },
+   {
+    "brief": "shop",
+    "seed": 42,
+    "model": "jev-1.13.0",
+    "decideMs": 194,
+    "met": true,
+    "targets": {
+     "directions": 6,
+     "compositions": 4,
+     "constructions": 3,
+     "treatments": 3,
+     "grayscaleDistinct": 4
+    },
+    "achieved": {
+     "directions": 6,
+     "compositions": 6,
+     "constructions": 5,
+     "treatments": 4,
+     "grayscaleDistinct": 6,
+     "minSeparation": 0.485,
+     "minGrayscaleSeparation": 0.4714
+    },
+    "shortfall": [],
+    "directions": [
+     {
+      "blueprint": "statement-display",
+      "palette": "bone-terracotta",
+      "construction": "stacked",
+      "treatment": "plain"
+     },
+     {
+      "blueprint": "image-strip",
       "palette": "bone-terracotta",
       "construction": "outline",
       "treatment": "shaped"
@@ -4114,19 +4194,19 @@
       "treatment": "textwrap"
      },
      {
-      "blueprint": "product-demo",
+      "blueprint": "product-demo~f51bd2714",
       "palette": "bone-terracotta",
       "construction": "run-on",
       "treatment": "cutout"
      },
      {
-      "blueprint": "data-metrics",
+      "blueprint": "product-spec~f51c70474",
       "palette": "bone-terracotta",
       "construction": "caps",
       "treatment": "plain"
      },
      {
-      "blueprint": "event-ticketing~cc6ae1fe4",
+      "blueprint": "event-ticketing~f5229ece4",
       "palette": "sage-mist",
       "construction": "outline",
       "treatment": "plain"
@@ -4135,71 +4215,9 @@
    },
    {
     "brief": "shop",
-    "seed": 42,
-    "model": "jev-1.13.0",
-    "decideMs": 615,
-    "met": true,
-    "targets": {
-     "directions": 6,
-     "compositions": 4,
-     "constructions": 3,
-     "treatments": 3,
-     "grayscaleDistinct": 4
-    },
-    "achieved": {
-     "directions": 6,
-     "compositions": 6,
-     "constructions": 5,
-     "treatments": 4,
-     "grayscaleDistinct": 6,
-     "minSeparation": 0.5696,
-     "minGrayscaleSeparation": 0.5623
-    },
-    "shortfall": [],
-    "directions": [
-     {
-      "blueprint": "statement-panel~f51a95a24",
-      "palette": "bone-terracotta",
-      "construction": "stacked",
-      "treatment": "plain"
-     },
-     {
-      "blueprint": "event-festival~f52200974",
-      "palette": "bone-terracotta",
-      "construction": "outline",
-      "treatment": "shaped"
-     },
-     {
-      "blueprint": "catalogue-gallery~f51dad164",
-      "palette": "bone-terracotta",
-      "construction": "broken",
-      "treatment": "textwrap"
-     },
-     {
-      "blueprint": "data-calculator~f52517494",
-      "palette": "bone-terracotta",
-      "construction": "caps",
-      "treatment": "plain"
-     },
-     {
-      "blueprint": "product-demo",
-      "palette": "bone-terracotta",
-      "construction": "stacked",
-      "treatment": "cutout"
-     },
-     {
-      "blueprint": "statement-display~f519f7cc4",
-      "palette": "bone-terracotta",
-      "construction": "run-on",
-      "treatment": "plain"
-     }
-    ]
-   },
-   {
-    "brief": "shop",
     "seed": 97,
     "model": "jev-1.13.0",
-    "decideMs": 600,
+    "decideMs": 270,
     "met": true,
     "targets": {
      "directions": 6,
@@ -4214,8 +4232,8 @@
      "constructions": 5,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.4166,
-     "minGrayscaleSeparation": 0.3979
+     "minSeparation": 0.5184,
+     "minGrayscaleSeparation": 0.5074
     },
     "shortfall": [],
     "directions": [
@@ -4232,27 +4250,27 @@
       "treatment": "shaped"
      },
      {
-      "blueprint": "catalogue-gallery~f308d21d4",
+      "blueprint": "catalogue-gallery~f308d1bc4",
       "palette": "bone-terracotta",
       "construction": "broken",
       "treatment": "textwrap"
      },
      {
-      "blueprint": "product-demo~f306f7784",
+      "blueprint": "product-demo~f306f7174",
       "palette": "bone-terracotta",
       "construction": "run-on",
       "treatment": "cutout"
      },
      {
-      "blueprint": "data-calculator",
+      "blueprint": "data-metrics~f30f9e7a4",
       "palette": "bone-terracotta",
       "construction": "caps",
       "treatment": "plain"
      },
      {
-      "blueprint": "statement-display~f3051c724",
+      "blueprint": "event-ticketing~f30dc3744",
       "palette": "bone-terracotta",
-      "construction": "stacked",
+      "construction": "outline",
       "treatment": "plain"
      }
     ]
@@ -4261,7 +4279,7 @@
     "brief": "software",
     "seed": 11,
     "model": "jev-1.13.0",
-    "decideMs": 808,
+    "decideMs": 245,
     "met": true,
     "targets": {
      "directions": 6,
@@ -4276,13 +4294,13 @@
      "constructions": 4,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.5366,
-     "minGrayscaleSeparation": 0.5766
+     "minSeparation": 0.5412,
+     "minGrayscaleSeparation": 0.5816
     },
     "shortfall": [],
     "directions": [
      {
-      "blueprint": "data-metrics",
+      "blueprint": "product-spec",
       "palette": "steel-signal",
       "construction": "caps",
       "treatment": "plain"
@@ -4294,13 +4312,13 @@
       "treatment": "cutout"
      },
      {
-      "blueprint": "image-mosaic~cc6b80964",
+      "blueprint": "image-mosaic",
       "palette": "steel-signal",
       "construction": "outline",
       "treatment": "shaped"
      },
      {
-      "blueprint": "story-origin",
+      "blueprint": "story-origin~cc6907ba4",
       "palette": "steel-signal",
       "construction": "broken",
       "treatment": "textwrap"
@@ -4312,9 +4330,9 @@
       "treatment": "textwrap"
      },
      {
-      "blueprint": "product-pricing~cc6552704",
+      "blueprint": "statement-letter",
       "palette": "steel-signal",
-      "construction": "outline",
+      "construction": "stacked",
       "treatment": "plain"
      }
     ]
@@ -4323,7 +4341,7 @@
     "brief": "software",
     "seed": 42,
     "model": "jev-1.13.0",
-    "decideMs": 741,
+    "decideMs": 231,
     "met": true,
     "targets": {
      "directions": 6,
@@ -4385,7 +4403,7 @@
     "brief": "software",
     "seed": 97,
     "model": "jev-1.13.0",
-    "decideMs": 768,
+    "decideMs": 220,
     "met": true,
     "targets": {
      "directions": 6,
@@ -4400,46 +4418,46 @@
      "constructions": 4,
      "treatments": 4,
      "grayscaleDistinct": 6,
-     "minSeparation": 0.5648,
-     "minGrayscaleSeparation": 0.6069
+     "minSeparation": 0.5229,
+     "minGrayscaleSeparation": 0.5619
     },
     "shortfall": [],
     "directions": [
      {
-      "blueprint": "data-calculator~f3103c504",
+      "blueprint": "data-metrics~f30f9e7a4",
       "palette": "steel-signal",
       "construction": "caps",
       "treatment": "plain"
      },
      {
-      "blueprint": "image-mosaic",
+      "blueprint": "product-demo~f306f7174",
+      "palette": "steel-signal",
+      "construction": "stacked",
+      "treatment": "cutout"
+     },
+     {
+      "blueprint": "image-mosaic~f30e61ab4",
       "palette": "steel-signal",
       "construction": "outline",
       "treatment": "shaped"
      },
      {
-      "blueprint": "product-demo~f306f7784",
+      "blueprint": "catalogue-gallery",
       "palette": "steel-signal",
       "construction": "broken",
-      "treatment": "cutout"
-     },
-     {
-      "blueprint": "story-origin~f30be9304",
-      "palette": "steel-signal",
-      "construction": "stacked",
       "treatment": "textwrap"
      },
      {
-      "blueprint": "catalogue-gallery~f308d1bc4",
+      "blueprint": "product-pricing~f30833e64",
+      "palette": "steel-signal",
+      "construction": "outline",
+      "treatment": "plain"
+     },
+     {
+      "blueprint": "story-origin",
       "palette": "steel-signal",
       "construction": "caps",
       "treatment": "textwrap"
-     },
-     {
-      "blueprint": "statement-letter",
-      "palette": "steel-signal",
-      "construction": "broken",
-      "treatment": "plain"
      }
     ]
    }
@@ -4447,16 +4465,16 @@
   "writer": {
    "status": "live",
    "model": "deepseek-flash",
-   "latencyMs": 9480,
+   "latencyMs": 8428,
    "inputTokens": 955,
-   "outputTokens": 1666,
-   "estimatedUsd": 0.00114285,
-   "brand": "Blokpunt"
+   "outputTokens": 1544,
+   "estimatedUsd": 0.00106965,
+   "brand": "Wijhaven"
   },
   "image": {
    "status": "live",
    "service": "https://kimi.tailec998.ts.net:4363 (https)",
-   "direction": "dir_4565d30a",
+   "direction": "dir_a3fbc1ff",
    "blueprint": "event-festival",
    "renderableSlots": [
     "hero",
@@ -4484,16 +4502,16 @@
      "source": "generated",
      "license": "",
      "size": "256x256",
-     "bytes": 55472,
-     "seconds": 6.62
+     "bytes": 47547,
+     "seconds": 6.41
     },
     {
      "slot": "gallery-2",
      "source": "generated",
      "license": "",
      "size": "256x256",
-     "bytes": 43224,
-     "seconds": 0.8
+     "bytes": 39139,
+     "seconds": 0.81
     }
    ],
    "placement": {
@@ -4501,15 +4519,15 @@
     "checked": 3,
     "issues": []
    },
-   "imageMs": 8087,
+   "imageMs": 8098,
    "zipTestOk": true,
    "zipEntries": [
     "index.html",
     "design.spec.json",
     "README.md",
     "assets/live-final/00-user-hero.png",
-    "assets/live-final/00-gallery-1-910931464.png",
-    "assets/live-final/01-gallery-2-749513376.png",
+    "assets/live-final/00-gallery-1-640669446.png",
+    "assets/live-final/01-gallery-2-806734444.png",
     "fonts/LICENSES.md",
     "fonts/archivo-latin-var.woff2",
     "fonts/inter-latin-var.woff2",
@@ -4519,9 +4537,9 @@
     "index.selfcontained.html"
    ],
    "notes": [
-    "generated 2 image(s) for gallery-1, gallery-2 at Turbo (steps 4, guidance 2) in 8087ms"
+    "generated 2 image(s) for gallery-1, gallery-2 at Turbo (steps 4, guidance 2) in 8098ms"
    ]
   }
  },
- "wallMs": 30021
+ "wallMs": 22077
 }

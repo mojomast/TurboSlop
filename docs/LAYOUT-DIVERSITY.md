@@ -156,8 +156,11 @@ reason.
 
 ### 2.6 Bundled type
 
-Five SIL OFL 1.1 variable fonts (Archivo, Source Serif 4, Nunito, JetBrains Mono, Inter), 278 KB
-of latin-subset woff2, with the full licence text in `public/fonts/LICENSES.md`. The `@font-face`
+Five SIL OFL 1.1 variable fonts (Archivo, Source Serif 4, Nunito, JetBrains Mono, Inter), 332 KB
+of latin-subset woff2, with the full licence text in `public/fonts/LICENSES.md`. Archivo carries a
+real **width axis** (`wdth` 62–125) and the pack emits the `font-stretch` descriptor for it, so a
+page's `font-stretch` — the `--head-width` in every typographic recipe — actually condenses or
+expands the display type. The `@font-face`
 blocks are emitted into the page and the family is placed first in every stack, so **a generated
 page makes no remote font request at all** — the Google Fonts link is gone. Fonts are copied to
 `<outDir>/fonts/` and referenced relatively, so the same HTML works from disk, from
@@ -165,9 +168,10 @@ page makes no remote font request at all** — the Google Fonts link is gone. Fo
 
 ### 2.7 Code-rendered assets
 
-- `src/motifs.ts` — deterministic seeded SVG motifs, five families (halftone, contour, hatching,
-  technical, stamp). One coordinated family per direction, placed **once** on the page as a
-  background, band, corner or rule.
+- `src/motifs.ts` — deterministic seeded SVG motifs, twelve families (halftone, contour, hatching,
+  technical, stamp, truchet, isometric, weave, fishscale, waves, quatrefoil, stipple). One
+  coordinated family per direction, placed **once** on the page as a background, band, corner or
+  rule.
 - `src/frames.ts` — seven presentation frames (browser, device, packaging, ticket, cover, figure,
   plain); they wrap the figure and demo heroes, so they change image placement rather than
   decorating it.
@@ -251,12 +255,12 @@ Thinking mode is off by default (see [`JEV-RESEARCH.md`](JEV-RESEARCH.md)); the 
 and dominates.
 
 The current evidence corpus (`evidence/tables.md` §5) runs the **offline control** — local
-decider, specimen inventory: 1 model call per six-direction set, ~91–119 ms end to end per set,
-5–8 ms of that spent rendering all six previews locally. Candidate search is bounded at 2,394
+decider, specimen inventory: 1 model call per six-direction set, ~87–115 ms end to end per set,
+4–9 ms of that spent rendering all six previews locally. Candidate search is bounded at 2,394
 candidates per set. The second (inventory) call is the one that appears when a writer is
 configured; it is never paid per direction. The same two calls measured **live**
-(`evidence/tables.md` §10): Jev answered in 561–3,154 ms per decision (9 calls), and the shared
-inventory write took 9,480 ms for 955 in / 1,666 out tokens — $0.00114 on `deepseek-flash`.
+(`evidence/tables.md` §10): Jev answered in 189–335 ms per decision (9 calls), and the shared
+inventory write took 8,428 ms for 955 in / 1,544 out tokens — $0.00107 on `deepseek-flash`.
 
 ---
 
@@ -266,7 +270,7 @@ Run `npm test` — 13 suites, offline by construction. The generated
 counts (passed / failed / skipped per suite) live in
 [`evidence/tables.md`](../evidence/tables.md) §8, produced from
 `evidence/tests.txt` by `scripts/report.ts`, so the number quoted here can
-never drift from the suite again. **266 checks passed, 0 failed, 0 skipped**
+never drift from the suite again. **268 checks passed, 0 failed, 0 skipped**
 in this environment, where the credentials for the live halves are present;
 without them those checks skip *with the reason in the test name* rather than
 disappearing.
@@ -321,7 +325,7 @@ preservation, and the header-safe download filename check.
 6. **Live Jev and live writer paths are environment-gated, and they ran here.** With
    `TYPESAFE_API_KEY` and an LLM key present, `test/diversity.test.ts` checks the targets
    against nine live-decided sets (all met) and `test/forge.test.ts` runs the writer, the
-   decision and their composition — 266 passed / 0 failed / 0 skipped. On a machine without
+   decision and their composition — 268 passed / 0 failed / 0 skipped. On a machine without
    credentials those same checks skip *with the reason in the test name*, the offline corpus is
    unchanged, and `scripts/evidence.ts` records why its live phase did not run instead of
    dropping the rows.

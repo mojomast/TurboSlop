@@ -60,11 +60,11 @@
   ok    a product demonstration is wrapped in a real frame
   ok    art-directed treatments degrade rather than hide text
   ok    icons are used sparingly and never as the only carrier of meaning
-        -> deepseek-flash wrote "Moinho" — We grind the wheat before the sun hits the cobblestones.
+        -> deepseek-flash wrote "Moinho" — We stone-mill every grain before sunrise, then bake it hard.
   ok    live writing (deepseek/deepseek-flash (key from DEEPSEEK_API_KEY))
-        -> emotion=mystery(1.00) composition=gallery-first(1.00) effects=cinematic-depth(0.58) palette=void-violet(0.99) typography=editorial-serif(0.81) layout=editorial-asymmetric(0.59) motion=glacial(0.96) density=balanced(0.00)
+        -> emotion=mystery(1.00) composition=gallery-first(1.00) effects=cinematic-depth(0.60) palette=void-violet(0.99) typography=editorial-serif(0.82) layout=editorial-asymmetric(0.54) motion=glacial(0.95) density=balanced(0.00)
   ok    live Jev decision
-        -> design by jev-1.13.0, content "ROUNDBREAK" by deepseek-flash, 10613ms total
+        -> design by jev-1.13.0, content "GRIDLOCK" by deepseek-flash, 9344ms total
   ok    both halves compose: Jev designs, the writer writes
 
 all 58 checks passed
@@ -135,7 +135,8 @@ all 11 checks passed
   ok    density 1 draws more elements than density 0
   ok    element budget: under 400 tags at 1200x800 density 1
   ok    id and filename are stable and derived from the spec
-  ok    MOTIF_FAMILIES declares the five distinct families
+  ok    MOTIF_FAMILIES declares the twelve distinct families
+  ok    every family is reachable from the catalog emotions or the fallback
   ok    motifFamilyForEmotion is total over the catalog
   ok    an unknown emotion still returns a valid family
   ok    motifToDataUri is URL-encoded, not base64, and escapes #
@@ -147,7 +148,7 @@ all 11 checks passed
   ok    injected colour values are sanitised before they reach markup
   ok    motifInk derives a legible ink from real palette colours
 
-all 23 checks passed
+all 24 checks passed
 
 
 === TurboSlop assets ===
@@ -200,6 +201,7 @@ all 31 checks passed
   ok    fontDirectionFor is total over all catalog typeface ids
   ok    fontDirectionFor maps the known ids and defaults unknown ids to restrained
   ok    fontFaceCss emits a complete @font-face for every direction
+  ok    at least one bundled family exposes a real width axis
   ok    fontFaceCss honours a custom basePath
   ok    fontFaceCss returns an empty string for an unknown direction
   ok    fontFaceCssFor emits only the requested directions
@@ -209,7 +211,7 @@ all 31 checks passed
   ok    the whole pack stays under 1.5 MB
   ok    describeFontPack names every family without NaN or undefined
 
-all 19 checks passed
+all 20 checks passed
 
 
 === TurboSlop — direction sessions ===
@@ -291,15 +293,15 @@ all 13 checks passed
   info  software seed 42: statement-panel~f51a96034/noir-lime/stacked/plain | image-mosaic~f5233d054/arctic-cyan/outline/shaped | product-demo~f51bd2714/arctic-cyan/stacked/cutout | data-calculator/arctic-cyan/caps/plain | catalogue-gallery~f51dad164/noir-lime/stacked/textwrap | statement-display~f519f76b4/arctic-cyan/stacked/plain
   info  software seed 97: statement-panel~f305bb0a4/noir-lime/stacked/plain | image-mosaic~f30e620c4/arctic-cyan/outline/shaped | product-demo/noir-lime/stacked/cutout | catalogue-rail/arctic-cyan/stacked/textwrap | data-calculator/arctic-cyan/caps/plain | statement-display~f3051c724/arctic-cyan/stacked/plain
   ok    festival, ceramics-shop and software produce different COMPLETE sets across seeds
-  info  LIVE festival (live jev-1.13.0, 433ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE festival (live jev-1.13.0, 433ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE festival (live jev-1.13.0, 433ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE shop (live jev-1.13.0, 232ms) seed 11: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE shop (live jev-1.13.0, 232ms) seed 42: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE shop (live jev-1.13.0, 232ms) seed 97: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE software (live jev-1.13.0, 215ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE software (live jev-1.13.0, 215ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
-  info  LIVE software (live jev-1.13.0, 215ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE festival (live jev-1.13.0, 316ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE festival (live jev-1.13.0, 316ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE festival (live jev-1.13.0, 316ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE shop (live jev-1.13.0, 245ms) seed 11: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE shop (live jev-1.13.0, 245ms) seed 42: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE shop (live jev-1.13.0, 245ms) seed 97: compositions 6/4, constructions 5/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE software (live jev-1.13.0, 276ms) seed 11: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE software (live jev-1.13.0, 276ms) seed 42: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
+  info  LIVE software (live jev-1.13.0, 276ms) seed 97: compositions 6/4, constructions 4/3, treatments 4/3, grayscale 6/4 — met=true
   ok    a LIVE Jev decision also yields sets that meet every diversity target
 
 all 22 checks passed

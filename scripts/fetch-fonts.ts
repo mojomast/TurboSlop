@@ -21,7 +21,11 @@
  *     (> 5 KB and starting with `wOF2`) is deleted.
  *
  * Run:
- *   npx tsx scripts/fetch-fonts.ts
+ *   npx tsx scripts/fetch-fonts.ts            # fetch anything missing
+ *   npx tsx scripts/fetch-fonts.ts --refresh  # re-fetch every file too — use
+ *                                             # after changing an axis query,
+ *                                             # because a verified existing
+ *                                             # file is otherwise kept as-is
  *
  * Exits non-zero if any required family cannot be fetched or fails validation.
  */
@@ -54,6 +58,12 @@ interface PackEntry {
   variation: string;
   /** Weight axis range. */
   weightRange: [number, number];
+  /**
+   * Width axis range, in percent — emitted as the `font-stretch` DESCRIPTOR so
+   * the browser knows the file can vary its width. Without this a page's
+   * `font-stretch` is clamped to 100%.
+   */
+  stretchRange?: [number, number];
   /** Human-facing source page. */
   source: string;
   /** Raw OFL.txt in the upstream google/fonts repository. */
@@ -67,12 +77,13 @@ const PACK: PackEntry[] = [
     direction: 'poster',
     upstream: 'Archivo',
     file: 'archivo-latin-var.woff2',
-    cssQuery: 'Archivo:wght@100..900',
-    variation: "'wght' 100 900",
+    cssQuery: 'Archivo:wdth,wght@62..125,100..900',
+    variation: "'wdth' 62 125, 'wght' 100 900",
     weightRange: [100, 900],
+    stretchRange: [62, 125],
     source: 'https://fonts.google.com/specimen/Archivo',
     licenseUrl: 'https://raw.githubusercontent.com/google/fonts/main/ofl/archivo/OFL.txt',
-    note: 'Grotesque display with a very wide weight axis — loud, poster-scale headlines.',
+    note: 'Grotesque display with a wide WEIGHT and WIDTH axis — loud, poster-scale headlines that can condense or expand.',
   },
   {
     direction: 'literary',
@@ -186,8 +197,15 @@ async function fetchLicence(entry: PackEntry): Promise<string> {
 }
 
 /** Download (or accept an existing) verified woff2. */
-async function ensureFont(entry: PackEntry): Promise<{ status: Outcome['status']; bytes: number; detail: string }> {
+async function ensureFont(entry: PackEntry, refresh = false): Promise<{ status: Outcome['status']; bytes: number; detail: string }> {
   const target = path.join(FONT_DIR, entry.file);
+  if (refresh) {
+    try {
+      await unlink(target);
+    } catch {
+      /* nothing to remove */
+    }
+  }
   try {
     const existing = await readFile(target);
     if (isWoff2(existing)) {
@@ -263,6 +281,7 @@ function buildLicencesMd(outcomes: Outcome[]): string {
       `- CSS family: \`${e.upstream}\``,
       `- Files: \`${e.file}\` (latin subset, variable ${e.variation}, unmodified)`,
       `- Weight range: ${e.weightRange[0]}–${e.weightRange[1]}`,
+      ...(e.stretchRange ? [`- Width range: ${e.stretchRange[0]}–${e.stretchRange[1]}%`] : []),
       `- Upstream source: <${e.source}>`,
       `- Repository licence: <${e.licenseUrl}>`,
       `- Licence: SIL Open Font License 1.1 (SPDX: \`OFL-1.1\`)`,
@@ -281,11 +300,12 @@ function buildLicencesMd(outcomes: Outcome[]): string {
 
 async function main(): Promise<void> {
   await mkdir(FONT_DIR, { recursive: true });
+  const refresh = process.argv.includes('--refresh');
   const outcomes: Outcome[] = [];
 
   for (const entry of PACK) {
     try {
-      const { status, bytes, detail } = await ensureFont(entry);
+      const { status, bytes, detail } = await ensureFont(entry, refresh);
       const license = await fetchLicence(entry);
       outcomes.push({ entry, status, bytes, detail, license });
     } catch (err) {

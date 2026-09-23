@@ -238,7 +238,7 @@ per-batch seed, per-direction seed, and the history snapshot keys
 
 ## 5. Testing and evidence
 
-`npm test` runs 13 suites — 266 checks passed, 0 failed, 0 skipped when credentials are
+`npm test` runs 13 suites — 268 checks passed, 0 failed, 0 skipped when credentials are
 present (the live Jev / writer halves run); without keys those same checks skip with the
 reason in their name. See `evidence/tables.md` §8 for the generated counts. Evidence is
 produced by:

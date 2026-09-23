@@ -1,9 +1,11 @@
 # TurboSlop — Dynamic-design plan
 
-**Status: research and plan, nothing here is implemented.** Produced by six parallel
-audits (generative-surface inventory, quantified sameness audit, modern-CSS capability
-audit, generated-asset expansion analysis, state-of-the-art research, and a throwaway
-six-page prototype). Numbers below are measured from `evidence/raw.json`,
+**Status: research and plan.** Two of its lower layers have since landed — see
+[`ASSET-SOURCES.md`](ASSET-SOURCES.md) §6: the motif/material layer went from 5 to 12 generated
+families, and the font pack gained a real width axis. Everything else below is still a plan.
+Produced by six parallel audits (generative-surface inventory, quantified sameness audit,
+modern-CSS capability audit, generated-asset expansion analysis, state-of-the-art research, and a
+throwaway six-page prototype). Numbers below are measured from `evidence/raw.json`,
 `evidence/measure.json`, the 58 rendered pages in `evidence/pages/`, and the 11 recent
 live designs in the run output — not estimates.
 

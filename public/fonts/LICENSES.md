@@ -12,11 +12,11 @@ Fonts: no glyphs were added, removed, renamed or re-licensed, and the outlines
 are byte-identical to the upstream served subset. The full licence text for
 each family is reproduced verbatim in its section below.
 
-Pack total: 5 families, 278.4 KB.
+Pack total: 5 families, 332.3 KB.
 
 | direction | family | file | axis | upstream | licence |
 | --- | --- | --- | --- | --- | --- |
-| poster | Archivo | `archivo-latin-var.woff2` | `'wght' 100 900` | https://fonts.google.com/specimen/Archivo | [OFL-1.1](https://raw.githubusercontent.com/google/fonts/main/ofl/archivo/OFL.txt) |
+| poster | Archivo | `archivo-latin-var.woff2` | `'wdth' 62 125, 'wght' 100 900` | https://fonts.google.com/specimen/Archivo | [OFL-1.1](https://raw.githubusercontent.com/google/fonts/main/ofl/archivo/OFL.txt) |
 | literary | Source Serif 4 | `source-serif-4-latin-var.woff2` | `'opsz' 8 60, 'wght' 200 900` | https://fonts.google.com/specimen/Source+Serif+4 | [OFL-1.1](https://raw.githubusercontent.com/google/fonts/main/ofl/sourceserif4/OFL.txt) |
 | friendly | Nunito | `nunito-latin-var.woff2` | `'wght' 200 1000` | https://fonts.google.com/specimen/Nunito | [OFL-1.1](https://raw.githubusercontent.com/google/fonts/main/ofl/nunito/OFL.txt) |
 | technical | JetBrains Mono | `jetbrains-mono-latin-var.woff2` | `'wght' 100 800` | https://fonts.google.com/specimen/JetBrains+Mono | [OFL-1.1](https://raw.githubusercontent.com/google/fonts/main/ofl/jetbrainsmono/OFL.txt) |
@@ -28,12 +28,13 @@ Pack total: 5 families, 278.4 KB.
 
 - Direction: poster
 - CSS family: `Archivo`
-- Files: `archivo-latin-var.woff2` (latin subset, variable 'wght' 100 900, unmodified)
+- Files: `archivo-latin-var.woff2` (latin subset, variable 'wdth' 62 125, 'wght' 100 900, unmodified)
 - Weight range: 100–900
+- Width range: 62–125%
 - Upstream source: <https://fonts.google.com/specimen/Archivo>
 - Repository licence: <https://raw.githubusercontent.com/google/fonts/main/ofl/archivo/OFL.txt>
 - Licence: SIL Open Font License 1.1 (SPDX: `OFL-1.1`)
-- Purpose: Grotesque display with a very wide weight axis — loud, poster-scale headlines.
+- Purpose: Grotesque display with a wide WEIGHT and WIDTH axis — loud, poster-scale headlines that can condense or expand.
 
 ```
 Copyright 2020 The Archivo Project Authors (https://github.com/Omnibus-Type/Archivo)

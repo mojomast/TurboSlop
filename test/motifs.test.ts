@@ -163,9 +163,33 @@ await test('id and filename are stable and derived from the spec', () => {
   assert.equal(generateMotif(spec({ family: 'contour', seed: 7, width: 300, height: 200 })).id, m.id);
 });
 
-await test('MOTIF_FAMILIES declares the five distinct families', () => {
-  assert.equal(MOTIF_FAMILIES.length, 5);
-  assert.deepEqual([...MOTIF_FAMILIES], ['halftone', 'contour', 'hatching', 'technical', 'stamp']);
+await test('MOTIF_FAMILIES declares the twelve distinct families', () => {
+  assert.equal(MOTIF_FAMILIES.length, 12);
+  assert.deepEqual(
+    [...MOTIF_FAMILIES],
+    [
+      'halftone',
+      'contour',
+      'hatching',
+      'technical',
+      'stamp',
+      'truchet',
+      'isometric',
+      'weave',
+      'fishscale',
+      'waves',
+      'quatrefoil',
+      'stipple',
+    ],
+  );
+});
+
+await test('every family is reachable from the catalog emotions or the fallback', () => {
+  const reached = new Set<string>(EMOTIONS.map((e) => motifFamilyForEmotion(e.id)));
+  reached.add(motifFamilyForEmotion('not-an-emotion'));
+  for (const family of MOTIF_FAMILIES) {
+    assert.ok(reached.has(family), `${family} is unreachable from any emotion`);
+  }
 });
 
 /* ------------------------------------------------------------------ *

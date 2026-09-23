@@ -29,6 +29,12 @@ export interface FontFace {
   /** variable axis descriptor, e.g. "'wght' 100 900" or "'opsz' 8 60, 'wght' 200 900" */
   variation?: string;
   weightRange: [number, number];
+  /**
+   * Width axis range in percent, emitted as the @font-face `font-stretch`
+   * descriptor so `font-stretch` on the page can actually move the `wdth` axis.
+   * Omitted for faces without a width axis.
+   */
+  stretchRange?: [number, number];
   /** licences: spdx + human name + where the text lives */
   license: { spdx: string; name: string; file: string };
   /** what it is for, in one line */
@@ -37,7 +43,7 @@ export interface FontFace {
 
 /** Every file a bundled family ships, keyed by file name. */
 const FONT_BYTES: Record<string, number> = {
-  'archivo-latin-var.woff2': 34928,
+  'archivo-latin-var.woff2': 90104,
   'source-serif-4-latin-var.woff2': 122360,
   'nunito-latin-var.woff2': 39128,
   'jetbrains-mono-latin-var.woff2': 40404,
@@ -51,10 +57,11 @@ export const FONT_PACK: FontFace[] = [
     direction: 'poster',
     family: 'Archivo',
     file: 'archivo-latin-var.woff2',
-    variation: "'wght' 100 900",
+    variation: "'wdth' 62 125, 'wght' 100 900",
     weightRange: [100, 900],
+    stretchRange: [62, 125],
     license: { ...OFL },
-    note: 'Variable grotesque with a very wide weight axis for poster-scale display type.',
+    note: 'Variable grotesque with a wide weight AND width axis — poster-scale display type that can condense or expand.',
   },
   {
     direction: 'literary',
@@ -124,6 +131,7 @@ export function fontFaceCss(direction: FontDirection, basePath = '../fonts/'): s
     `  font-family: '${face.family}';`,
     '  font-style: normal;',
     `  font-weight: ${wMin} ${wMax};`,
+    ...(face.stretchRange ? [`  font-stretch: ${face.stretchRange[0]}% ${face.stretchRange[1]}%;`] : []),
     '  font-display: swap;',
     `  src: url('${basePath}${face.file}') format('woff2');`,
   ];

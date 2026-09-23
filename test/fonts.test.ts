@@ -172,7 +172,22 @@ await test('fontFaceCss emits a complete @font-face for every direction', () => 
     assert.ok(css.includes(`font-weight: ${face.weightRange[0]} ${face.weightRange[1]}`), `${face.direction} missing weight range`);
     assert.ok(css.includes(`url('../fonts/${face.file}')`), `${face.direction} missing local url`);
     if (face.variation) assert.ok(css.includes(`font-variation-settings: ${face.variation}`), `${face.direction} missing variation`);
+    if (face.stretchRange) {
+      assert.ok(
+        css.includes(`font-stretch: ${face.stretchRange[0]}% ${face.stretchRange[1]}%`),
+        `${face.direction} declares a width axis but does not emit the font-stretch descriptor`,
+      );
+    }
     assert.ok(!css.includes('undefined') && !css.includes('NaN'), `${face.direction} output contains undefined/NaN`);
+  }
+});
+
+await test('at least one bundled family exposes a real width axis', () => {
+  const withWidth = FONT_PACK.filter((f) => f.stretchRange);
+  assert.ok(withWidth.length >= 1, 'no bundled family can vary its width');
+  for (const face of withWidth) {
+    const [lo, hi] = face.stretchRange!;
+    assert.ok(lo < hi && lo >= 25 && hi <= 200, `${face.family} has an implausible width range ${lo}..${hi}`);
   }
 });
 

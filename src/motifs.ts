@@ -3,8 +3,10 @@
  *
  * A motif is a small, decorative SVG field used as a background or ornament
  * layer on a generated page: halftone dots, topographic contours, hatch lines,
- * a drafting grid, or a perforated stamp edge. Each family is a genuinely
- * different drawing, not a parameter tweak of another.
+ * a drafting grid, a perforated stamp edge, Truchet tiles, an isometric
+ * lattice, basket weave, fish scales, scattered waves, a quatrefoil lattice or
+ * a stippled field. Each family is a genuinely different drawing, not a
+ * parameter tweak of another.
  *
  * Everything here is a PURE STRING GENERATOR. No DOM, no network, no
  * filesystem, no dependencies, no clock: given the same MotifSpec the output is
@@ -21,6 +23,13 @@
  *   - stamp:     2*(46+30) perforations  = 152 dots + 2 rules   -> 156
  *   - technical: 50 grid + 50 ticks + 4 crosshair arms + 1 dimension -> 107
  *   - contour:   10 nested rings                                -> 12
+ *   - stipple:   20x14 hex dots          = 252 circles          -> 254
+ *   - truchet:   12 rows of arcs         = 1 path per row       -> 14
+ *   - isometric: 3 line families         = 1 path per family     -> 5
+ *   - weave:     12 rows of slats        = 1 path per row       -> 14
+ *   - fishscale: 14 rows of scallops     = 1 path per row       -> 16
+ *   - waves:     8 sine lines            = 1 path per line      -> 10
+ *   - quatrefoil:14 rows of tiles        = 1 path per row       -> 16
  * All well under the ~400 element budget. Numbers are rounded to two decimals
  * to keep bytes down, and every value goes through `f()` so NaN, Infinity and
  * undefined can never reach the markup.
@@ -32,7 +41,20 @@
  * fallback so the standalone `.svg` file looks right on its own.
  */
 
-export const MOTIF_FAMILIES = ['halftone', 'contour', 'hatching', 'technical', 'stamp'] as const;
+export const MOTIF_FAMILIES = [
+  'halftone',
+  'contour',
+  'hatching',
+  'technical',
+  'stamp',
+  'truchet',
+  'isometric',
+  'weave',
+  'fishscale',
+  'waves',
+  'quatrefoil',
+  'stipple',
+] as const;
 export type MotifFamily = (typeof MOTIF_FAMILIES)[number];
 
 export interface MotifSpec {
@@ -472,6 +494,277 @@ function buildStamp(seed: number, w: number, h: number, density: number, ink: st
 }
 
 /* ------------------------------------------------------------------ *
+ * truchet — a grid of quarter-arc tiles, the 10 PRINT construction.
+ * Worst case (1200x800, density 1): 12 rows of arcs, one <path> per row
+ * -> 14 tags.
+ * ------------------------------------------------------------------ */
+function buildTruchet(seed: number, w: number, h: number, density: number, ink: string): string {
+  const rand = mulberry32(seed);
+  const inkVar = `var(--motif-ink, ${ink})`;
+  const out: string[] = [openSvg('truchet', w, h)];
+  const cols = clamp(Math.round(6 + density * 10), 6, 18);
+  const rows = clamp(Math.round(4 + density * 8), 4, 12);
+  const cell = Math.min(w / cols, h / rows);
+  const ox = (w - cell * cols) / 2;
+  const oy = (h - cell * rows) / 2;
+  const r = cell / 2;
+  const sw = Math.max(0.4, 1.2 - density * 0.5);
+
+  for (let j = 0; j < rows; j++) {
+    const parts: string[] = [];
+    for (let i = 0; i < cols; i++) {
+      const x = ox + i * cell;
+      const y = oy + j * cell;
+      /* Two quarter arcs joining edge midpoints. One seeded bit per tile:
+         the S pairing (top-left + bottom-right) or its rotation. */
+      if (rand() < 0.5) {
+        parts.push(`M ${f(x + r)} ${f(y)} A ${f(r)} ${f(r)} 0 0 1 ${f(x)} ${f(y + r)}`);
+        parts.push(`M ${f(x + r)} ${f(y + cell)} A ${f(r)} ${f(r)} 0 0 1 ${f(x + cell)} ${f(y + r)}`);
+      } else {
+        parts.push(`M ${f(x + r)} ${f(y)} A ${f(r)} ${f(r)} 0 0 0 ${f(x + cell)} ${f(y + r)}`);
+        parts.push(`M ${f(x + r)} ${f(y + cell)} A ${f(r)} ${f(r)} 0 0 0 ${f(x)} ${f(y + r)}`);
+      }
+    }
+    out.push(
+      `<path d="${parts.join(' ')}" stroke="${inkVar}" stroke-width="${f(sw)}" ` +
+        `stroke-opacity="0.72" fill="none"/>`,
+    );
+  }
+  out.push('</svg>');
+  return out.join('');
+}
+
+/* ------------------------------------------------------------------ *
+ * isometric — a three-family 30/90/150 lattice, like isometric drafting
+ * paper. One <path> per line family: 2–3 tags plus the root.
+ * ------------------------------------------------------------------ */
+function buildIsometric(seed: number, w: number, h: number, density: number, ink: string, ground: string): string {
+  const rand = mulberry32(seed);
+  const inkVar = `var(--motif-ink, ${ink})`;
+  const out: string[] = [openSvg('isometric', w, h)];
+  const families = density < 0.3 ? 2 : 3;
+  const spacing = (34 + (1 - density) * 40) * (0.9 + 0.2 * rand());
+  const opacity = isLightGround(ground) ? 0.4 : 0.55;
+  const cx = w / 2;
+  const cy = h / 2;
+  const L = w + h;
+  const angles = [Math.PI / 6, Math.PI / 2, (Math.PI * 5) / 6].slice(0, families);
+
+  angles.forEach((a, k) => {
+    const dx = Math.cos(a);
+    const dy = Math.sin(a);
+    const nx = -dy;
+    const ny = dx;
+    const extent = (Math.abs(nx) * w + Math.abs(ny) * h) / 2;
+    const jitter = (rand() - 0.5) * spacing * 0.3;
+    const parts: string[] = [];
+    for (let t = -extent + jitter; t <= extent; t += spacing) {
+      const px = cx + nx * t;
+      const py = cy + ny * t;
+      parts.push(`M ${f(px - dx * L)} ${f(py - dy * L)} L ${f(px + dx * L)} ${f(py + dy * L)}`);
+    }
+    out.push(
+      `<path d="${parts.join(' ')}" stroke="${inkVar}" stroke-width="${k === 1 ? '0.9' : '0.5'}" ` +
+        `stroke-opacity="${f(k === 1 ? opacity + 0.15 : opacity)}" fill="none"/>`,
+    );
+  });
+  out.push('</svg>');
+  return out.join('');
+}
+
+/** A rectangle as a closed subpath (keeps one element per row). */
+function rectSubpath(x: number, y: number, w: number, h: number): string {
+  return `M ${f(x)} ${f(y)} h ${f(w)} v ${f(h)} h ${f(-w)} Z`;
+}
+
+/* ------------------------------------------------------------------ *
+ * weave — a basket-weave parquet of alternating slat pairs.
+ * Worst case: one <path> per row, rows <= 14 -> 16 tags.
+ * ------------------------------------------------------------------ */
+function buildWeave(seed: number, w: number, h: number, density: number, ink: string): string {
+  const rand = mulberry32(seed);
+  const inkVar = `var(--motif-ink, ${ink})`;
+  const out: string[] = [openSvg('weave', w, h)];
+  const u = (20 + (1 - density) * 30) * (0.9 + 0.2 * rand());
+  const cell = u * 2;
+  const cols = clamp(Math.round(w / cell), 4, 16);
+  const rows = clamp(Math.round(h / cell), 3, 12);
+  const cw = w / cols;
+  const ch = h / rows;
+  const gap = Math.max(1, Math.min(cw, ch) * 0.09);
+  const slat = Math.min(cw, ch) / 2 - gap * 0.75;
+  const out2: string[] = [];
+  for (let j = 0; j < rows; j++) {
+    const parts: string[] = [];
+    const rowJitter = (rand() - 0.5) * gap * 0.8;
+    for (let i = 0; i < cols; i++) {
+      const x = i * cw + gap + (rand() - 0.5) * gap * 0.5;
+      const y = j * ch + gap + rowJitter;
+      if ((i + j) % 2 === 0) {
+        parts.push(rectSubpath(x, y, cw - 2 * gap, slat));
+        parts.push(rectSubpath(x, y + slat + gap * 0.75, cw - 2 * gap, slat));
+      } else {
+        parts.push(rectSubpath(x, y, slat, ch - 2 * gap));
+        parts.push(rectSubpath(x + slat + gap * 0.75, y, slat, ch - 2 * gap));
+      }
+    }
+    out2.push(`<path d="${parts.join(' ')}" fill="${inkVar}" fill-opacity="0.5"/>`);
+  }
+  out.push(...out2);
+  out.push('</svg>');
+  return out.join('');
+}
+
+/* ------------------------------------------------------------------ *
+ * fishscale — staggered rows of scalloped arcs, like roof tiles.
+ * Worst case: one <path> per row, rows <= 14 -> 16 tags.
+ * ------------------------------------------------------------------ */
+function buildFishscale(seed: number, w: number, h: number, density: number, ink: string, ground: string): string {
+  const rand = mulberry32(seed);
+  const inkVar = `var(--motif-ink, ${ink})`;
+  const out: string[] = [openSvg('fishscale', w, h)];
+  const r = Math.min(w, h) * (0.11 - density * 0.05) * (0.9 + 0.2 * rand());
+  const cols = clamp(Math.ceil(w / (r * 2)), 4, 24);
+  const rows = clamp(Math.ceil(h / (r * 1.15)), 3, 14);
+  const sw = Math.max(0.4, 1.1 - density * 0.45);
+  const opacity = isLightGround(ground) ? 0.45 : 0.6;
+  const step = w / cols;
+  const rr = step / 2;
+
+  for (let j = 0; j < rows; j++) {
+    const y = (j + 1) * (h / (rows + 0.25));
+    const off = j % 2 ? step / 2 : 0;
+    const parts: string[] = [];
+    for (let i = -1; i <= cols; i++) {
+      const x = i * step + off;
+      parts.push(`M ${f(x)} ${f(y)} A ${f(rr)} ${f(rr)} 0 0 0 ${f(x + step)} ${f(y)}`);
+    }
+    out.push(
+      `<path d="${parts.join(' ')}" stroke="${inkVar}" stroke-width="${f(sw)}" ` +
+        `stroke-opacity="${f(opacity)}" fill="none"/>`,
+    );
+  }
+  out.push('</svg>');
+  return out.join('');
+}
+
+/* ------------------------------------------------------------------ *
+ * waves — a stack of scattered sine lines, seeded amplitude and phase.
+ * Worst case: 8 lines, one <path> each -> 10 tags.
+ * ------------------------------------------------------------------ */
+function buildWaves(seed: number, w: number, h: number, density: number, ink: string, ground: string): string {
+  const rand = mulberry32(seed);
+  const inkVar = `var(--motif-ink, ${ink})`;
+  const out: string[] = [openSvg('waves', w, h)];
+  const count = clamp(Math.round(3 + density * 5), 3, 8);
+  const amp = h * (0.025 + 0.05 * density) * (0.8 + 0.4 * rand());
+  const wavelength = w / (1.2 + rand() * 2.2);
+  const sw = Math.max(0.5, 1.3 - density * 0.5);
+  const opacity = isLightGround(ground) ? 0.4 : 0.6;
+  const steps = Math.max(12, Math.round(w / 40));
+
+  for (let k = 0; k < count; k++) {
+    const base = h * ((k + 0.75) / (count + 0.5));
+    const phase = rand() * Math.PI * 2;
+    const ampK = amp * (0.7 + 0.6 * rand());
+    const pts: string[] = [];
+    for (let i = 0; i <= steps; i++) {
+      const x = (i / steps) * w;
+      const y = base + Math.sin((x / wavelength) * Math.PI * 2 + phase) * ampK;
+      pts.push(`${f(x)} ${f(y)}`);
+    }
+    out.push(
+      `<path d="M ${pts.join(' L ')}" stroke="${inkVar}" stroke-width="${f(sw)}" ` +
+        `stroke-opacity="${f(opacity)}" fill="none"/>`,
+    );
+  }
+  out.push('</svg>');
+  return out.join('');
+}
+
+/** A circle as a closed two-arc subpath (keeps one element per row). */
+function circleSubpath(cx: number, cy: number, r: number): string {
+  return (
+    `M ${f(cx - r)} ${f(cy)} A ${f(r)} ${f(r)} 0 1 0 ${f(cx + r)} ${f(cy)} ` +
+    `A ${f(r)} ${f(r)} 0 1 0 ${f(cx - r)} ${f(cy)} Z`
+  );
+}
+
+/* ------------------------------------------------------------------ *
+ * quatrefoil — a Moorish lattice of four overlapping lobes per cell.
+ * Worst case: one <path> per row, rows <= 9 -> 11 tags.
+ * ------------------------------------------------------------------ */
+function buildQuatrefoil(seed: number, w: number, h: number, density: number, ink: string): string {
+  const rand = mulberry32(seed);
+  const inkVar = `var(--motif-ink, ${ink})`;
+  const out: string[] = [openSvg('quatrefoil', w, h)];
+  const cell = Math.min(w, h) * (0.2 - density * 0.08) * (0.9 + 0.2 * rand());
+  const cols = clamp(Math.round(w / cell), 4, 12);
+  const rows = clamp(Math.round(h / cell), 3, 9);
+  const cw = w / cols;
+  const ch = h / rows;
+  const unit = Math.min(cw, ch);
+  const r = unit * 0.33;
+  const off = unit * 0.17;
+  const sw = Math.max(0.4, 1.1 - density * 0.45);
+  /* A seeded lattice offset: without it the cell counts round the seed away
+     and every seed draws the same tiles. */
+  const ox = (rand() - 0.5) * cw;
+  const oy = (rand() - 0.5) * ch;
+
+  for (let j = 0; j < rows; j++) {
+    const parts: string[] = [];
+    for (let i = 0; i < cols; i++) {
+      const cx = (i + 0.5) * cw + ox;
+      const cy = (j + 0.5) * ch + oy;
+      parts.push(circleSubpath(cx - off, cy, r));
+      parts.push(circleSubpath(cx + off, cy, r));
+      parts.push(circleSubpath(cx, cy - off, r));
+      parts.push(circleSubpath(cx, cy + off, r));
+    }
+    out.push(
+      `<path d="${parts.join(' ')}" stroke="${inkVar}" stroke-width="${f(sw)}" stroke-opacity="0.6" fill="none"/>`,
+    );
+  }
+  out.push('</svg>');
+  return out.join('');
+}
+
+/* ------------------------------------------------------------------ *
+ * stipple — jittered dots on a hex lattice, thinned by a seeded coin.
+ * Worst case (1200x800, density 1): 20x14 kept at ~90% = 252 dots
+ * -> 254 tags.
+ * ------------------------------------------------------------------ */
+function buildStipple(seed: number, w: number, h: number, density: number, ink: string): string {
+  const rand = mulberry32(seed);
+  const inkVar = `var(--motif-ink, ${ink})`;
+  const out: string[] = [openSvg('stipple', w, h)];
+  const s = 64 - density * 30;
+  const cols = clamp(Math.round(w / s), 6, 20);
+  const rows = clamp(Math.round(h / s), 4, 14);
+  const cw = w / cols;
+  const ch = h / rows;
+  const base = Math.min(cw, ch) * (0.12 + density * 0.1);
+  const drop = 0.25 - density * 0.15;
+
+  for (let j = 0; j < rows; j++) {
+    for (let i = 0; i < cols; i++) {
+      const jx = (j % 2) * cw * 0.5;
+      const x = (i + 0.5) * cw + jx + (rand() - 0.5) * cw * 0.55;
+      const y = (j + 0.5) * ch + (rand() - 0.5) * ch * 0.55;
+      const wave =
+        0.5 +
+        0.5 * Math.sin((x / w) * Math.PI * 2 * 1.7 + Math.cos((y / h) * Math.PI * 2 * 1.3) * 1.4);
+      const r = Math.max(0.4, base * (0.2 + 0.8 * wave));
+      if (rand() < drop) continue;
+      out.push(`<circle cx="${f(clamp(x, 0, w))}" cy="${f(clamp(y, 0, h))}" r="${f(r)}" fill="${inkVar}"/>`);
+    }
+  }
+  out.push('</svg>');
+  return out.join('');
+}
+
+/* ------------------------------------------------------------------ *
  * Generation
  * ------------------------------------------------------------------ */
 type Builder = (seed: number, w: number, h: number, density: number, ink: string, ground: string) => string;
@@ -482,6 +775,13 @@ const BUILDERS: Record<MotifFamily, Builder> = {
   hatching: buildHatching,
   technical: buildTechnical,
   stamp: (s, w, h, d, ink) => buildStamp(s, w, h, d, ink),
+  truchet: (s, w, h, d, ink) => buildTruchet(s, w, h, d, ink),
+  isometric: buildIsometric,
+  weave: (s, w, h, d, ink) => buildWeave(s, w, h, d, ink),
+  fishscale: buildFishscale,
+  waves: buildWaves,
+  quatrefoil: (s, w, h, d, ink) => buildQuatrefoil(s, w, h, d, ink),
+  stipple: (s, w, h, d, ink) => buildStipple(s, w, h, d, ink),
 };
 
 /**
@@ -521,21 +821,21 @@ export function generateMotif(spec: MotifSpec): Motif {
  * ------------------------------------------------------------------ */
 const MOTIF_BY_EMOTION: Record<string, MotifFamily> = {
   awe: 'contour',
-  serenity: 'hatching',
-  delight: 'halftone',
+  serenity: 'waves',
+  delight: 'quatrefoil',
   tension: 'technical',
-  nostalgia: 'stamp',
-  mystery: 'contour',
-  trust: 'technical',
-  energy: 'hatching',
-  intimacy: 'hatching',
+  nostalgia: 'weave',
+  mystery: 'stipple',
+  trust: 'isometric',
+  energy: 'truchet',
+  intimacy: 'fishscale',
   optimism: 'halftone',
   other: 'stamp',
 };
 
 /** Which motif family suits an emotion. Total: never returns undefined. */
 export function motifFamilyForEmotion(emotion: string): MotifFamily {
-  return MOTIF_BY_EMOTION[emotion] ?? 'halftone';
+  return MOTIF_BY_EMOTION[emotion] ?? 'hatching';
 }
 
 /**
