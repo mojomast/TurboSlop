@@ -231,7 +231,7 @@ per-batch seed, per-direction seed, and the history snapshot keys
 
 ## 5. Testing and evidence
 
-`npm test` runs 12 offline suites (255 checks + 1 environment skip); see
+`npm test` runs 13 offline suites (261 checks passed, 0 failed, 1 environment skip); see
 `evidence/tables.md` §8 for the generated counts. Evidence is produced by:
 
 ```bash

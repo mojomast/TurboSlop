@@ -1,6 +1,6 @@
 
 > turboslop@0.1.0 test
-> tsx test/forge.test.ts && tsx test/images.test.ts && tsx test/zip.test.ts && tsx test/motifs.test.ts && tsx test/assets.test.ts && tsx test/fonts.test.ts && tsx test/session.test.ts && tsx test/slots.test.ts && tsx test/diversity.test.ts && tsx test/locks.test.ts && tsx test/revision.test.ts && tsx test/assetplan.test.ts
+> tsx test/forge.test.ts && tsx test/images.test.ts && tsx test/zip.test.ts && tsx test/motifs.test.ts && tsx test/assets.test.ts && tsx test/fonts.test.ts && tsx test/session.test.ts && tsx test/slots.test.ts && tsx test/diversity.test.ts && tsx test/locks.test.ts && tsx test/revision.test.ts && tsx test/assetplan.test.ts && tsx test/viewport.test.ts
 
 
 === TurboSlop ===
@@ -274,15 +274,15 @@ all 13 checks passed
   ok    a single-design run records its resolved design and avoids repeating it next time
   ok    the diversity report counts what a set actually contains
   ok    the selection version is recorded and stable
-  info  festival seed 11: statement-display/arctic-cyan/stacked/plain | event-festival~cc6a43c74/arctic-cyan/outline/shaped | product-demo~cc6416024/noir-lime/stacked/cutout | product-spec~cc64b3d84/arctic-cyan/caps/plain | catalogue-rail/arctic-cyan/stacked/textwrap | statement-letter/arctic-cyan/stacked/plain
-  info  festival seed 42: statement-panel/noir-lime/stacked/plain | event-festival~f52200974/arctic-cyan/outline/shaped | data-metrics~f52479124/noir-lime/caps/plain | catalogue-gallery/noir-lime/stacked/textwrap | product-demo/hazard-mono/stacked/cutout | statement-letter~f51b33d94/arctic-cyan/stacked/plain
-  info  festival seed 97: statement-display/arctic-cyan/stacked/plain | event-festival~f30d253d4/arctic-cyan/outline/shaped | product-spec/arctic-cyan/caps/plain | product-demo~f306f7784/noir-lime/stacked/cutout | catalogue-rail/hazard-mono/stacked/textwrap | statement-panel/noir-lime/stacked/plain
-  info  shop seed 11: statement-display~cc623b5d4/hazard-mono/stacked/plain | event-festival/arctic-cyan/outline/shaped | product-demo~cc6416024/hazard-mono/run-on/cutout | catalogue-rail/arctic-cyan/stacked/textwrap | data-calculator/arctic-cyan/caps/plain | event-ticketing/hazard-mono/outline/plain
-  info  shop seed 42: statement-panel/hazard-mono/stacked/plain | event-festival~f52200974/arctic-cyan/outline/shaped | catalogue-gallery~f51dad164/arctic-cyan/run-on/textwrap | data-metrics~f52479124/arctic-cyan/caps/plain | product-demo/hazard-mono/stacked/cutout | event-ticketing/arctic-cyan/outline/plain
-  info  shop seed 97: statement-display~f3051c724/hazard-mono/stacked/plain | image-strip~f30effe24/arctic-cyan/outline/shaped | catalogue-rail/arctic-cyan/run-on/textwrap | product-demo~f306f7174/arctic-cyan/stacked/cutout | data-metrics/hazard-mono/caps/plain | statement-panel/hazard-mono/stacked/plain
-  info  software seed 11: statement-panel~cc62d9944/arctic-cyan/stacked/plain | image-mosaic~cc6b80964/arctic-cyan/outline/shaped | product-demo~cc6416024/arctic-cyan/stacked/cutout | data-metrics~cc6cbca34/arctic-cyan/caps/plain | story-editorial/arctic-cyan/stacked/textwrap | statement-display~cc623b5d4/arctic-cyan/stacked/plain
-  info  software seed 42: statement-letter~f51b343a4/arctic-cyan/stacked/plain | image-mosaic~f5233ca44/arctic-cyan/outline/shaped | product-demo~f51bd2104/arctic-cyan/stacked/cutout | product-spec~f51c70a84/arctic-cyan/caps/plain | story-origin~f520c3c84/arctic-cyan/stacked/textwrap | statement-display/arctic-cyan/stacked/plain
-  info  software seed 97: statement-panel~f305bb0a4/arctic-cyan/stacked/plain | image-mosaic~f30e620c4/arctic-cyan/outline/shaped | product-demo/arctic-cyan/stacked/cutout | data-calculator/arctic-cyan/caps/plain | story-editorial~f30aacc24/noir-lime/stacked/textwrap | statement-display~f3051c724/noir-lime/stacked/plain
+  info  festival seed 11: statement-letter/arctic-cyan/stacked/plain | event-festival/hazard-mono/outline/shaped | data-metrics/hazard-mono/caps/plain | product-demo~cc6415a14/hazard-mono/stacked/cutout | story-editorial~cc67caeb4/arctic-cyan/stacked/textwrap | statement-display/arctic-cyan/stacked/plain
+  info  festival seed 42: statement-letter/arctic-cyan/stacked/plain | event-festival~f52200364/arctic-cyan/outline/shaped | data-calculator/arctic-cyan/caps/plain | product-demo~f51bd2714/hazard-mono/stacked/cutout | story-origin~f520c4294/arctic-cyan/stacked/textwrap | statement-display~f519f76b4/arctic-cyan/stacked/plain
+  info  festival seed 97: statement-panel/hazard-mono/stacked/plain | event-festival/hazard-mono/outline/shaped | product-spec/hazard-mono/caps/plain | catalogue-gallery~f308d1bc4/arctic-cyan/stacked/textwrap | product-demo/arctic-cyan/stacked/cutout | statement-display/arctic-cyan/stacked/plain
+  info  shop seed 11: statement-letter/arctic-cyan/stacked/plain | image-mosaic~cc6b80964/hazard-mono/outline/shaped | product-demo/hazard-mono/run-on/cutout | data-calculator~cc6d5b3b4/arctic-cyan/caps/plain | story-editorial~cc67caeb4/hazard-mono/stacked/textwrap | statement-display/arctic-cyan/broken/plain
+  info  shop seed 42: statement-letter/arctic-cyan/stacked/plain | event-festival~f52200364/arctic-cyan/outline/shaped | product-demo/arctic-cyan/run-on/cutout | data-calculator~f52517aa4/hazard-mono/caps/plain | catalogue-rail~f51e4aec4/arctic-cyan/broken/textwrap | story-origin/arctic-cyan/stacked/textwrap
+  info  shop seed 97: statement-panel/hazard-mono/stacked/plain | image-strip~f30f00434/arctic-cyan/outline/shaped | catalogue-rail~f3096ff34/hazard-mono/run-on/textwrap | product-spec~f30795af4/arctic-cyan/caps/plain | product-demo/hazard-mono/stacked/cutout | event-ticketing~f30dc3744/hazard-mono/outline/plain
+  info  software seed 11: statement-panel~cc62d9334/noir-lime/stacked/plain | image-mosaic~cc6b80964/noir-lime/outline/shaped | product-demo~cc6415a14/noir-lime/stacked/cutout | data-metrics~cc6cbd044/noir-lime/caps/plain | story-editorial~cc67cb4c4/noir-lime/stacked/textwrap | statement-display/arctic-cyan/stacked/plain
+  info  software seed 42: statement-panel~f51a96034/noir-lime/stacked/plain | image-mosaic~f5233d054/arctic-cyan/outline/shaped | product-demo~f51bd2714/arctic-cyan/stacked/cutout | data-calculator/arctic-cyan/caps/plain | catalogue-gallery~f51dad164/noir-lime/stacked/textwrap | statement-display~f519f76b4/arctic-cyan/stacked/plain
+  info  software seed 97: statement-panel~f305bb0a4/noir-lime/stacked/plain | image-mosaic~f30e620c4/arctic-cyan/outline/shaped | product-demo/noir-lime/stacked/cutout | catalogue-rail/arctic-cyan/stacked/textwrap | data-calculator/arctic-cyan/caps/plain | statement-display~f3051c724/arctic-cyan/stacked/plain
   ok    festival, ceramics-shop and software produce different COMPLETE sets across seeds
   SKIP  live-Jev diversity — no TYPESAFE_API_KEY — the local decider is the offline control
 
@@ -340,4 +340,16 @@ all 8 checks passed
   ok    content diagnostics are reported for what the inventory cannot fill
 
 all 13 checks passed
+
+
+=== TurboSlop — preview viewports (real control surface) ===
+
+  ok    desktop mode simulates a real 1440×900 viewport inside the card
+  ok    the page inside the desktop iframe lays out at 1440 CSS pixels
+  ok    mobile mode switches to a real 390×844 viewport
+  ok    resizing the window changes only the scale — the simulated viewport is stable
+  ok    preview labels live outside the generated page canvas
+  ok    a preview reports ready only after fonts load, with motion frozen
+
+all 6 checks passed
 

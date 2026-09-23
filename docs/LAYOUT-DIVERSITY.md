@@ -247,7 +247,7 @@ configured; it is never paid per direction.
 
 ## 6. Tests
 
-Run `npm test` — 12 offline suites, no keys, no network, no GPU. The generated
+Run `npm test` — 13 offline suites, no keys, no network, no GPU. The generated
 counts (passed / failed / skipped per suite) live in
 [`evidence/tables.md`](../evidence/tables.md) §8, produced from
 `evidence/tests.txt` by `scripts/report.ts`, so the number quoted here can
@@ -267,6 +267,7 @@ never drift from the suite again.
 | `locks.test.ts` | locks bound to explicit values and source cards, blueprint/composition locks applied, invalid and incompatible locks explained, immutable previous batches |
 | `revision.test.ts` | copy-only revision preserves the resolved visual spec (the `data-metrics` → `story-origin` regression), visual edits touch only named axes, no re-decision |
 | `assetplan.test.ts` | zero slots ⇒ zero asset-service requests (controlled fixture), supplied images suppress generation, slot ownership by rendered variant, placement verification, ZIP export carries assets + fonts + licences |
+| `viewport.test.ts` | the REAL control surface in a real browser: 1440×900 / 390×844 simulated viewports, card resize changes only the scale, labels outside the canvas, fonts-ready + motion-frozen before a thumbnail is "ready" |
 
 Regression checks that exist because of bugs found during this work: the
 affinity/catalog drift check, the palette-guardrail lightness check, "no asset

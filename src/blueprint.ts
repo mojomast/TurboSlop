@@ -626,6 +626,15 @@ export function imageSlotsFor(bp: Blueprint): BlueprintImageSlot[] {
         id: 'hero', role: 'hero-figure', aspect: '16 / 10', crop: 'detail',
         placement: 'inside the framed demonstration', scale: 'native', desktopWidth: 256,
       });
+    } else {
+      /* Every OTHER hero draws an atmosphere layer behind the opening
+         (`hero-art`). Without a slot for it, that layer could only ever be
+         filled by some other slot's picture — an asset rendered somewhere it
+         was never meant to be. The slot makes the ownership explicit. */
+      slots.push({
+        id: 'hero', role: 'hero-texture', aspect: '16 / 9', crop: 'cover',
+        placement: 'atmosphere behind the opening statement', scale: 'texture', desktopWidth: 1200,
+      });
     }
   }
 

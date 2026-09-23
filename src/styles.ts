@@ -375,7 +375,17 @@ export function elementCss(): string {
   .hero-panel__body { display: grid; gap: var(--s-4); align-content: start; }
 
   .hero-media { display: grid; gap: var(--s-5); }
-  .hero-media__plate { aspect-ratio: 16 / 9; border-radius: var(--radius); overflow: clip; }
+  /* The caption carries the HEADLINE, so the plate may never push it below
+     the first screen: 16:9 until the viewport says otherwise, then clamped so
+     eyebrow + headline + lede stay inside 100svh on a desktop viewport.
+     Measured before this clamp: media heroes put the h1 at 946–1031px on a
+     900px fold — a first screen with no headline in it. */
+  .hero-media__plate {
+    aspect-ratio: 16 / 9;
+    max-block-size: min(calc((100vw - 5rem) * 0.5625), calc(100svh - 24rem));
+    border-radius: var(--radius);
+    overflow: clip;
+  }
   .hero-media__plate img { inline-size: 100%; block-size: 100%; object-fit: cover; }
   .hero-media__caption { display: grid; gap: var(--s-3); }
   .hero-media__title {
@@ -453,8 +463,12 @@ export function elementCss(): string {
 
   /* --- editorial figure: a large plate and a narrow reading column --- */
   .hero-figure { display: grid; gap: var(--s-6); align-items: center; }
+  /* Narrow screens: the TEXT column leads. A first screen that shows only an
+     empty plate above the fold is not a first screen. */
+  .hero-figure__col { order: -1; }
   @container (min-width: 56rem) {
     .hero-figure { grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr); }
+    .hero-figure__col { order: 0; }
   }
   .hero-figure__plate { margin: 0; min-inline-size: 0; }
   .hero-figure__img {

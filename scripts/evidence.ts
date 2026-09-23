@@ -29,7 +29,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdir, copyFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, copyFile, readdir, rm, writeFile } from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -139,6 +139,11 @@ async function main(): Promise<void> {
   const workDir = path.join(outAbs, 'work');
   const pagesDir = path.join(outAbs, 'pages');
   const shotsDir = path.join(outAbs, 'shots');
+  /* A clean slate: history is an INPUT to selection, so a corpus that must
+     reproduce byte-for-byte starts from an empty history (and records the
+     snapshot each run actually used). */
+  await rm(workDir, { recursive: true, force: true });
+  await rm(pagesDir, { recursive: true, force: true });
   await mkdir(workDir, { recursive: true });
   await mkdir(pagesDir, { recursive: true });
 

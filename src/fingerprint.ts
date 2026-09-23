@@ -232,20 +232,25 @@ const eq = (a: string, b: string) => (a === b ? 0 : 1);
 /**
  * The weighted feature set. Weights sum to 1 before normalisation and are
  * owned HERE, so "structure matters more than tracking" is a number a reviewer
- * can see rather than a property of a model.
+ * can see rather than the output of a model.
+ *
+ * Weights were CALIBRATED against rendered geometry (scripts/calibrate.ts):
+ * pages whose section sequences differ measure ~0.40 apart vertically while
+ * chrome-only differences barely move the render, so the block sequence carries
+ * the largest single weight and nav/footer/grid carry little.
  *
  * `gray: false` marks hue-only terms — dropped for the grayscale comparison.
  * Motion is dropped too: it is invisible in a still screenshot.
  */
 const TERMS: Term[] = [
   /* composition — 0.44 */
-  { weight: 0.10, gray: true, d: (a, b) => eq(a.lead, b.lead) },
-  { weight: 0.07, gray: true, d: (a, b) => eq(a.hero, b.hero) },
-  { weight: 0.14, gray: true, d: (a, b) => sequenceDistance(a.sequence, b.sequence) },
-  { weight: 0.035, gray: true, d: (a, b) => eq(a.nav, b.nav) },
-  { weight: 0.035, gray: true, d: (a, b) => eq(a.footer, b.footer) },
-  { weight: 0.02, gray: true, d: (a, b) => (a.columns === b.columns ? 0 : 1) },
-  { weight: 0.04, gray: true, d: (a, b) => eq(a.rhythm, b.rhythm) },
+  { weight: 0.09, gray: true, d: (a, b) => eq(a.lead, b.lead) },
+  { weight: 0.06, gray: true, d: (a, b) => eq(a.hero, b.hero) },
+  { weight: 0.18, gray: true, d: (a, b) => sequenceDistance(a.sequence, b.sequence) },
+  { weight: 0.03, gray: true, d: (a, b) => eq(a.nav, b.nav) },
+  { weight: 0.03, gray: true, d: (a, b) => eq(a.footer, b.footer) },
+  { weight: 0.015, gray: true, d: (a, b) => (a.columns === b.columns ? 0 : 1) },
+  { weight: 0.035, gray: true, d: (a, b) => eq(a.rhythm, b.rhythm) },
 
   /* typography — 0.27 */
   { weight: 0.09, gray: true, d: (a, b) => eq(a.construction, b.construction) },

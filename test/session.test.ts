@@ -75,8 +75,22 @@ await test('the decision response is persisted in full', () => {
 await test('directions are structurally distinct, not recolours', () => {
   const keys = new Set(session.directions.map((d) => d.structure.blocks.join('>')));
   assert.ok(keys.size >= 4, `expected several distinct block sequences, got ${keys.size}`);
+  /* Distinctness is now asserted the way the selector is graded: by the
+     enforced diversity targets on resolved compositions, with catalog
+     families kept as a coarse floor (six distinct compositions can still be
+     three catalog families — the families were the old proxy). */
   const families = new Set(session.directions.map((d) => d.family));
-  assert.ok(families.size >= 4, `expected several families, got ${families.size}`);
+  assert.ok(families.size >= 3, `expected at least three catalog families, got ${families.size}`);
+  const rep = session.diversity;
+  assert.ok(
+    rep.achieved.compositions >= rep.targets.compositions,
+    `compositions ${rep.achieved.compositions}/${rep.targets.compositions} — shortfall: ${JSON.stringify(rep.shortfall)}`,
+  );
+  assert.ok(
+    rep.achieved.constructions >= rep.targets.constructions,
+    `headline constructions ${rep.achieved.constructions}/${rep.targets.constructions} — ${JSON.stringify(rep.shortfall)}`,
+  );
+  assert.ok(rep.met, `diversity targets missed: ${JSON.stringify(rep.shortfall)}`);
 });
 
 await test('every direction has a preview file on disk', async () => {

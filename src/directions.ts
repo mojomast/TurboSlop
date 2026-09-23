@@ -458,7 +458,37 @@ function stylingPool(opts: BuildOptions): Styling[] {
     }
   }
   out.sort((a, b) => b.axisScore - a.axisScore || `${a.palette}${a.typography}`.localeCompare(`${b.palette}${b.typography}`));
-  return out.slice(0, MAX_STYLING);
+
+  /* The bounded slice must SPAN THE TYPEFACES, not fill up with one
+     typeface's motion/density permutations. Round-robin across typeface
+     groups (each group in score order): with 48 slots and ≤7 typefaces,
+     every pooled face — and therefore its headline construction — is
+     represented, and selection's coverage bonus can then choose between
+     constructions. Under a composition+palette lock this is the difference
+     between six cards that differ only in motion and six that differ in
+     their headline construction. */
+  const byType = new Map<string, Styling[]>();
+  for (const s of out) {
+    const list = byType.get(s.typography) ?? [];
+    list.push(s);
+    byType.set(s.typography, list);
+  }
+  const groups = [...byType.values()].sort(
+    (a, b) => (b[0]?.axisScore ?? 0) - (a[0]?.axisScore ?? 0) || (a[0]?.typography ?? '').localeCompare(b[0]?.typography ?? ''),
+  );
+  const interleaved: Styling[] = [];
+  for (let i = 0; interleaved.length < MAX_STYLING; i++) {
+    let added = false;
+    for (const group of groups) {
+      const next = group[i];
+      if (!next) continue;
+      if (interleaved.length >= MAX_STYLING) break;
+      interleaved.push(next);
+      added = true;
+    }
+    if (!added) break;
+  }
+  return interleaved;
 }
 
 /**
@@ -748,12 +778,32 @@ export function buildDirections(opts: BuildOptions): BuildResult {
 
   /* Shortfall reasons, so a miss is explained rather than hidden. */
   const reasons: Partial<Record<keyof DiversityTargets, string>> = {};
-  if ((opts.locks ?? []).length) {
-    const names = opts.locks!.map((l) => l.name).join(', ');
-    reasons.compositions = `locked: ${names} — constrained selection cannot move a locked axis`;
-    reasons.constructions = reasons.compositions;
-    reasons.treatments = reasons.compositions;
-    reasons.grayscaleDistinct = reasons.compositions;
+  const lockNames = (opts.locks ?? []).map((l) => l.name);
+  const structureLocked = lockNames.includes('composition') || lockNames.includes('blueprint');
+  const lockedLead = selected[0]?.features.lead;
+  const leadForcesConstruction =
+    lockedLead === 'image' || lockedLead === 'offer' ? 'outline' : lockedLead === 'data' ? 'caps' : null;
+
+  /* Constraint-aware targets. A composition/blueprint lock ASKS for one
+     composition, and a fixed lead can force the headline construction and the
+     imagery treatment outright. Targets are clamped to what the constraints
+     allow — never the other way round: nothing is ever added to a set just to
+     hit a number. */
+  if (structureLocked && selected.length) {
+    targets.compositions = 1;
+    targets.treatments = 1; // (lead, emotion, imagery) fully determine it
+    if (leadForcesConstruction) targets.constructions = 1;
+  }
+
+  if (lockNames.length) {
+    const names = lockNames.join(', ');
+    const lockedNote = `locked: ${names} — constrained selection cannot move a locked axis`;
+    reasons.compositions = lockedNote;
+    reasons.constructions = leadForcesConstruction
+      ? `the locked ${lockedLead}-led first screen sets a "${leadForcesConstruction}" headline construction for every card`
+      : lockedNote;
+    reasons.treatments = `the locked ${lockedLead} composition draws its imagery in a single treatment (one lead, one emotion)`;
+    reasons.grayscaleDistinct = `with ${names} pinned, the remaining axes cannot separate this set far enough in grayscale`;
   } else if (stage > 0) {
     const why =
       'the fit floor stopped the set growing — no remaining candidate was both far enough apart and a good enough fit for this brief';

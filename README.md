@@ -7,7 +7,7 @@
 A brief goes in. A designed, written and illustrated page comes out — in about a second,
 for a fraction of a cent, with every decision typed, scored and reproducible.
 
-[![tests](https://img.shields.io/badge/tests-47%20passing-3fb950?style=flat-square)](#testing)
+[![tests](https://img.shields.io/badge/tests-261%20passed%20%C2%B7%201%20skipped-3fb950?style=flat-square)](#testing)
 [![node](https://img.shields.io/badge/node-%E2%89%A520-3fb950?style=flat-square)](https://nodejs.org)
 [![deps](https://img.shields.io/badge/runtime%20deps-1%20(zod)-3fb950?style=flat-square)](#why-so-few-dependencies)
 [![typescript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square)](tsconfig.json)
@@ -43,7 +43,8 @@ exactly why the output is always renderable, always on-brand, and always typed.
 ### The control surface
 
 Everything in one place: the catalog the machine may speak, the CSS the engine emits, the
-artwork it generated, and every design you've ever made.
+artwork it generated, and every design you've ever made — with model calls, decide / inventory /
+render / asset timings and the diversity report shown separately for every run.
 
 ![TurboSlop control surface](docs/screenshots/control-surface.png)
 
@@ -57,6 +58,22 @@ brief and hoping.
 
 ![Contact sheet](docs/screenshots/contact-sheet.png)
 
+Each card renders in a **real simulated viewport** — 1440×900 desktop, 390×844 mobile — scaled
+to fit the card, so resizing a card never changes the design you are judging. Expand any
+direction for a first-screen or full-page comparison at the same fixed viewport:
+
+![Expanded comparison](docs/screenshots/direction-expand.png)
+
+Locks are bound to an explicit value and the card it came from — regenerate and the whole set
+re-resolves under those constraints, while the previous batch stays browsable:
+
+![Locks and regeneration](docs/screenshots/directions-locks-regenerated.png)
+
+Real photographs import straight into the direction's own slots, with alt text, credit and
+licence carried through finalization and export:
+
+![Image slots and upload](docs/screenshots/image-slots-upload.png)
+
 A single direction from that set, at poster scale, in a bundled OFL face with no remote font
 request:
 
@@ -64,10 +81,12 @@ request:
 
 ### Iterating on a finished design
 
-Pick any previous design, lock its brief, and describe what to change. The original is never
-mutated — you get a new revision with visible lineage.
+Pick any previous design and describe what to change. Revision is a SCOPED edit of the resolved
+spec you chose: a copy-only request never touches layout, styling, seed or assets; a visual
+request touches only the axes it names; and it never re-runs the decision. The original is
+never mutated — you get a new revision with visible lineage.
 
-![Iterating on a design](docs/screenshots/design-detail.png)
+![Iterating on a design](docs/screenshots/design-revised.png)
 
 ### The CSS it knows
 

@@ -321,7 +321,12 @@ export function buildSlotPrompts(spec: DesignSpec, slots: BlueprintImageSlot[]):
             ? `Square still life of a single object on a plain undecorated ground, centred, strong silhouette`
             : `A single simple form on a plain ground, ${s.aspect} framing, strong silhouette`;
     const crop = s.crop === 'detail' ? 'Close detail crop.' : '';
-    const kind: AssetPrompt['kind'] = i === 0 ? 'backdrop' : i === 1 ? 'surface' : 'motif';
+    /* `backdrop` means "the atmosphere layer behind the opening" — ONLY a
+       hero-texture slot may carry it. Deriving kind from POSITION (i === 0)
+       once put a gallery tile's picture in the hero and left the gallery
+       slot empty: a role, not a rank. */
+    const kind: AssetPrompt['kind'] =
+      s.role === 'hero-texture' ? 'backdrop' : i % 2 === 1 ? 'motif' : 'surface';
     return {
       slot: s.id,
       kind,

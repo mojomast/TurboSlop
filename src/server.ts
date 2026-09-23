@@ -472,6 +472,9 @@ async function startFinalizeJob(
         timings: {
           writerMs: write.latencyMs,
           assetMs,
+          /* At most one model call here — the final-copy write — and none when
+             the shared inventory is reused. */
+          modelCalls: write.source === 'llm' ? 1 : 0,
           totalMs: Date.now() - job.startedAt,
         },
       };
@@ -1015,11 +1018,19 @@ const server = http.createServer((req, res) => {
          /preview/<id>/ finds its fonts at /preview/<id>/fonts/.
          Batch paths are explicit — `/preview/<sid>/b2/1` is the SECOND batch's
          second direction and keeps resolving after later regenerations, so a
-         saved preview link never breaks. */
+         saved preview link never breaks. A document at /preview/<sid>/b2/1
+         resolves its relative fonts/ against /preview/<sid>/b2/, so the batch
+         prefix must be stripped BEFORE matching fonts/ and assets/ —
+         otherwise archived pages render with fallback faces. */
       const preview = /^\/preview\/([a-z0-9_-]+)\/(.*)$/.exec(p);
       if (preview) {
         const id = preview[1]!;
-        const rest = preview[2] ?? '';
+        const full = preview[2] ?? '';
+        /* Relative refs resolve against the document's DIRECTORY: a page at
+           /preview/<sid>/b2/1 asks for /preview/<sid>/b2/fonts/… — so the
+           batch prefix is stripped only when matching fonts/assets, never
+           when resolving the batch's own file. */
+        const rest = full.replace(/^b\d+\//, '');
 
         if (rest.startsWith('fonts/')) {
           const rel = rest.replace(/^fonts\//, '');
@@ -1034,7 +1045,7 @@ const server = http.createServer((req, res) => {
           text(res, 404, 'not found');
           return;
         }
-        if (rest === '' || rest === 'index.html') {
+        if (full === '' || full === 'index.html') {
           if (await serveFile(res, path.join(OUT_DIR, `${id}.html`))) return;
           const s = await loadSession(OUT_DIR, id);
           if (s && (await serveFile(res, path.join(OUT_DIR, s.previewDir, '0.html')))) return;
@@ -1044,7 +1055,7 @@ const server = http.createServer((req, res) => {
           return;
         }
         // An explicit batch: /preview/<sessionId>/b<n>/<k>
-        const batched = /^b(\d+)\/(\d+)$/.exec(rest);
+        const batched = /^b(\d+)\/(\d+)$/.exec(full);
         if (batched) {
           const file = path.join(OUT_DIR, 'previews', id, `b${batched[1]}`, `${batched[2]}.html`);
           if (await serveFile(res, file)) return;
@@ -1052,11 +1063,11 @@ const server = http.createServer((req, res) => {
           return;
         }
         // The current batch: /preview/<sessionId>/<k>
-        if (/^\d+$/.test(rest)) {
+        if (/^\d+$/.test(full)) {
           const s = await loadSession(OUT_DIR, id);
           const dir = s?.previewDir ?? path.posix.join('previews', id);
-          if (await serveFile(res, path.join(OUT_DIR, dir, `${rest}.html`))) return;
-          if (await serveFile(res, path.join(OUT_DIR, 'previews', id, `${rest}.html`))) return;
+          if (await serveFile(res, path.join(OUT_DIR, dir, `${full}.html`))) return;
+          if (await serveFile(res, path.join(OUT_DIR, 'previews', id, `${full}.html`))) return;
           text(res, 404, 'not found');
           return;
         }

@@ -444,8 +444,12 @@
 .sheet__bar { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; justify-content: space-between; }
 .sheet__metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
 .sheet__metrics .metric { background: var(--bg-sunk); }
+/* The diversity summary and long numbers must WRAP, never truncate — these are
+   the numbers the sheet exists to show. */
+.sheet__metrics .metric__v { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
 .sheet__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr)); gap: 0.75rem; align-items: start; }
-.sheet__grid[data-vp="mobile"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); }
+/* Mobile cards must be wide enough that a 390px phone still reads at scale. */
+.sheet__grid[data-vp="mobile"] { grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr)); }
 
 .dir { border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-sunk); display: grid; overflow: hidden; }
 .dir[data-selected="1"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
@@ -453,10 +457,17 @@
 .dir__head { padding: 0.5rem 0.6rem; display: grid; gap: 0.12rem; border-block-end: 1px solid var(--line); }
 .dir__head h3 { font-size: 0.8125rem; font-family: var(--font-sans); font-weight: 600; color: var(--fg); }
 .dir__head .hint { font-family: var(--font-mono); font-size: 0.625rem; }
-.dir__preview { position: relative; background: var(--bg); border-block-end: 1px solid var(--line); }
-.dir__preview iframe { inline-size: 100%; block-size: 15rem; border: 0; display: block; background: #fff; }
-.sheet__grid[data-vp="mobile"] .dir__preview iframe { inline-size: 390px; max-inline-size: 100%; margin-inline: auto; block-size: 20rem; }
-.dir__preview .badge { position: absolute; inset-block-start: 0.35rem; inset-inline-start: 0.35rem; font-family: var(--font-mono); font-size: 0.5625rem; background: #000c; color: #fff; border-radius: 3px; padding: 0.05rem 0.3rem; }
+/* A REAL simulated viewport: the iframe always lays out at exactly 1440×900
+   (desktop) or 390×844 (mobile); only the wrapper's height and the iframe's
+   scale change with the card width. Nothing is drawn over the page canvas. */
+.dir__preview { position: relative; overflow: hidden; background: var(--bg); border-block-end: 1px solid var(--line); }
+.dir__preview iframe {
+  display: block;
+  border: 0;
+  background: #fff;
+  transform-origin: top left;
+  /* inline-size / block-size / transform are set by fitViewport() in JS */
+}
 .dir__struct { padding: 0.4rem 0.6rem; font-family: var(--font-mono); font-size: 0.5625rem; color: var(--faint); display: flex; flex-wrap: wrap; gap: 0.2rem; border-block-end: 1px solid var(--line); }
 .dir__struct span { border: 1px solid var(--line-strong); border-radius: 3px; padding: 0 0.25rem; }
 .dir__locks { padding: 0.4rem 0.6rem; display: flex; flex-wrap: wrap; gap: 0.25rem 0.6rem; border-block-end: 1px solid var(--line); }
@@ -465,6 +476,158 @@
 .dir__actions label { display: inline-flex; gap: 0.3rem; align-items: center; font-size: 0.6875rem; cursor: pointer; }
 .dir__actions .spacer { margin-inline-start: auto; }
 .sheet__note { font-family: var(--font-mono); font-size: 0.625rem; color: var(--faint); }
+
+/* ---------- contact-sheet chrome: state chips live OUTSIDE the canvas ---------- */
+.chip--sm { padding: 0.1rem 0.45rem; font-size: 0.5625rem; }
+.dir__headrow { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
+.dir__chips {
+  padding: 0.35rem 0.6rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  border-block-end: 1px solid var(--line);
+}
+.mini {
+  font-family: var(--font-mono);
+  font-size: 0.5625rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  border: 1px solid var(--line-strong);
+  border-radius: 3px;
+  padding: 0 0.3rem;
+  white-space: nowrap;
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mini b { color: var(--fg); font-weight: 500; }
+/* Missing-content diagnostics: amber, never hidden. */
+.mini--warn { color: var(--warn); border-color: var(--warn); background: oklch(from var(--warn) l c h / 0.08); }
+
+/* ---------- locks: show the exact value that will be pinned ---------- */
+.dir__locks label { max-inline-size: 100%; }
+.dir__locks .lock-name { color: var(--fg); }
+.dir__locks .lock-val {
+  color: var(--faint);
+  max-inline-size: 8.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dir__actions .btn { flex: none; }
+
+/* ---------- help line: lock chips, shortfalls, errors ---------- */
+#sheet-help { display: flex; flex-wrap: wrap; gap: 0.3rem 0.5rem; align-items: baseline; }
+.lockchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--accent);
+  border: 1px solid oklch(from var(--accent) l c h / 0.45);
+  background: oklch(from var(--accent) l c h / 0.07);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+}
+.shortfall { color: var(--warn); font-family: var(--font-mono); font-size: 0.625rem; }
+.sheet__err { color: var(--bad); font-weight: 600; font-family: var(--font-mono); font-size: 0.6875rem; }
+.batchpick { display: inline-flex; align-items: center; gap: 0.35rem; }
+.mini-select {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--fg);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  padding: 0.15rem 0.4rem;
+}
+
+/* ---------- expanded comparison stage ---------- */
+.frame { display: flex; flex-direction: column; }
+.frame__bar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-raised);
+  border-block-end: 1px solid var(--line);
+}
+.frame__bar h2 { min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.frame__bar .spacer { margin-inline-start: auto; }
+.frame__body { flex: 1 1 auto; min-block-size: 0; position: relative; }
+.frame__body > iframe { inline-size: 100%; block-size: 100%; }
+.vpstage {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  padding: 1rem;
+  background: var(--bg-sunk);
+}
+.vpstage__inner { position: relative; margin: 0 auto; }
+#expand-frame {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  border: 0;
+  display: block;
+  background: #fff;
+  transform-origin: top left;
+}
+
+/* ---------- imported images ---------- */
+.uploads { display: grid; gap: 0.5rem; margin-block-start: 0.5rem; }
+.up {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  background: var(--bg-sunk);
+}
+.up__thumb {
+  inline-size: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  background: #fff;
+}
+.up__meta { display: grid; gap: 0.35rem; min-inline-size: 0; }
+.up__name {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.up__row { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+.up__row .field { padding: 0.3rem 0.45rem; font-size: 0.75rem; flex: 1 1 7rem; min-inline-size: 0; }
+.up__row select.field { flex: 1 1 14rem; }
+.up__err { color: var(--bad); font-family: var(--font-mono); font-size: 0.625rem; overflow-wrap: anywhere; }
+.up__ok { color: var(--good); font-family: var(--font-mono); font-size: 0.625rem; }
+input[type="file"] { inline-size: 100%; font-size: 0.75rem; color: var(--muted); }
+input[type="file"]::file-selector-button {
+  font: inherit;
+  font-size: 0.75rem;
+  color: var(--fg);
+  background: var(--bg-sunk);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r);
+  padding: 0.3rem 0.6rem;
+  margin-inline-end: 0.6rem;
+  cursor: pointer;
+}
+
+/* ---------- the last job's timings + notes (ingestion, placement, scope) ---------- */
+.jobnotes { display: grid; gap: 0.2rem; margin-block-start: 0.5rem; }
+.jobnotes div { font-size: 0.75rem; color: var(--muted); overflow-wrap: anywhere; }
+.jobnotes div::before { content: "· "; color: var(--faint); }
+#result-timings { text-align: end; }
 </style>
 </head>
 <body>
@@ -520,7 +683,27 @@
       </div>
     </div>
 
-    <div class="frame" id="frame" hidden><iframe id="preview" title="Design preview"></iframe></div>
+    <div class="frame" id="frame" hidden>
+      <!-- Expanded comparison: the same fixed simulated viewport, scaled to fit
+           the stage. Close (or Escape) restores whatever was showing before. -->
+      <div class="frame__bar" id="expand-bar" hidden>
+        <span class="eyebrow">Expanded</span>
+        <h2 id="expand-title"></h2>
+        <div class="seg" role="group" aria-label="Expanded viewport mode">
+          <button data-exp="first" aria-pressed="true">First screen</button>
+          <button data-exp="full" aria-pressed="false">Full page</button>
+        </div>
+        <span class="mono" id="expand-scale"></span>
+        <span class="spacer"></span>
+        <button class="btn btn--sm btn--ghost" id="expand-close" type="button">Close · Esc</button>
+      </div>
+      <div class="frame__body" id="frame-body">
+        <iframe id="preview" title="Design preview"></iframe>
+        <div class="vpstage" id="vpstage" hidden>
+          <div class="vpstage__inner" id="vpstage-inner"><iframe id="expand-frame" title="Expanded direction preview"></iframe></div>
+        </div>
+      </div>
+    </div>
 
     <!-- Cost / tokens / models / time for the selected design -->
     <div class="metrics" id="metrics" hidden>
@@ -564,20 +747,42 @@
         <div class="row" style="gap:0.5rem;align-items:center">
           <span class="eyebrow">Directions</span>
           <span class="sheet__note" id="sheet-label"></span>
+          <span class="chip chip--sm" id="sheet-batch" data-ok="off" title="Current batch directory">batch <b>0</b></span>
+          <label class="batchpick" id="batch-wrap" hidden>
+            <span class="sheet__note">View batch</span>
+            <select class="mini-select" id="batch-sel" aria-label="View batch"></select>
+          </label>
         </div>
         <div class="row" style="gap:0.4rem;align-items:center">
           <div class="seg" role="group" aria-label="Preview viewport">
             <button data-vp="desktop" aria-pressed="true">Desktop</button>
             <button data-vp="mobile" aria-pressed="false">Mobile</button>
           </div>
-          <button class="btn btn--sm btn--ghost" id="sheet-regen">Regenerate unlocked</button>
-          <button class="btn btn--sm" id="sheet-finalize" disabled>Finalize selected</button>
-          <button class="btn btn--sm btn--ghost" id="sheet-close">Close</button>
+          <button class="btn btn--sm btn--ghost" id="sheet-explore" type="button" title="Start a NEW session with a fresh set — the current one stays listed">Explore new directions</button>
+          <button class="btn btn--sm btn--ghost" id="sheet-regen" type="button" title="Re-roll everything not locked. Local, 0 model calls.">Regenerate unlocked</button>
+          <button class="btn btn--sm" id="sheet-finalize" type="button" disabled>Finalize selected</button>
+          <button class="btn btn--sm btn--ghost" id="sheet-close" type="button">Close</button>
         </div>
       </div>
       <div class="sheet__metrics" id="sheet-metrics" hidden></div>
       <p class="hint" id="sheet-help">Pick one to finalize. Lock any aspect you like before regenerating the rest — regeneration is local and costs nothing.</p>
+      <p class="sheet__note" id="sheet-stats" hidden></p>
       <div class="sheet__grid" id="sheet-grid" data-vp="desktop"></div>
+
+      <!-- Real photographs the human brings in, assigned to the selected
+           direction's renderable slots before finalizing. -->
+      <section class="card" id="images-block" hidden>
+        <div class="composer-head">
+          <div class="eyebrow">Images</div>
+          <span class="hint" id="images-block-hint" style="margin-inline-start:auto"></span>
+        </div>
+        <label class="lbl" style="margin-block-start:0.5rem">
+          <span>Import images — PNG · JPEG · WebP · GIF (max 16 MB each)</span>
+          <input type="file" id="user-images" accept="image/png,image/jpeg,image/webp,image/gif" multiple>
+        </label>
+        <p class="hint" id="uploads-help">Each upload needs a slot on the selected direction to be sent with the finalize call; files without one are left out.</p>
+        <div class="uploads" id="uploads"></div>
+      </section>
     </div>
   </section>
 
@@ -594,7 +799,7 @@
           <textarea class="field" id="brief" rows="4" placeholder="A calm, spa-like landing page for a wellness studio. Soft edges, lots of whitespace, slow gentle motion."></textarea>
         </label>
         <label class="lbl" id="iterate-wrap" hidden>
-          <span>What to change</span>
+          <span id="iterate-label">What to change</span>
           <textarea class="field" id="instructions" rows="2" placeholder="Keep the calm but make it feel more premium. Darker ground, larger type."></textarea>
         </label>
 
@@ -646,6 +851,16 @@
       <div class="log" id="log" style="margin-block-start:0.6rem"></div>
     </div>
 
+    <!-- The last job's timings and EVERY note it returned: ingestion failures,
+         asset-placement issues and revision scope belong here, not in the console. -->
+    <div class="card" id="result-card" hidden>
+      <div class="row">
+        <div class="eyebrow">Last job</div>
+        <span class="hint" id="result-timings" style="margin-inline-start:auto"></span>
+      </div>
+      <div class="jobnotes" id="result-notes"></div>
+    </div>
+
     <div class="row">
       <div class="eyebrow">Designs</div>
       <button class="btn btn--sm btn--ghost" id="refresh" style="margin-inline-start:auto">Refresh</button>
@@ -694,6 +909,18 @@
     catalog: {}, features: null, presets: [], designs: [], selected: null,
     detail: null, decider: 'auto', imagesOn: false, busy: false, es: null, jobId: null,
     session: null, sheetOpen: false,
+    /** null = current batch; otherwise an index into session.versions. */
+    viewBatch: null,
+    /** Last lock error from the server — shown, never swallowed. */
+    helpError: null,
+    /** Serialized lock updates (see updateLocks) — never racing each other. */
+    lockQueue: null,
+    /** Open expanded comparison, or null. */
+    expand: null,
+    /** Uploaded images, keyed by session id. */
+    uploads: new Map(),
+    /** Revise mode: {sessionId, slug} once a direction has been finalized. */
+    revise: null,
   };
 
   function toast(msg, ms = 3200) {
@@ -831,6 +1058,7 @@
 
   async function select(slug) {
     state.selected = slug;
+    state.revise = null; // picking a design leaves revise mode
     await refreshDesigns();
     const { record, spec, costs } = await api(`/api/designs/${slug}`);
     state.detail = { record, spec, costs };
@@ -841,8 +1069,11 @@
     $('#brief').value = spec.brief.split('\n')[0];
     $('#brief').readOnly = true;
     $('#iterate-wrap').hidden = false;
+    $('#iterate-label').textContent = 'What to change';
     $('#instructions').value = '';
     $('#go').textContent = 'Iterate';
+    $('#go').removeAttribute('title');
+    $('#go-hint').textContent = '';
     $('#new-design').hidden = false;
 
     $('#detail-toolbar').hidden = false;
@@ -965,12 +1196,16 @@
     $('#metrics').hidden = false;
   }
 
-  /* Exit iterate mode: unselect, unlock the brief, blank the composer. */
+  /* Exit iterate / revise mode: unselect, unlock the brief, blank the composer. */
   function clearDesign() {
     state.selected = null;
     state.detail = null;
     state.session = null;
+    state.revise = null;
+    state.viewBatch = null;
     if (state.sheetOpen) { $('#sheet').hidden = true; state.sheetOpen = false; }
+    if (state.expand) closeExpand();
+    $('#images-block').hidden = true;
 
     document.querySelectorAll('.design[aria-current]').forEach((b) => b.removeAttribute('aria-current'));
 
@@ -979,8 +1214,11 @@
     $('#brief').readOnly = false;
     $('#brief').value = '';
     $('#iterate-wrap').hidden = true;
+    $('#iterate-label').textContent = 'What to change';
     $('#instructions').value = '';
     $('#go').textContent = 'Generate design';
+    $('#go').removeAttribute('title');
+    $('#go-hint').textContent = '';
     $('#new-design').hidden = true;
 
     $('#preview').src = 'about:blank';
@@ -1002,6 +1240,23 @@
 
     // Keep the list in sync (drops any stale aria-current) without deleting anything.
     refreshDesigns();
+  }
+
+  /**
+   * Post-finalize: the composer becomes a SCOPED revision tool for the chosen
+   * design — POSTs to /api/sessions/<id>/revise, never to the old
+   * /api/designs/:slug/iterate path, and never re-runs the decision.
+   */
+  function enterReviseMode(slug, sessionId) {
+    state.revise = { sessionId, slug };
+    $('#mode-label').textContent = `Revising ${slug}`;
+    $('#iterate-wrap').hidden = false;
+    $('#iterate-label').textContent = 'Revision — what to change';
+    $('#instructions').value = '';
+    $('#go').textContent = 'Revise';
+    $('#go').title = 'Revise — scoped edit of the chosen design (0–1 writer call, never a re-decision)';
+    $('#go-hint').textContent = 'Revise — scoped edit of the chosen design (0–1 writer call, never a re-decision)';
+    $('#new-design').hidden = false;
   }
 
   function renderImages(spec) {
@@ -1054,6 +1309,26 @@
     };
   }
 
+  /** The last job's timings + every note it produced, in the control surface. */
+  function renderJobResult(result) {
+    const t = result.timings || {};
+    const bits = [];
+    if (t.decideMs !== undefined) bits.push(`decide ${fmtMs(t.decideMs)}`);
+    if (t.inventoryMs !== undefined) bits.push(`inventory ${fmtMs(t.inventoryMs)}`);
+    if (t.renderMs !== undefined) bits.push(`render ${fmtMs(t.renderMs)}`);
+    if (t.writerMs !== undefined) bits.push(`writer ${fmtMs(t.writerMs)}`);
+    if (t.assetMs !== undefined) bits.push(`assets ${fmtMs(t.assetMs)}`);
+    if (t.modelCalls !== undefined) bits.push(`${t.modelCalls} model call${t.modelCalls === 1 ? '' : 's'}`);
+    if (t.estimateUsd !== undefined) bits.push(fmtUsdShort(t.estimateUsd));
+    if (t.totalMs !== undefined) bits.push(`total ${fmtMs(t.totalMs)}`);
+    $('#result-timings').textContent = bits.join(' · ');
+    const box = $('#result-notes');
+    box.replaceChildren();
+    for (const n of result.notes || []) box.append(el('div', {}, n));
+    if (result.slug) box.append(el('div', {}, `slug: ${result.slug}`));
+    $('#result-card').hidden = false;
+  }
+
   function watch(jobId, title, onDone) {
     state.jobId = jobId;
     $('#progress-title').textContent = title;
@@ -1069,6 +1344,9 @@
         setBusy(false);
         const job = await api(`/api/jobs/${jobId}`);
         if (job.state === 'done') {
+          // Every note the job returned (ingestion refusals, asset-placement
+          // verification, revision scope) belongs on the surface, not the console.
+          if (job.result) renderJobResult(job.result);
           if (onDone) { await onDone(job); return; }
           toast('Design ready');
           await refreshDesigns();
@@ -1090,7 +1368,25 @@
       images: imagePayload(),
     };
     try {
-      if (kind === 'iterate') {
+      if (kind === 'revise') {
+        /* Scoped revision of the FINALIZED direction: never a re-decision,
+           never a regenerate. 0–1 writer call. */
+        const instructions = $('#instructions').value.trim();
+        if (!instructions) return toast('Say what to change');
+        if (!state.revise) return toast('Nothing finalized to revise yet');
+        const { jobId } = await api(`/api/sessions/${state.revise.sessionId}/revise`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ instructions, finalCopy: $('#copy-on').checked }),
+        });
+        const sid = state.revise.sessionId;
+        watch(jobId, 'Applying a scoped revision…', async (job) => {
+          if (!job.result || !job.result.slug) return toast('The revision produced no design', 6000);
+          toast(`Revised ${job.result.slug}`);
+          await refreshDesigns();
+          await select(job.result.slug);
+          enterReviseMode(job.result.slug, sid);
+        });
+      } else if (kind === 'iterate') {
         const instructions = $('#instructions').value.trim();
         if (!instructions) return toast('Say what to change');
         const { jobId } = await api(`/api/designs/${slug}/iterate`, {
@@ -1118,7 +1414,133 @@
      plus a single shared inventory call; every preview is rendered locally.
      Selecting, locking and regenerating are all model-free, so the previews you
      are comparing cannot change underneath you. */
-  const LOCK_AXES = ['palette', 'typography', 'effects', 'motion', 'density'];
+
+  /* The lock axes, in the order they appear on a card. `composition` pins the
+     exact resolved layout (the card's blueprint id, variant included);
+     `blueprint` pins its catalog origin. Every lock travels as an OBJECT —
+     {name, value, fromIndex} — built from THE CARD IT IS CHECKED ON. Bare axis
+     names would be re-resolved against "whatever is selected", which is how a
+     lock on card 3 silently pins card 1's palette. */
+  const LOCK_AXES = ['composition', 'blueprint', 'palette', 'typography', 'effects', 'motion', 'density'];
+
+  /** The exact value a lock on this axis takes from this card. */
+  function lockValue(d, name) {
+    switch (name) {
+      case 'composition': return d.blueprint;
+      case 'blueprint': return d.baseBlueprint ?? d.blueprint;
+      case 'palette': return d.palette;
+      case 'typography': return d.typography;
+      case 'effects': return d.effects;
+      case 'motion': return d.motion;
+      default: return d.density;
+    }
+  }
+
+  /* ---- fixed simulated viewports -------------------------------------
+     The page inside ALWAYS lays out at 1440×900 (desktop) or 390×844
+     (mobile). A card resize changes only the scale, never the viewport, so
+     the same card at any width shows the same design decisions. */
+  const VP = { desktop: { w: 1440, h: 900 }, mobile: { w: 390, h: 844 } };
+  const currentVp = () => VP[$('#sheet-grid').dataset.vp] || VP.desktop;
+
+  function fitViewport(box) {
+    const fr = box.querySelector('iframe');
+    if (!fr) return;
+    const w = Number(box.dataset.w) || VP.desktop.w;
+    const h = Number(box.dataset.h) || VP.desktop.h;
+    const avail = box.clientWidth;
+    if (!avail) return;
+    const key = `${avail}|${w}x${h}`;
+    if (box._fitKey === key) return;
+    const s = avail / w;
+    /* Keep the element's DECLARED viewport in step with the simulated one too:
+       the style drives rendering, the attributes state what is being
+       simulated — both say 1440×900 / 390×844, never the card's box. */
+    fr.setAttribute('width', String(w));
+    fr.setAttribute('height', String(h));
+    fr.style.width = `${w}px`;
+    fr.style.height = `${h}px`;
+    fr.style.transform = `scale(${s})`;
+    box.style.height = `${Math.round(h * s)}px`;
+    box._fitKey = key;
+  }
+  const previewRO = new ResizeObserver((entries) => {
+    for (const e of entries) fitViewport(e.target);
+  });
+
+  /* ---- preview readiness: fonts in, images in, motion frozen ---- */
+  const FREEZE_CSS =
+    '*,*::before,*::after{animation-delay:-0s!important;animation-play-state:paused!important;animation-duration:0s!important;transition:none!important}' +
+    'html{scroll-behavior:auto!important}';
+  const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  function waitForImages(d, cap = 1500) {
+    return new Promise((resolve) => {
+      const t0 = Date.now();
+      const tick = () => {
+        let done = true;
+        for (const im of d.images) if (!im.complete) { done = false; break; }
+        if (done || Date.now() - t0 >= cap) return resolve();
+        setTimeout(tick, 80);
+      };
+      tick();
+    });
+  }
+
+  /**
+   * Bring a preview to READY: fonts loaded, images loaded (capped), motion
+   * frozen so six animated pages do not all twitch at once, then
+   * `data-ready="1"` on the document. The state chip sits in the card header —
+   * never on top of the generated page canvas.
+   */
+  async function preparePreview(fr, chip) {
+    const say = (ok, text) => {
+      if (!chip) return;
+      chip.dataset.ok = ok;
+      const b = chip.querySelector('b');
+      if (b) b.textContent = text;
+    };
+    say('0', 'loading');
+    try {
+      const d = fr.contentDocument;
+      if (!d || !d.documentElement) { say('1', 'ready'); return; }
+      if (d.fonts && d.fonts.ready) await Promise.race([d.fonts.ready, delay(1500)]);
+      await waitForImages(d, 1500);
+      if (!d.getElementById('freeze-motion')) {
+        const st = d.createElement('style');
+        st.id = 'freeze-motion';
+        st.textContent = FREEZE_CSS;
+        (d.head || d.documentElement).appendChild(st);
+      }
+      d.documentElement.dataset.ready = '1';
+      say('1', 'ready');
+    } catch {
+      /* Same-origin previews normally allow this; if one ever does not, the
+         page still rendered — say ready rather than lie about loading. */
+      say('1', 'ready');
+      if (chip) chip.title = 'rendered — motion could not be frozen from the parent';
+    }
+  }
+
+  /** The set on screen: the current batch, or an immutable archived one. */
+  function activeBatch() {
+    const s = state.session;
+    if (!s) return null;
+    const v = state.viewBatch === null ? null : s.versions?.[state.viewBatch];
+    if (!v) {
+      return {
+        archived: false, batch: s.batch ?? 0, dirs: s.directions,
+        diversity: s.diversity, stats: s.stats, seed: s.seed, locks: s.locks || [],
+      };
+    }
+    return {
+      archived: true, batch: v.batch, dirs: v.directions,
+      diversity: v.diversity, stats: v.stats, seed: v.seed, locks: v.locks || [],
+    };
+  }
+
+  const previewUrl = (s, ab, i) =>
+    ab.archived ? `/preview/${s.id}/b${ab.batch}/${i}` : `/preview/${s.id}/${i}`;
 
   function dirPayload() {
     const num = (id) => { const v = $(id).value.trim(); return v === '' ? undefined : Number(v); };
@@ -1154,11 +1576,15 @@
   async function loadSession(id) {
     const { session } = await api(`/api/sessions/${id}`);
     state.session = session;
+    state.viewBatch = null;
+    state.helpError = null;
     renderSheet();
   }
 
   function showSheet(on) {
     state.sheetOpen = on;
+    // Restore any expand overlay FIRST: its snapshot predates this call.
+    if (on && state.expand) closeExpand();
     $('#sheet').hidden = !on;
     if (on) {
       $('#stage-empty').hidden = true;
@@ -1169,144 +1595,385 @@
     }
   }
 
-  function renderSheet() {
-    const s = state.session;
-    if (!s) return;
-    showSheet(true);
+  const statsLine = (st) =>
+    !st ? '' :
+    `bounded candidate search: ${st.structures} structures · ${st.generated} generated → ${st.unique} unique → ` +
+    `${st.afterNearDuplicate} after near-duplicate → ${st.afterHistory} after history → ${st.afterContent} content-eligible` +
+    ` · ${st.stages} stage(s)${st.historyRelaxed ? ' · history filter relaxed' : ''}`;
 
-    $('#sheet-label').textContent =
-      `${s.directions.length} directions · seed ${s.seed} · explore ${s.explore} · ${s.previewLabel}`;
-
+  /** Model calls, timings, cost, seed and diversity — side by side. */
+  function renderSheetMetrics(s, ab) {
     const m = s.metrics || {};
     const box = $('#sheet-metrics');
     box.hidden = false;
     box.replaceChildren();
-    const cell = (k, v, sub) => el('div', { className: 'metric' },
-      el('span', { className: 'metric__k' }, k),
-      el('span', { className: 'metric__v' }, v),
-      el('span', { className: 'metric__sub' }, sub || ''));
+    const cell = (k, v, sub, title) => {
+      const c = el('div', { className: 'metric' },
+        el('span', { className: 'metric__k' }, k),
+        el('span', { className: 'metric__v' }, v),
+        el('span', { className: 'metric__sub' }, sub || ''));
+      if (title) c.title = title;
+      return c;
+    };
+    const a = ab.diversity?.achieved;
+    const t = ab.diversity?.targets;
+    const divText = a && t
+      ? `${a.compositions}/${t.compositions} comp · ${a.constructions}/${t.constructions} con · ` +
+        `${a.treatments}/${t.treatments} treat · ${a.grayscaleDistinct}/${t.grayscaleDistinct} gray`
+      : '—';
+    const divSub = !ab.diversity
+      ? 'no report'
+      : ab.diversity.met
+        ? 'all targets met'
+        : `${(ab.diversity.shortfall || []).length} target(s) missed`;
+
     box.append(
       cell('Model calls', String(m.modelCalls ?? '—'), 'entire set'),
       cell('Decide', fmtMs(m.decideMs), s.decider === 'live' ? 'Jev' : 'local stand-in'),
       cell('Inventory', fmtMs(m.inventoryMs), s.inventorySource === 'llm' ? 'one shared write' : 'specimen'),
-      cell('Render', fmtMs(m.renderMs), `${s.directions.length} local renders`),
-      cell('Preview cost', fmtUsdShort(m.estimateUsd), 'estimated'),
-      cell('Seed', String(s.seed), 'reproducible'),
+      cell('Local render', fmtMs(m.renderMs), `${s.directions.length} local renders`),
+      cell('Assets', fmtMs(m.assetsMs || 0), m.assetsMs ? 'asset work' : '0 ms · preview sets request none'),
+      cell('End-to-end', fmtMs(m.totalMs), `batch ${ab.batch}`),
+      cell('Cost', fmtUsdShort(m.estimateUsd), 'estimated'),
+      cell('Seed', String(ab.seed), ab.archived ? `batch ${ab.batch} · archived` : 'reproducible'),
+      cell('Diversity', divText, divSub, statsLine(ab.stats)),
     );
 
+    const note = $('#sheet-stats');
+    const sl = statsLine(ab.stats);
+    note.hidden = !sl;
+    note.textContent = sl;
+  }
+
+  const DEFAULT_HELP =
+    'Pick one to finalize. Lock any aspect you like before regenerating the rest — regeneration is local and costs nothing.';
+
+  /** Lock chips, diversity shortfalls and any server-side lock error. */
+  function renderHelp() {
+    const box = $('#sheet-help');
+    box.replaceChildren();
+    const ab = activeBatch();
+    if (state.helpError) {
+      box.append(el('div', { className: 'sheet__err' }, `Lock refused — ${state.helpError}`));
+    }
+    if (ab) {
+      for (const l of ab.locks) {
+        box.append(el('span', { className: 'lockchip', title: `pinned from direction #${l.fromIndex + 1}` },
+          `${l.name}=${l.value} (from #${l.fromIndex + 1})`));
+      }
+      if (ab.diversity && ab.diversity.met === false) {
+        for (const sf of ab.diversity.shortfall || []) {
+          box.append(el('span', { className: 'shortfall', title: sf.reason },
+            `${sf.target}: ${sf.wanted}/${sf.got} — ${sf.reason}`));
+        }
+      }
+    }
+    box.append(el('span', {}, DEFAULT_HELP));
+  }
+
+  function renderSheet() {
+    const s = state.session;
+    if (!s) return;
+    showSheet(true);
+    const ab = activeBatch();
+
+    $('#sheet-label').textContent =
+      `${ab.dirs.length} directions · seed ${ab.seed} · explore ${s.explore} · ${s.previewLabel}` +
+      (ab.archived ? ' · archived, read-only' : '');
+
+    const bchip = $('#sheet-batch');
+    bchip.dataset.ok = ab.archived ? 'off' : '1';
+    $('b', bchip).textContent = String(ab.batch);
+    bchip.title = `${s.previewDir} · ${s.versions?.length ?? 0} archived batch(es)`;
+
+    const wrap = $('#batch-wrap');
+    const sel = $('#batch-sel');
+    if (s.versions?.length) {
+      wrap.hidden = false;
+      sel.replaceChildren();
+      sel.append(el('option', { value: 'current' }, `current (batch ${s.batch})`));
+      s.versions.forEach((v, i) =>
+        sel.append(el('option', { value: String(i) }, `batch ${v.batch}${v.locks?.length ? ` · ${v.locks.length} lock(s)` : ''}`)));
+      sel.value = state.viewBatch === null ? 'current' : String(state.viewBatch);
+      sel.onchange = () => {
+        state.viewBatch = sel.value === 'current' ? null : Number(sel.value);
+        renderSheet();
+      };
+    } else {
+      wrap.hidden = true;
+      state.viewBatch = null;
+    }
+
+    renderSheetMetrics(s, ab);
+    renderHelp();
+
     const grid = $('#sheet-grid');
+    grid.querySelectorAll('.dir__preview').forEach((b) => previewRO.unobserve(b));
     grid.replaceChildren();
-    const locks = new Set(s.locks || []);
+    const vp = currentVp();
+    const stored = new Map(ab.locks.map((l) => [l.name, l]));
 
-    s.directions.forEach((d, i) => {
+    ab.dirs.forEach((d, i) => {
       const card = el('article', { className: 'dir', dataset: { index: String(i) } });
-      if (s.selectedIndex === i) card.dataset.selected = '1';
+      if (!ab.archived && s.selectedIndex === i) card.dataset.selected = '1';
 
-      card.append(el('header', { className: 'dir__head' },
-        el('span', { className: 'eyebrow' }, `#${i + 1} · ${d.lead}-led · ${d.family}`),
+      const ready = el('span', { className: 'chip chip--sm', dataset: { ok: '0' }, title: 'preview state' },
+        'preview ', el('b', {}, 'loading'));
+      const head = el('header', { className: 'dir__head' },
+        el('div', { className: 'dir__headrow' },
+          el('span', { className: 'eyebrow' }, `#${i + 1} · ${d.lead}-led · ${d.family}`),
+          el('span', { className: 'row', style: 'gap:0.35rem' },
+            ab.archived
+              ? el('span', { className: 'chip chip--sm', dataset: { ok: 'off' }, title: `immutable batch ${bTitle(ab)} — its previews never change` }, 'archived')
+              : null,
+            ready,
+          ),
+        ),
         el('h3', {}, d.blueprintLabel),
         el('span', { className: 'hint' },
           `fit ${d.fit.toFixed(3)} · novelty ${d.novelty.toFixed(2)} · ${d.palette} · ${d.effects}`),
         el('span', { className: 'hint' }, d.rationale || ''),
-      ));
+      );
+      card.append(head);
 
-      card.append(el('div', { className: 'dir__preview' },
-        el('iframe', { src: `/preview/${s.id}/${i}`, loading: 'lazy', title: `${d.blueprintLabel} preview` }),
-        el('span', { className: 'badge' }, 'preview'),
-      ));
+      /* Detail chips: what this card IS, plus any missing-content warnings. */
+      const chips = el('div', { className: 'dir__chips' });
+      chips.append(el('span', { className: 'mini', title: 'headline construction' }, 'construction ', el('b', {}, d.features?.construction ?? '?')));
+      chips.append(el('span', { className: 'mini', title: 'image treatment' }, 'treatment ', el('b', {}, d.visual?.imageTreatment ?? d.features?.treatment ?? '?')));
+      const nSlots = (d.imageSlots || []).length;
+      chips.append(el('span', { className: 'mini', title: (d.imageSlots || []).map((x) => `${x.id} — ${x.placement}`).join('\n') },
+        `${nSlots} image slot${nSlots === 1 ? '' : 's'}`));
+      chips.append(el('span', { className: 'mini', title: 'direction seed' }, `seed ${d.seed}`));
+      chips.append(el('span', { className: 'mini', title: `composition: ${d.composition}` }, `layout ${d.blueprint}`));
+      for (const note of d.diagnostics || []) {
+        chips.append(el('span', { className: 'mini mini--warn', title: 'missing content — this direction never silently fills it' }, `⚠ ${note}`));
+      }
+      card.append(chips);
 
-      const struct = el('div', { className: 'dir__struct' });
+      const url = previewUrl(s, ab, i);
+      const box = el('div', { className: 'dir__preview', dataset: { w: String(vp.w), h: String(vp.h) } });
+      const fr = el('iframe', {
+        src: url,
+        loading: 'lazy',
+        title: `${d.blueprintLabel} preview`,
+        width: vp.w,
+        height: vp.h,
+        style: `width:${vp.w}px;height:${vp.h}px;transform-origin:top left;`,
+      });
+      fr.addEventListener('load', () => void preparePreview(fr, ready));
+      box.append(fr);
+      card.append(box);
+
+      const struct = el('div', { className: 'dir__struct', title: `composition: ${d.composition}` });
       for (const b of d.structure.blocks) struct.append(el('span', {}, b));
       card.append(struct);
 
+      /* Locks: checkbox + axis + THE VALUE THAT WILL BE PINNED, from THIS card. */
       const lockBox = el('div', { className: 'dir__locks' });
-      LOCK_AXES.forEach((axis) => {
-        const cb = el('input', { type: 'checkbox' });
-        cb.checked = locks.has(axis);
-        cb.onchange = () => updateLocks(i);
-        lockBox.append(el('label', {}, cb, axis));
-      });
+      if (ab.archived) {
+        lockBox.append(el('span', { className: 'hint' },
+          `archived batch ${ab.batch} is read-only — locks and selection act on batch ${s.batch}`));
+      } else {
+        for (const axis of LOCK_AXES) {
+          const v = lockValue(d, axis);
+          const cb = el('input', { type: 'checkbox' });
+          const own = stored.get(axis);
+          cb.checked = Boolean(own) && own.fromIndex === i;
+          cb.dataset.axis = axis;
+          cb.setAttribute('aria-label', `lock ${axis} ${v} from card ${i + 1}`);
+          cb.onchange = () => { void updateLocks(i, axis, cb.checked); };
+          lockBox.append(el('label', { title: `lock ${axis} = ${v} (pinned from card #${i + 1})` },
+            cb, el('span', { className: 'lock-name' }, axis), el('span', { className: 'lock-val' }, v)));
+        }
+      }
       card.append(lockBox);
 
       const actions = el('div', { className: 'dir__actions' });
-      const pick = el('input', { type: 'radio', name: 'dirpick' });
-      pick.checked = s.selectedIndex === i;
-      pick.onchange = () => chooseDirection(i);
-      actions.append(el('label', {}, pick, 'use this'));
+      if (ab.archived) {
+        actions.append(el('span', { className: 'hint' }, 'read-only'));
+      } else {
+        const pick = el('input', { type: 'radio', name: 'dirpick' });
+        pick.checked = s.selectedIndex === i;
+        pick.onchange = () => chooseDirection(i);
+        actions.append(el('label', {}, pick, 'use this'));
+      }
       actions.append(el('span', { className: 'spacer' }));
-      actions.append(el('a', {
-        className: 'btn btn--sm btn--ghost', href: `/preview/${s.id}/${i}`, target: '_blank', rel: 'noopener',
-      }, 'Open ↗'));
+      const expand = el('button', { className: 'btn btn--sm btn--ghost', type: 'button' }, 'Expand');
+      expand.onclick = () => openExpand(i, url, `#${i + 1} · ${d.blueprintLabel}`);
+      actions.append(expand);
+      actions.append(el('a', { className: 'btn btn--sm btn--ghost', href: url, target: '_blank', rel: 'noopener' }, 'Open ↗'));
       card.append(actions);
 
       grid.append(card);
+      previewRO.observe(box);
+      fitViewport(box);
     });
 
-    $('#sheet-finalize').disabled = s.selectedIndex === null || s.selectedIndex === undefined;
-    $('#sheet-help').textContent = locks.size
-      ? `Locked: ${[...locks].join(', ')}. Regenerate to re-roll everything else.`
-      : 'Pick one to finalize. Lock any aspect you like before regenerating the rest — regeneration is local and costs nothing.';
+    const hasSelection = s.selectedIndex !== null && s.selectedIndex !== undefined;
+    $('#sheet-finalize').disabled = ab.archived || !hasSelection;
+    $('#sheet-regen').title = ab.archived
+      ? `You are viewing archived batch ${ab.batch} — regeneration acts on the current batch ${s.batch}`
+      : 'Re-roll everything not locked. Local, 0 model calls.';
+
+    const showImages = !ab.archived && hasSelection;
+    $('#images-block').hidden = !showImages;
+    if (showImages) renderUploads();
   }
 
-  function collectLocks(card) {
-    const boxes = [...card.querySelectorAll('.dir__locks input')];
-    return boxes.map((cb, i) => (cb.checked ? LOCK_AXES[i] : null)).filter(Boolean);
-  }
+  const bTitle = (ab) => `batch ${ab.batch}`;
 
-  async function updateLocks(index) {
-    const card = $(`#sheet-grid .dir[data-index="${index}"]`);
-    const locks = collectLocks(card);
-    const { session } = await api(`/api/sessions/${state.session.id}/select`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ index: state.session.selectedIndex, locks }),
+  /** Re-read lock state from the session without reloading every iframe. */
+  function syncLockUI() {
+    const s = state.session;
+    if (!s) return;
+    const stored = new Map((s.locks || []).map((l) => [l.name, l]));
+    document.querySelectorAll('#sheet-grid .dir').forEach((card) => {
+      const i = Number(card.dataset.index);
+      const d = s.directions[i];
+      if (!d) return;
+      card.querySelectorAll('.dir__locks input[type=checkbox]').forEach((cb) => {
+        const own = stored.get(cb.dataset.axis);
+        cb.checked = Boolean(own) && own.fromIndex === i;
+        const lab = cb.parentElement;
+        if (lab) lab.title = `lock ${cb.dataset.axis} = ${lockValue(d, cb.dataset.axis)} (pinned from card #${i + 1})`;
+      });
     });
-    state.session = session;
-    // Deliberately not a full re-render: that would reload every iframe.
-    $('#sheet-help').textContent = locks.length
-      ? `Locked: ${locks.join(', ')}. Regenerate to re-roll everything else.`
-      : 'Pick one to finalize. Lock any aspect you like before regenerating the rest.';
+    renderHelp();
+  }
+
+  /**
+   * Toggle ONE lock on ONE card. The payload is rebuilt from the stored locks
+   * (which already carry their own value + source card) plus the entry just
+   * changed, whose value comes from THIS card. A 400 is shown, not swallowed.
+   */
+  /* Lock updates are SERIALIZED: each request builds on the previous
+     RESPONSE's lock set, so two quick clicks (composition then palette) can
+     never race and silently drop one another's lock. */
+  function updateLocks(index, axis, checked) {
+    state.lockQueue = (state.lockQueue || Promise.resolve()).then(() => performLockUpdate(index, axis, checked));
+    return state.lockQueue;
+  }
+
+  async function performLockUpdate(index, axis, checked) {
+    const s = state.session;
+    if (!s) return;
+    const d = s.directions[index];
+    if (!d) return;
+    const locks = (s.locks || []).filter((l) => l.name !== axis);
+    if (checked) locks.push({ name: axis, value: lockValue(d, axis), fromIndex: index });
+    try {
+      const { session } = await api(`/api/sessions/${s.id}/select`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ index: s.selectedIndex, locks }),
+      });
+      state.session = session;
+      state.helpError = null;
+      syncLockUI();
+    } catch (err) {
+      state.helpError = String(err.message || err);
+      renderHelp();
+      toast(state.helpError, 7000);
+      syncLockUI(); // checkboxes fall back to what the server actually holds
+    }
   }
 
   async function chooseDirection(index) {
-    const { session } = await api(`/api/sessions/${state.session.id}/select`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ index, locks: state.session.locks || [] }),
-    });
-    state.session = session;
+    const s = state.session;
+    if (!s) return;
+    try {
+      const { session } = await api(`/api/sessions/${s.id}/select`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ index, locks: s.locks || [] }),
+      });
+      state.session = session;
+      state.helpError = null;
+    } catch (err) {
+      state.helpError = String(err.message || err);
+      toast(state.helpError, 7000);
+      syncLockUI();
+      renderHelp();
+      return;
+    }
     document.querySelectorAll('#sheet-grid .dir').forEach((c) => {
       c.dataset.selected = c.dataset.index === String(index) ? '1' : '';
     });
     document.querySelectorAll('#sheet-grid input[type=radio]').forEach((r, i) => { r.checked = i === index; });
     $('#sheet-finalize').disabled = false;
+    $('#images-block').hidden = false; // a direction is selected now
+    renderUploads();
+    renderHelp();
     $('#sheet-finalize').scrollIntoView({ block: 'nearest' });
   }
 
+  /** Local re-roll of everything unlocked. 0 model calls, no seed sent —
+      the server derives a deterministic batch seed. */
   async function regenerateSheet() {
     const s = state.session;
     if (!s) return;
     try {
+      state.helpError = null;
+      renderHelp();
       $('#sheet-help').textContent = 'Re-rolling the unlocked directions…';
       const { session } = await api(`/api/sessions/${s.id}/regenerate`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           locks: s.locks || [],
-          fromIndex: s.selectedIndex === null || s.selectedIndex === undefined ? 0 : s.selectedIndex,
+          fromIndex: s.selectedIndex ?? 0,
           count: s.directions.length,
         }),
       });
       state.session = session;
+      state.viewBatch = null; // land on the new batch; the old one is archived
+      state.helpError = null;
       renderSheet();
-      toast(`New directions · seed ${session.seed} · no model calls`);
-    } catch (err) { toast(String(err.message || err), 6000); }
+      const div = session.diversity;
+      toast(`Batch ${session.batch} · seed ${session.seed} · no model calls` +
+        (div ? (div.met ? ' · diversity targets met' : ` · missed: ${div.shortfall.map((x) => x.target).join(', ')}`) : ''), 4500);
+    } catch (err) {
+      state.helpError = String(err.message || err);
+      renderHelp();
+      toast(state.helpError, 7000);
+    }
   }
 
+  /**
+   * A NEW session with a fresh set. The current session is not modified and
+   * stays in the session list — only this view moves on.
+   */
+  function exploreNewDirections() {
+    state.session = null;
+    state.viewBatch = null;
+    state.helpError = null;
+    showSheet(false);
+    $('#stage-empty').hidden = false;
+    $('#new-design').hidden = false;
+    void generateDirections();
+  }
+
+  /** Finalize the chosen direction — including image settings and uploads. */
   async function finalizeSelected() {
     const s = state.session;
     if (!s || s.selectedIndex === null || s.selectedIndex === undefined) return toast('Pick a direction first');
+    const assigned = uploadsFor(s.id).filter((u) => u.path && u.slot);
     try {
       const { jobId } = await api(`/api/sessions/${s.id}/finalize`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ index: s.selectedIndex, finalCopy: $('#copy-on').checked }),
+        body: JSON.stringify({
+          index: s.selectedIndex,
+          finalCopy: $('#copy-on').checked,
+          images: imagePayload(),
+          ...(assigned.length
+            ? {
+                userImages: assigned.map((u) => ({
+                  slot: u.slot,
+                  path: u.path,
+                  ...(u.alt ? { alt: u.alt } : {}),
+                  ...(u.credit ? { credit: u.credit } : {}),
+                  ...(u.license ? { license: u.license } : {}),
+                })),
+              }
+            : {}),
+        }),
       });
       watch(jobId, 'Writing final copy for the chosen direction…', async (job) => {
         if (!job.result || !job.result.slug) return toast('Finalize produced no design', 6000);
@@ -1314,15 +1981,230 @@
         showSheet(false);
         await refreshDesigns();
         await select(job.result.slug);
+        enterReviseMode(job.result.slug, s.id);
       });
     } catch (err) { toast(String(err.message || err), 6000); }
   }
 
   function closeSheet() {
+    if (state.expand) closeExpand();
     state.session = null;
+    state.viewBatch = null;
+    state.helpError = null;
     showSheet(false);
     $('#stage-empty').hidden = false;
     $('#new-design').hidden = true;
+    $('#images-block').hidden = true;
+  }
+
+  /* ---------------- expanded comparison ----------------
+     The same fixed simulated viewport, scaled to fit the stage. First screen
+     = 1440×900 / 390×844; Full page = the page's own scrollHeight, still
+     laid out at the fixed width. Escape or Close restores the previous view. */
+  function snapshotStage() {
+    return {
+      sheetHidden: $('#sheet').hidden,
+      emptyHidden: $('#stage-empty').hidden,
+      toolbarHidden: $('#detail-toolbar').hidden,
+      metricsHidden: $('#metrics').hidden,
+      frameHidden: $('#frame').hidden,
+      previewHidden: $('#preview').hidden,
+    };
+  }
+
+  function openExpand(index, url, title) {
+    const snap = snapshotStage();
+    const vp = currentVp();
+    state.expand = { mode: 'first', snap, url, base: { w: vp.w, h: vp.h }, vp: { w: vp.w, h: vp.h }, index };
+
+    $('#sheet').hidden = true;
+    $('#stage-empty').hidden = true;
+    $('#detail-toolbar').hidden = true;
+    $('#metrics').hidden = true;
+    $('#frame').hidden = false;
+    $('#preview').hidden = true;
+    $('#expand-bar').hidden = false;
+    $('#vpstage').hidden = false;
+    $('#expand-title').textContent = title;
+    document.querySelectorAll('[data-exp]').forEach((b) =>
+      b.setAttribute('aria-pressed', String(b.dataset.exp === 'first')));
+    $('#expand-scale').textContent = `${vp.w}×${vp.h}`;
+
+    const fr = $('#expand-frame');
+    fr.onload = () => {
+      if (!state.expand) return;
+      if (state.expand.mode === 'full') measureFull(fr, state.expand);
+      void preparePreview(fr, null);
+      layoutStage();
+    };
+    fr.src = url;
+    layoutStage();
+    $('#expand-close').focus();
+  }
+
+  /** Full-page height: the document's scrollHeight, measured in the iframe. */
+  function measureFull(fr, ex) {
+    try {
+      const d = fr.contentDocument;
+      if (!d || !d.documentElement) return;
+      const h = Math.max(d.documentElement.scrollHeight || 0, d.body ? d.body.scrollHeight : 0);
+      if (h > 0) ex.vp.h = h;
+    } catch { /* keep the first-screen height */ }
+  }
+
+  function layoutStage() {
+    const ex = state.expand;
+    if (!ex) return;
+    const stage = $('#vpstage');
+    if (stage.hidden) return;
+    const inner = $('#vpstage-inner');
+    const fr = $('#expand-frame');
+    const cs = getComputedStyle(stage);
+    const availW = Math.max(160, stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight));
+    const availH = Math.max(160, stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom));
+    const w = ex.vp.w;
+    const h = ex.vp.h;
+    const s = ex.mode === 'first' ? Math.min(availW / w, availH / h) : availW / w;
+    fr.setAttribute('width', String(w));
+    fr.setAttribute('height', String(h));
+    fr.style.width = `${w}px`;
+    fr.style.height = `${h}px`;
+    fr.style.transform = `scale(${s})`;
+    inner.style.width = `${Math.ceil(w * s)}px`;
+    inner.style.height = `${Math.ceil(h * s)}px`;
+    $('#expand-scale').textContent = `${w}×${h} @ ${Math.round(s * 100)}%`;
+  }
+
+  function closeExpand() {
+    const ex = state.expand;
+    if (!ex) return;
+    state.expand = null;
+    const fr = $('#expand-frame');
+    fr.onload = null;
+    fr.src = 'about:blank';
+    $('#vpstage').hidden = true;
+    $('#expand-bar').hidden = true;
+    $('#preview').hidden = false;
+    const snap = ex.snap;
+    $('#frame').hidden = snap.frameHidden;
+    $('#sheet').hidden = snap.sheetHidden;
+    $('#stage-empty').hidden = snap.emptyHidden;
+    $('#detail-toolbar').hidden = snap.toolbarHidden;
+    $('#metrics').hidden = snap.metricsHidden;
+    if (!snap.sheetHidden) $('#sheet-regen').focus();
+    else $('#directions').focus();
+  }
+
+  /* ---------------- imported images ----------------
+     Upload state is keyed by session, so switching sessions never mixes
+     another brief's photographs into the finalize call. */
+  let upSeq = 0;
+  const uploadsFor = (sid) => {
+    if (!state.uploads.has(sid)) state.uploads.set(sid, []);
+    return state.uploads.get(sid);
+  };
+
+  function addUpload(file) {
+    const s = state.session;
+    if (!s) return;
+    const item = {
+      id: `up${++upSeq}`, file: file.name, dataUrl: '', w: 0, h: 0,
+      path: null, error: null, slot: '', alt: '', credit: '', license: '',
+    };
+    uploadsFor(s.id).push(item);
+    renderUploads();
+
+    if (file.size > 16 * 1024 * 1024) {
+      item.error = `${(file.size / 1048576).toFixed(1)} MB — the server accepts at most 16 MB`;
+      renderUploads();
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      item.dataUrl = String(reader.result || '');
+      const probe = new Image();
+      probe.onload = () => { item.w = probe.naturalWidth; item.h = probe.naturalHeight; renderUploads(); };
+      probe.src = item.dataUrl;
+      renderUploads();
+      void (async () => {
+        try {
+          const res = await api('/api/uploads', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: file.name, dataUrl: item.dataUrl }),
+          });
+          item.path = res.path;
+          item.w = res.width || item.w;
+          item.h = res.height || item.h;
+          item.error = null;
+        } catch (err) {
+          item.error = String(err.message || err); // ingestion failure, shown inline
+        }
+        renderUploads();
+      })();
+    };
+    reader.onerror = () => { item.error = 'could not read that file from disk'; renderUploads(); };
+    reader.readAsDataURL(file);
+  }
+
+  function renderUploads() {
+    const s = state.session;
+    const box = $('#uploads');
+    box.replaceChildren();
+    if (!s) return;
+    const items = uploadsFor(s.id);
+    const dir = s.selectedIndex === null || s.selectedIndex === undefined ? null : s.directions[s.selectedIndex];
+    const slots = dir?.imageSlots || [];
+    $('#images-block-hint').textContent = dir
+      ? `selected: #${s.selectedIndex + 1} · ${slots.length} renderable slot${slots.length === 1 ? '' : 's'}`
+      : '';
+
+    if (!items.length) {
+      box.append(el('p', { className: 'hint' }, 'No images imported yet.'));
+      return;
+    }
+    for (const it of items) {
+      const sel = el('select', { className: 'field' });
+      sel.append(el('option', { value: '' }, '— not assigned —'));
+      for (const sl of slots) {
+        sel.append(el('option', { value: sl.id }, `${sl.id} — ${sl.placement} (${sl.aspect}, ${sl.scale})`));
+      }
+      if (it.slot && ![...sel.options].some((o) => o.value === it.slot)) it.slot = '';
+      sel.value = it.slot;
+      sel.onchange = () => { it.slot = sel.value; };
+
+      const text = (key, placeholder) => {
+        const inp = el('input', { className: 'field', type: 'text', placeholder, value: it[key] });
+        inp.oninput = () => { it[key] = inp.value; };
+        return inp;
+      };
+
+      const drop = el('button', { className: 'btn btn--sm btn--ghost', type: 'button' }, 'Remove');
+      drop.onclick = () => {
+        const arr = uploadsFor(s.id);
+        const at = arr.indexOf(it);
+        if (at >= 0) arr.splice(at, 1);
+        renderUploads();
+      };
+
+      const row = el('div', { className: 'up' },
+        it.dataUrl
+          ? el('img', { className: 'up__thumb', src: it.dataUrl, alt: it.file })
+          : el('span', { className: 'up__thumb', style: 'display:grid;place-items:center;color:var(--faint);font-size:0.625rem' }, '…'),
+        el('div', { className: 'up__meta' },
+          el('span', { className: 'up__name', title: it.file }, it.file),
+          it.path
+            ? el('span', { className: 'up__ok' }, `${it.w}×${it.h} · ${it.path}`)
+            : it.error
+              ? el('span', { className: 'up__ok', style: 'color:var(--muted)' }, 'not uploaded')
+              : el('span', { className: 'up__ok', style: 'color:var(--muted)' }, it.dataUrl ? 'uploading…' : 'reading…'),
+          it.error ? el('span', { className: 'up__err' }, `upload refused — ${it.error}`) : null,
+          el('div', { className: 'up__row' }, sel, drop),
+          el('div', { className: 'up__row' },
+            text('alt', 'alt text'), text('credit', 'credit'), text('license', 'licence / license')),
+        ),
+      );
+      box.append(row);
+    }
   }
 
   /* ---------------- wiring ---------------- */
@@ -1346,20 +2228,59 @@
   };
 
   $('#go').onclick = () => {
-    if ($('#iterate-wrap').hidden === false && state.selected) run('iterate', state.selected);
+    if (state.revise) run('revise');
+    else if ($('#iterate-wrap').hidden === false && state.selected) run('iterate', state.selected);
     else run('new');
   };
 
   $('#directions').onclick = generateDirections;
   $('#sheet-regen').onclick = regenerateSheet;
+  $('#sheet-explore').onclick = exploreNewDirections;
   $('#sheet-finalize').onclick = finalizeSelected;
   $('#sheet-close').onclick = closeSheet;
-  document.querySelectorAll('[data-vp]').forEach((b) => {
+
+  /* Desktop / Mobile switches the SIMULATED viewport of every card
+     (1440×900 ↔ 390×844). Only the scale changes; the pages re-lay-out at the
+     new fixed width, because the iframe width itself is what moved. */
+  document.querySelectorAll('.seg [data-vp]').forEach((b) => {
     b.onclick = () => {
-      document.querySelectorAll('[data-vp]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      document.querySelectorAll('.seg [data-vp]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
       $('#sheet-grid').dataset.vp = b.dataset.vp;
+      const vp = VP[b.dataset.vp] || VP.desktop;
+      document.querySelectorAll('#sheet-grid .dir__preview').forEach((box) => {
+        box.dataset.w = String(vp.w);
+        box.dataset.h = String(vp.h);
+        box._fitKey = null;
+        fitViewport(box);
+      });
     };
   });
+
+  /* Expand overlay: First screen (fixed viewport) vs Full page (the document's
+     own scroll height at that same fixed width), scaled to fit the stage. */
+  document.querySelectorAll('[data-exp]').forEach((b) => {
+    b.onclick = () => {
+      const ex = state.expand;
+      if (!ex) return;
+      document.querySelectorAll('[data-exp]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      ex.mode = b.dataset.exp;
+      ex.vp = { ...ex.base };
+      if (ex.mode === 'full') measureFull($('#expand-frame'), ex);
+      layoutStage();
+    };
+  });
+  $('#expand-close').onclick = closeExpand;
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && state.expand) { e.preventDefault(); closeExpand(); }
+  });
+  new ResizeObserver(() => layoutStage()).observe($('#vpstage'));
+
+  /* Image import: read as a data URL, upload, then pick the slot it fills. */
+  $('#user-images').onchange = (e) => {
+    const files = [...(e.target.files || [])];
+    e.target.value = '';
+    for (const f of files) addUpload(f);
+  };
 
   $('#new-design').onclick = clearDesign;
   $('#refresh').onclick = () => refreshDesigns();

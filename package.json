@@ -11,7 +11,7 @@
     "serve": "tsx src/server.ts",
     "decide": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsx test/forge.test.ts && tsx test/images.test.ts && tsx test/zip.test.ts && tsx test/motifs.test.ts && tsx test/assets.test.ts && tsx test/fonts.test.ts && tsx test/session.test.ts && tsx test/slots.test.ts && tsx test/diversity.test.ts && tsx test/locks.test.ts && tsx test/revision.test.ts && tsx test/assetplan.test.ts",
+    "test": "tsx test/forge.test.ts && tsx test/images.test.ts && tsx test/zip.test.ts && tsx test/motifs.test.ts && tsx test/assets.test.ts && tsx test/fonts.test.ts && tsx test/session.test.ts && tsx test/slots.test.ts && tsx test/diversity.test.ts && tsx test/locks.test.ts && tsx test/revision.test.ts && tsx test/assetplan.test.ts && tsx test/viewport.test.ts",
     "test:forge": "tsx test/forge.test.ts",
     "test:images": "tsx test/images.test.ts",
     "test:zip": "tsx test/zip.test.ts",

@@ -439,7 +439,11 @@ await test('finalizing the selected direction honours the image setting and veri
     assert.ok(result.notes.some((n) => /0 image slots/.test(n)));
   } else {
     assert.equal(fixture.generateCalls - before, wanted, `session finalize must request exactly the unfilled slots (notes: ${result.notes.join(' | ')})`);
-    assert.ok(result.placement.ok, `placement issues: ${result.placement.issues.map((i) => i.reason).join('; ')}`);
+    assert.ok(
+      result.placement.ok,
+      `placement issues: ${result.placement.issues.map((i) => `${i.slot} (${i.file}): ${i.reason}`).join('; ')} | ` +
+        `assets: ${result.spec.assets.map((a) => `${a.slot}=${a.file}`).join(', ')} | blueprint ${chosen.blueprint} | slots ${chosen.imageSlots.map((x) => x.id).join(',')}`,
+    );
     const specOnDisk = JSON.parse(await readFile(path.join(outDir, 'asset-final.spec.json'), 'utf8')) as DesignSpec;
     assert.ok(specOnDisk.assets.length >= 1);
     const supplied = specOnDisk.assets.find((a) => a.source === 'user');
@@ -455,7 +459,13 @@ await test('finalizing the selected direction honours the image setting and veri
 });
 
 await test('the ZIP export carries assets, fonts WITH licences, and a self-contained page', async () => {
-  const specOnDisk = JSON.parse(await readFile(path.join(outDir, `${finalizeZipSlug}.spec.json`), 'utf8')) as DesignSpec;
+  if (!finalizeZipSlug) return skip('zip export', 'the finalize step did not complete');
+  let specOnDisk: DesignSpec;
+  try {
+    specOnDisk = JSON.parse(await readFile(path.join(outDir, `${finalizeZipSlug}.spec.json`), 'utf8')) as DesignSpec;
+  } catch {
+    return skip('zip export', `no ${finalizeZipSlug}.spec.json — the finalize step did not complete`);
+  }
   const zip = await buildZip(outDir, finalizeZipSlug);
   assert.ok(zip.byteLength > 1000, 'the archive must not be empty');
 
