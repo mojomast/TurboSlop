@@ -155,7 +155,9 @@ See [`ARCHITECTURE.md`](ARCHITECTURE.md) for how the layers fit together,
 [`docs/LAYOUT-DIVERSITY.md`](docs/LAYOUT-DIVERSITY.md) for how page structure is chosen —
 including the measured baseline this work started from and the limitations that remain — and
 [`docs/IMPLEMENTATION-REPORT.md`](docs/IMPLEMENTATION-REPORT.md) for this pass's measurements,
-commands and requirement-to-evidence mapping.
+commands and requirement-to-evidence mapping, and
+[`docs/DYNAMIC-DESIGN-PLAN.md`](docs/DYNAMIC-DESIGN-PLAN.md) for the measured plan to make
+designs procedurally generated rather than catalog-picked.
 
 ---
 
