@@ -591,15 +591,12 @@ export function visualCss({ vb, motif, fg, bg }: VisualCssInput): string {
     lines.push(`}`);
   }
   if (vb.imageTreatment === 'textwrap') {
-    // Editorial text wrap: the image floats and the prose flows around it.
-    lines.push(`[data-treatment='textwrap'] .about-text::after, [data-treatment='textwrap'] .columns::after { content: ""; display: block; clear: both; }`);
-    lines.push(`@supports (shape-outside: circle(50%)) {`);
-    lines.push(`  [data-treatment='textwrap'] .gallery--strip figure:first-of-type,`);
-    lines.push(`  [data-treatment='textwrap'] .tile:first-of-type {`);
-    lines.push(`    float: inline-start; inline-size: min(22rem, 46%); margin-inline-end: var(--s-5); margin-block-end: var(--s-4);`);
-    lines.push(`    shape-outside: polygon(0 0, 100% 4%, 96% 100%, 0 96%); shape-margin: 1rem;`);
-    lines.push(`  }`);
-    lines.push(`}`);
+    // Editorial lead: the first frame opens the strip wider. The previous rule
+    // floated the tile and sized it at 46% — but a grid item cannot float, and
+    // the percentage resolved against the tile's own narrow track, shrinking
+    // the image to a sliver. A wider first frame is the treatment that a grid
+    // can actually honour.
+    lines.push(`[data-treatment='textwrap'] .gallery--strip .tile:first-of-type { grid-column: span 2; }`);
   }
 
   /* ---- motif ----------------------------------------------------------- */

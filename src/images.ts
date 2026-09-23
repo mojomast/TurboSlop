@@ -28,6 +28,7 @@
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { inflateSync } from 'node:zlib';
 import { paletteVisual } from './catalog.js';
 import type { BlueprintImageSlot } from './blueprint.js';
 import type { DesignSpec } from './types.js';
@@ -623,10 +624,143 @@ export interface ImageRunResult {
   assets: GeneratedAsset[];
   totalMs: number;
   service: ImageServiceConfig;
+  /** Frames the service returned that carry no picture (flat/black/blank). */
+  rejected: DegenerateFrame[];
+}
+
+/** A returned frame that was discarded instead of rendered. */
+export interface DegenerateFrame {
+  slot: string;
+  reason: string;
 }
 
 function randomSeed(): number {
   return Math.floor(Math.random() * 2_147_483_647);
+}
+
+/* ------------------------------------------------------------------ *
+ * Flat-frame rejection
+ *
+ * The service occasionally answers a prompt like "one even plane, no focal
+ * subject" with a UNIFORM frame. Rendering it gives the page a black (or
+ * otherwise blank) slab where a texture should be, which reads as a broken
+ * image. A flat frame is not a picture: discard it locally and let the slot
+ * keep its CSS plate, exactly like a failed job. Real renders (256x256) are
+ * judged; tiny test/placeholder images are exempt — a 1x1 pixel cannot be
+ * told apart from a legitimate flat swatch.
+ * ------------------------------------------------------------------ */
+
+interface DecodedPng {
+  width: number;
+  height: number;
+  channels: number;
+  data: Buffer;
+}
+
+function paeth(a: number, b: number, c: number): number {
+  const p = a + b - c;
+  const pa = Math.abs(p - a);
+  const pb = Math.abs(p - b);
+  const pc = Math.abs(p - c);
+  return pa <= pb && pa <= pc ? a : pb <= pc ? b : c;
+}
+
+/** Minimal 8-bit non-interlaced PNG decode (the service's only output shape). */
+function decodePng8(buf: Buffer): DecodedPng | null {
+  if (buf.length < 8 || !buf.subarray(0, 8).equals(PNG_MAGIC)) return null;
+  let off = 8;
+  let width = 0;
+  let height = 0;
+  let bitDepth = 0;
+  let colorType = 0;
+  let interlace = 0;
+  const idat: Buffer[] = [];
+  while (off + 12 <= buf.length) {
+    const len = buf.readUInt32BE(off);
+    const type = buf.toString('ascii', off + 4, off + 8);
+    const start = off + 8;
+    const end = start + len;
+    if (end + 4 > buf.length) return null;
+    if (type === 'IHDR') {
+      if (len < 13) return null;
+      width = buf.readUInt32BE(start);
+      height = buf.readUInt32BE(start + 4);
+      bitDepth = buf[start + 8]!;
+      colorType = buf[start + 9]!;
+      interlace = buf[start + 12]!;
+    } else if (type === 'IDAT') {
+      idat.push(buf.subarray(start, end));
+    } else if (type === 'IEND') {
+      break;
+    }
+    off = end + 4;
+  }
+  if (!width || !height || bitDepth !== 8 || interlace !== 0) return null;
+  const channels =
+    colorType === 0 ? 1 : colorType === 2 ? 3 : colorType === 4 ? 2 : colorType === 6 ? 4 : 0;
+  if (!channels) return null;
+  let raw: Buffer;
+  try {
+    raw = inflateSync(Buffer.concat(idat));
+  } catch {
+    return null;
+  }
+  const stride = width * channels;
+  if (raw.length < (stride + 1) * height) return null;
+  const out = Buffer.alloc(stride * height);
+  let prev = Buffer.alloc(stride);
+  for (let y = 0; y < height; y++) {
+    const filter = raw[y * (stride + 1)]!;
+    const line = raw.subarray(y * (stride + 1) + 1, y * (stride + 1) + 1 + stride);
+    const cur = out.subarray(y * stride, (y + 1) * stride);
+    for (let x = 0; x < stride; x++) {
+      const a = x >= channels ? cur[x - channels]! : 0;
+      const b = prev[x]!;
+      const c = x >= channels ? prev[x - channels]! : 0;
+      const v = line[x]!;
+      cur[x] =
+        filter === 0
+          ? v
+          : filter === 1
+            ? (v + a) & 0xff
+            : filter === 2
+              ? (v + b) & 0xff
+              : filter === 3
+                ? (v + ((a + b) >> 1)) & 0xff
+                : filter === 4
+                  ? (v + paeth(a, b, c)) & 0xff
+                  : v;
+    }
+    prev = cur;
+  }
+  return { width, height, channels, data: out };
+}
+
+/**
+ * Why this frame carries no picture — or null when it is fine to render.
+ * Exported for tests; `generateAssets` is the only caller in production.
+ */
+export function flatFrameReason(buf: Buffer, opts: { minSide?: number; tolerance?: number } = {}): string | null {
+  const minSide = opts.minSide ?? 16;
+  const tolerance = opts.tolerance ?? 4;
+  const px = decodePng8(buf);
+  if (!px) return null; // unreadable: leave it to the placement verifier, do not invent a rejection
+  if (Math.min(px.width, px.height) < minSide) return null;
+  let min = 255;
+  let max = 0;
+  for (let i = 0; i < px.data.length; i += px.channels) {
+    const r = px.data[i]!;
+    const g = px.channels > 2 ? px.data[i + 1]! : r;
+    const b = px.channels > 2 ? px.data[i + 2]! : r;
+    const a = px.channels === 4 ? px.data[i + 3]! : 255;
+    if (a === 0) continue; // fully transparent pixels are not content
+    const lum = Math.round(0.2126 * r + 0.7152 * g + 0.0722 * b);
+    if (lum < min) min = lum;
+    if (lum > max) max = lum;
+    if (max - min > tolerance) return null;
+  }
+  const tone = max < 16 ? 'black' : min > 239 ? 'white' : 'flat';
+  return `${tone} frame (luminance spread ${max - min}/255)`;
 }
 
 /**
@@ -648,6 +782,7 @@ export async function generateAssets(spec: DesignSpec, opts: ImageRunOptions): P
     : buildAssetPrompts(spec, opts.count).map((p) => ({ ...p, slot: '', aspect: '1 / 1', role: 'texture' }));
   assertPromptsWithinBudget(prompts);
   const assets: GeneratedAsset[] = [];
+  const rejected: DegenerateFrame[] = [];
   const dir = path.join(opts.outDir, 'assets', opts.slug);
   await mkdir(dir, { recursive: true });
 
@@ -674,6 +809,13 @@ export async function generateAssets(spec: DesignSpec, opts: ImageRunOptions): P
 
     const buf = await fetchImage(service, done.image!);
     const name = p.slot ? p.slot : p.kind;
+    const flat = flatFrameReason(buf);
+    if (flat) {
+      /* Discarded locally, like a failed job: the slot keeps its CSS plate. */
+      opts.onProgress?.(`    discarded ${name}: ${flat} — the slot keeps its plate`);
+      rejected.push({ slot: name, reason: flat });
+      continue;
+    }
     const file = path.join(dir, `${String(i).padStart(2, '0')}-${name}-${done.seed}.png`);
     await writeFile(file, buf);
     assets.push({
@@ -689,7 +831,7 @@ export async function generateAssets(spec: DesignSpec, opts: ImageRunOptions): P
     });
   }
 
-  return { assets, totalMs: Date.now() - started, service };
+  return { assets, totalMs: Date.now() - started, service, rejected };
 }
 
 /**

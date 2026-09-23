@@ -145,6 +145,9 @@ it is not:
 Generation is capped at the number of slots, so a page with two places asks for two images and the
 baseline's "generated but never rendered" cannot recur. Resolution is **by slot id**, never by
 cycling: a named place gets its own picture or the CSS gradient, and never borrows a neighbour's.
+A returned frame that carries no picture (a uniform black or blank render, which the service
+sometimes answers a "no focal subject" prompt with) is **discarded, not rendered**: the slot keeps
+its plate and the plan says so, rather than giving the page a slab where a texture should be.
 
 Supplied brand images are the preferred source. They are copied into the export with their
 creator, licence and **real** intrinsic pixel size (PNG/JPEG/WebP/GIF headers are parsed, so an
@@ -263,7 +266,7 @@ Run `npm test` — 13 suites, offline by construction. The generated
 counts (passed / failed / skipped per suite) live in
 [`evidence/tables.md`](../evidence/tables.md) §8, produced from
 `evidence/tests.txt` by `scripts/report.ts`, so the number quoted here can
-never drift from the suite again. **264 checks passed, 0 failed, 0 skipped**
+never drift from the suite again. **266 checks passed, 0 failed, 0 skipped**
 in this environment, where the credentials for the live halves are present;
 without them those checks skip *with the reason in the test name* rather than
 disappearing.
@@ -271,7 +274,7 @@ disappearing.
 | Suite | Protects |
 |---|---|
 | `forge.test.ts` | decision composition, composite scoring, confidence gates, catalog drift, blueprint + visual-blueprint validation, fingerprint uniqueness, every blueprint renders with resolving anchors, unique ids, the three hero recipes, typographic recipes, treatments, icons — **plus the live writer, the live Jev decision and their composition**, which skip with a reason when unconfigured |
-| `images.test.ts` | payload validation, path-traversal refusal, PNG magic bytes, foreign-job filtering, busy/429 backoff |
+| `images.test.ts` | payload validation, path-traversal refusal, PNG magic bytes, foreign-job filtering, busy/429 backoff, flat-frame rejection (a uniform black/blank render is discarded, the slot keeps its plate) |
 | `zip.test.ts` | CRC-32 vectors, real `unzip` round-trips (incl. Unicode names), DEFLATE vs STORE, traversal rejection, header-safe download filenames |
 | `motifs.test.ts` | determinism, element budgets, density, data-URI encoding |
 | `assets.test.ts` | frame composition, icon family consistency, escaping |
@@ -318,7 +321,7 @@ preservation, and the header-safe download filename check.
 6. **Live Jev and live writer paths are environment-gated, and they ran here.** With
    `TYPESAFE_API_KEY` and an LLM key present, `test/diversity.test.ts` checks the targets
    against nine live-decided sets (all met) and `test/forge.test.ts` runs the writer, the
-   decision and their composition — 264 passed / 0 failed / 0 skipped. On a machine without
+   decision and their composition — 266 passed / 0 failed / 0 skipped. On a machine without
    credentials those same checks skip *with the reason in the test name*, the offline corpus is
    unchanged, and `scripts/evidence.ts` records why its live phase did not run instead of
    dropping the rows.

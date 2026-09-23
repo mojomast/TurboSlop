@@ -9,6 +9,7 @@
  * Run: npm run test:images
  */
 import assert from 'node:assert/strict';
+import { deflateSync } from 'node:zlib';
 import {
   IMAGE_PRESETS,
   ImageServiceError,
@@ -17,6 +18,7 @@ import {
   buildAssetPrompts,
   describeImageService,
   fetchImage,
+  flatFrameReason,
   pollJobs,
   promptBudgetWarning,
   resolveImageService,
@@ -27,6 +29,7 @@ import {
   waitForJobs,
   type ImageServiceConfig,
 } from '../src/images.js';
+import { crc32 } from '../src/zip.js';
 import { decideWithFallback } from '../src/decider.js';
 import { compose } from '../src/compose.js';
 import { fallbackContent } from '../src/content.js';
@@ -73,6 +76,39 @@ function restoreFetch(): void {
 }
 
 const PNG = Buffer.concat([Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]), Buffer.alloc(64, 1)]);
+
+/** A real 8-bit RGB PNG of the given size, for flat-frame checks. */
+function pngRgb(width: number, height: number, pixel: (x: number, y: number) => [number, number, number]): Buffer {
+  const raw = Buffer.alloc((width * 3 + 1) * height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const [r, g, b] = pixel(x, y);
+      const i = y * (width * 3 + 1) + 1 + x * 3;
+      raw[i] = r;
+      raw[i + 1] = g;
+      raw[i + 2] = b;
+    }
+  }
+  const ihdr = Buffer.alloc(13);
+  ihdr.writeUInt32BE(width, 0);
+  ihdr.writeUInt32BE(height, 4);
+  ihdr[8] = 8; // bit depth
+  ihdr[9] = 2; // truecolour
+  const chunk = (type: string, data: Buffer): Buffer => {
+    const len = Buffer.alloc(4);
+    len.writeUInt32BE(data.length);
+    const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
+    const crc = Buffer.alloc(4);
+    crc.writeUInt32BE(crc32(body));
+    return Buffer.concat([len, body, crc]);
+  };
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    chunk('IHDR', ihdr),
+    chunk('IDAT', deflateSync(raw)),
+    chunk('IEND', Buffer.alloc(0)),
+  ]);
+}
 /** A deliberately generic fixture: the tests must not depend on any one host. */
 const SERVICE: ImageServiceConfig = {
   baseUrl: 'https://host.test:4363',
@@ -433,8 +469,7 @@ await test('pages render identically in structure with or without generated art'
 });
 
 /* ---- end to end with a mocked service ---- */
-await test('generateAssets submits, polls, downloads and persists', async () => {
-  const tmp = await import('node:fs/promises').then((m) => m.mkdtemp('/tmp/forge-img-'));
+await test('generateAssets submits, polls, downloads and persists', async () => {  const tmp = await import('node:fs/promises').then((m) => m.mkdtemp('/tmp/forge-img-'));
   let submitted = 0;
   mockFetch((url) => {
     if (url.endsWith('/api/generate')) {
@@ -470,6 +505,56 @@ await test('generateAssets submits, polls, downloads and persists', async () => 
     assert.equal(a.bytes, PNG.byteLength);
     assert.ok(a.seed > 0);
   }
+  restoreFetch();
+});
+
+await test('a flat frame is rejected, not rendered, and the slot keeps its plate', () => {
+  const black = pngRgb(64, 64, () => [0, 0, 0]);
+  const white = pngRgb(64, 64, () => [250, 250, 250]);
+  const picture = pngRgb(64, 64, (x, y) => [x * 4, y * 3, 90]);
+  const tiny = pngRgb(1, 1, () => [0, 0, 0]);
+
+  assert.match(flatFrameReason(black) ?? '', /black frame/, 'a black frame is not a picture');
+  assert.match(flatFrameReason(white) ?? '', /white frame/, 'a blank white frame is not a picture');
+  assert.equal(flatFrameReason(picture), null, 'a real render is kept');
+  assert.equal(flatFrameReason(tiny), null, 'a 1x1 placeholder cannot be judged');
+  assert.equal(flatFrameReason(Buffer.from('not a png')), null, 'unreadable input is never silently rejected');
+});
+
+await test('generateAssets discards a flat frame and persists nothing for it', async () => {
+  const tmp = await import('node:fs/promises').then((m) => m.mkdtemp('/tmp/forge-flat-'));
+  const { readdir } = await import('node:fs/promises');
+  const flat = pngRgb(64, 64, () => [2, 2, 6]);
+  mockFetch((url) => {
+    if (url.endsWith('/api/generate')) return { status: 202, body: { id: 'job-1', batch: 'b', ids: ['job-1'] } };
+    if (url.endsWith('/api/status')) {
+      return {
+        status: 200,
+        body: {
+          jobs: [
+            { id: 'job-1', status: 'done', prompt: 'p', seed: 5, steps: 4, cfg: 2, image: '/images/job-1.png', seconds: 0.5 },
+          ],
+        },
+      };
+    }
+    if (url.includes('/images/')) return { status: 200, bytes: flat };
+    return { status: 404, body: {} };
+  });
+
+  const { generateAssets } = await import('../src/images.js');
+  const r = await decideWithFallback('A calm spa landing page', { offline: true });
+  const { spec } = compose('A calm spa landing page', r);
+  const run = await generateAssets(spec, { count: 1, steps: 4, cfg: 2, outDir: tmp, slug: 'flat', service: SERVICE });
+
+  assert.equal(run.assets.length, 0, 'a flat frame must not become an asset');
+  assert.equal(run.rejected.length, 1, 'the discard must be recorded, not silent');
+  assert.match(run.rejected[0]!.reason, /frame/);
+  const files = await readdir(tmp, { recursive: true });
+  assert.equal(
+    files.filter((f) => String(f).endsWith('.png')).length,
+    0,
+    'nothing is written for a discarded frame',
+  );
   restoreFetch();
 });
 

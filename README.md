@@ -7,7 +7,7 @@
 A brief goes in. A designed, written and illustrated page comes out — in about a second,
 for a fraction of a cent, with every decision typed, scored and reproducible.
 
-[![tests](https://img.shields.io/badge/tests-264%20passed%20%C2%B7%200%20skipped-3fb950?style=flat-square)](#testing)
+[![tests](https://img.shields.io/badge/tests-266%20passed%20%C2%B7%200%20skipped-3fb950?style=flat-square)](#testing)
 [![node](https://img.shields.io/badge/node-%E2%89%A520-3fb950?style=flat-square)](https://nodejs.org)
 [![deps](https://img.shields.io/badge/runtime%20deps-1%20(zod)-3fb950?style=flat-square)](#why-so-few-dependencies)
 [![typescript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square)](tsconfig.json)
@@ -473,7 +473,7 @@ from the captured run rather than hand-maintained: see
 | Suite | Covers |
 |---|---|
 | `test/forge.test.ts` | decision composition, composite scoring, confidence gates, catalog drift, blueprint + visual-blueprint validation, fingerprint uniqueness, anchors, hero recipes, typographic recipes, treatments, icons, renderer, modern-CSS emission, **plus the live writer, live Jev decision and their composition** (auto-skip with a reason when unconfigured) |
-| `test/images.test.ts` | payload validation, path-traversal refusal, URL allowlist, PNG magic bytes, **foreign-job filtering**, busy/429 backoff, ambiguous submissions |
+| `test/images.test.ts` | payload validation, path-traversal refusal, URL allowlist, PNG magic bytes, **foreign-job filtering**, busy/429 backoff, ambiguous submissions, **flat/black frames discarded instead of rendered** |
 | `test/zip.test.ts` | CRC-32 vectors, real `unzip` round-trips (incl. Unicode names), DEFLATE vs STORE, traversal rejection, header-safe download filenames |
 | `test/motifs.test.ts` | deterministic seeded motifs, element budgets, density, data-URI encoding |
 | `test/assets.test.ts` | frame composition, icon family consistency, escaping |

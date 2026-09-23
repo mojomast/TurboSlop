@@ -14,7 +14,7 @@ baseline itself used — local decider + specimen inventory + a **controlled loc
 the image service — so it reproduces byte-for-byte from the same inputs; a separate **live
 phase** (`scripts/evidence.ts`, tables §10) records real Jev decisions, a real writer call and a
 real image batch, or the reason it could not. Every test, journey and table below was produced
-with those credentials present: **264 passed · 0 failed · 0 skipped**.
+with those credentials present: **266 passed · 0 failed · 0 skipped**.
 
 Every table quoted here is generated from the raw evidence by
 `scripts/report.ts` → [`evidence/tables.md`](../evidence/tables.md). Nothing below is
@@ -192,15 +192,16 @@ Generated from `evidence/tests.txt` (tables §8):
 
 | status | checks |
 |---|---|
-| **passed** | **264** |
+| **passed** | **266** |
 | **failed** | **0** |
 | **skipped** | **0** — every environment-gated check ran (live Jev, live writer), and the forge
 suite's three live halves report `SKIPPED` only when the key really is absent |
 
-13 suites: 58 · 24 · 11 · 23 · 31 · 19 · 22 · 13 · 22 · 14 · 8 · 13 · 6. The suites that
+13 suites: 58 · 26 · 11 · 23 · 31 · 19 · 22 · 13 · 22 · 14 · 8 · 13 · 6. The suites that
 previously self-skipped now genuinely run: `diversity` gained the live-Jev check (17 offline
-checks → 19, 22 with the 3 live), and `revision` (8) pins `FORGE_LLM_PROVIDER=__offline_test__`
-so an ambient key can never turn its byte-identical assertion into a network call.
+checks → 19, 22 with the 3 live), `images` gained the flat-frame checks (24 → 26), and
+`revision` (8) pins `FORGE_LLM_PROVIDER=__offline_test__` so an ambient key can never turn its
+byte-identical assertion into a network call.
 `npm run typecheck` is clean over `src/`, `test/` **and** `scripts/` (the `DOM.Iterable` lib
 gap that hid script errors is closed).
 
@@ -228,11 +229,13 @@ gap that hid script errors is closed).
 | unsupported content / empty galleries / dead CTAs | empty-state notes for gallery/schedule/pricing/faq, contact-guarded hero CTAs, missing-content diagnostics per card | anchors/diagnostics tests; cards show amber diagnostics when content is missing |
 | fonts + licences in ZIP **and** single-file export | `fonts/LICENSES.md` in the ZIP; licence text embedded as a comment in the self-contained page (asserted) | `test/assetplan.test.ts` export test |
 | Unicode ZIP filename failure | archive valid under Info-ZIP (both locales), Python and busybox; `?` glyphs are console display; the one real failure is `ERR_INVALID_CHAR` for non-latin1 response headers — slugs are ASCII and `contentDisposition()` RFC-6266-encodes regardless | `evidence/zip-unicode.txt`, `scripts/zip-unicode-check.ts`, `test/zip.test.ts` header test |
-| "281 checks" and stale listings | every count now generated from `evidence/tests.txt`; LAYOUT-DIVERSITY rewritten (fingerprints section, suites table, limitations); README badge = 264 passed · 0 skipped | `evidence/tables.md` §8; `docs/LAYOUT-DIVERSITY.md` |
+| "281 checks" and stale listings | every count now generated from `evidence/tests.txt`; LAYOUT-DIVERSITY rewritten (fingerprints section, suites table, limitations); README badge = 266 passed · 0 skipped | `evidence/tables.md` §8; `docs/LAYOUT-DIVERSITY.md` |
 | the diversity suite hardcoded its live-Jev skip, so a key would have changed the meaning of a green run | replaced with a real conditional check: 3 briefs × 3 seeds under Jev, asserting the same targets as the offline control | `test/diversity.test.ts` (22 checks: 19 offline + 3 live) |
 | an ambient `DEEPSEEK_API_KEY` could turn `revision`'s offline byte-identity assertion into a network call | the suite pins `FORGE_LLM_PROVIDER=__offline_test__` for its duration and restores the previous value in teardown | `test/revision.test.ts` (8/8) |
 | no live evidence of the real services anywhere in the report | `runLive()` phase: decision, 9 live-decided diversity sets, writer call, image run with a pre/post `/api/status` job-id diff, ZIP check — recorded as `status + reason` per part | tables §10; `evidence/raw.json` `live` block |
 | the image switch could resolve to a layout with **zero image slots**, so "generate images" made no request — and the next similar brief came back as the same lead/family again | selection reads the image setting (`wantsImages`): slot-less layouts are dropped (locks and an empty capable pool fall back, and the plan then says why); a fresh standalone run (`freshLeads`) skips the leads the newest three history entries used | `test/diversity.test.ts` (image + fresh-lead checks), `test/assetplan.test.ts` (image-enabled pipeline makes real requests), README/ARCHITECTURE/LAYOUT-DIVERSITY |
+| horizontal strip galleries collapsed to 1/12 width, and the `textwrap` lead frame to 46% of its own track — images rendered at 15–44 px | `gallery--strip` clears `grid-template-columns` so `grid-auto-columns` governs; the textwrap treatment is a **wider lead frame** (`grid-column: span 2`) instead of a float a grid item cannot honour | measured re-render of the affected page: lead frame 619×464 px, others 300×224 (was 15×11), 0 overflow |
+| the image service answered a "no focal subject" prompt with a **uniform black frame**, rendered as a slab across the hero | `flatFrameReason()` decodes the returned PNG and discards a uniform frame (tolerance 4/255, placeholders under 16 px exempt); the slot keeps its plate and the plan records the discard | `test/images.test.ts` (26 checks), LAYOUT-DIVERSITY §2.5 |
 
 ---
 
@@ -266,7 +269,7 @@ Committed evidence (paths relative to the repo root):
 | 3 | trustworthy selection/locks/regeneration/revision | `src/sessions.ts`, `src/revise.ts` · `test/locks.test.ts` (14), `test/revision.test.ts` (8) · journey (30/30), API smoke (§1 commands) |
 | 4 | complete image workflow | `src/assetplan.ts`, `POST /api/uploads`, placement verification · `test/assetplan.test.ts` (13, fixture) · tables §6 (controlled fixture) **and §10 (live service: 2 new jobs, 3 assets, 0 issues)** · upload journey (6/6) |
 | 5 | CSS / typography / assets | `src/visual.ts` (`TYPO_COMPAT`, width/wrap/hierarchy), `src/styles.ts`, `src/layout.ts`, frames in gallery, direction-seeded motifs, licence-embedded export · geometry table (§5 above: 0 overflow, 0 dup, 0 broken) |
-| 6 | verify journeys, reconcile evidence | all of §1's commands; `evidence/` raw JSON → `tables.md`; screenshots §5; passed/failed/skipped reported separately (264/0/0) |
+| 6 | verify journeys, reconcile evidence | all of §1's commands; `evidence/` raw JSON → `tables.md`; screenshots §5; passed/failed/skipped reported separately (266/0/0) |
 | 7 | deliver | `ARCHITECTURE.md`, this report, commits `98c1482` + `7ef1374` + `0b20860` (+ docs commits) pushed to `origin/main`; this live-evidence commit follows it |
 
 ---

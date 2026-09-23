@@ -588,7 +588,7 @@ export function elementCss(): string {
   .quote--band blockquote { font-size: clamp(1.75rem, 5vw, 3.5rem); max-inline-size: 28ch; }
   .quote--inline blockquote { font-size: clamp(1.15rem, 2vw, 1.6rem); }
 
-  .gallery--strip { grid-auto-flow: column; grid-auto-columns: 24%; overflow-x: auto; padding-block-end: var(--s-3); }
+  .gallery--strip { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 24%; overflow-x: auto; padding-block-end: var(--s-3); }
   .gallery--strip .tile { grid-column: auto; }
   @media (max-width: 48rem) { .gallery--strip { grid-auto-columns: 70%; } }
 

@@ -318,6 +318,9 @@ export async function finalizeAssets(
           `generated ${run.assets.length} image(s) for ${plan.toGenerate.map((s) => s.id).join(', ')} ` +
             `at ${preset.label} (steps ${steps}, guidance ${guidance}) in ${run.totalMs}ms`,
         );
+        for (const r of run.rejected) {
+          notes.push(`${r.slot}: the service returned a ${r.reason} — discarded, the slot keeps its plate`);
+        }
       } catch (err) {
         notes.push(
           `image generation failed — continuing with plates and supplied art: ${err instanceof Error ? err.message : String(err)}`,
